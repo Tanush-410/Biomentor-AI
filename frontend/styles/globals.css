@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --bm-bg: #f7efe4;
+  --bm-bg-soft: #fbf5ee;
+  --bm-panel: rgba(255, 251, 247, 0.94);
+  --bm-panel-strong: rgba(255, 252, 249, 0.98);
+  --bm-ink: #3a2719;
+  --bm-muted: #755f4d;
+  --bm-line: rgba(148, 120, 92, 0.2);
+  --bm-primary: #5f4028;
+  --bm-secondary: #7a5334;
+  --bm-accent: #8a5a36;
+  --bm-accent-soft: #ead8c6;
+  --bm-shadow: 0 18px 42px rgba(84, 55, 31, 0.11);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  @apply text-slate-900;
+  background:
+    radial-gradient(circle at top left, rgba(180, 120, 76, 0.11), transparent 24%),
+    radial-gradient(circle at 85% 12%, rgba(219, 195, 164, 0.16), transparent 20%),
+    linear-gradient(180deg, #fbf5ee 0%, #f7efe4 46%, #f3e6d6 100%);
+  color: var(--bm-ink);
+  font-family: "Source Sans 3", "Libre Franklin", sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+a,
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.skip-link {
+  @apply sr-only;
+}
+
+.skip-link:focus {
+  @apply not-sr-only fixed left-4 top-4 z-[100] rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-lg;
+}
+
+.card {
+  @apply rounded-[26px] border border-stone-200/90 bg-[rgba(255,251,247,0.94)] shadow-lg shadow-stone-200/50 transition-colors duration-200 ease-out;
+  box-shadow: var(--bm-shadow);
+}
+
+.card:hover {
+  border-color: rgba(164, 132, 101, 0.35);
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-[18px] px-4 py-2.5 font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-amber-700 focus:ring-offset-2 focus:ring-offset-transparent;
+}
+
+.btn-primary {
+  @apply btn border border-amber-900/10 bg-gradient-to-r from-[#6d472d] to-[#8b5a35] text-amber-50 shadow-md shadow-amber-100/40 hover:-translate-y-0.5 hover:brightness-105;
+}
+
+.btn-secondary {
+  @apply btn border border-stone-700 bg-stone-800 text-stone-50 hover:-translate-y-0.5 hover:bg-stone-700;
+}
+
+.btn-outline {
+  @apply btn border border-stone-300 bg-[rgba(255,251,247,0.92)] text-stone-800 hover:-translate-y-0.5 hover:border-amber-700/40 hover:bg-[#f5ebdf] hover:text-[#6d472d];
+}
+
+.input {
+  @apply w-full rounded-[18px] border border-stone-200 bg-[#fffaf5] px-4 py-3 text-stone-900 placeholder:text-stone-400 focus:border-amber-700/50 focus:outline-none focus:ring-2 focus:ring-amber-100;
+}
+
+.input-auth {
+  @apply w-full rounded-[18px] border border-[#d7c0a9] bg-[#fff8f0] px-4 py-3 text-black placeholder:text-[#8d735f] focus:border-[#8a5a36] focus:outline-none focus:ring-2 focus:ring-[#ead8c6];
+  caret-color: #000000;
+}
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input-auth:-webkit-autofill,
+.input-auth:-webkit-autofill:hover,
+.input-auth:-webkit-autofill:focus {
+  -webkit-text-fill-color: #000000;
+  -webkit-box-shadow: 0 0 0px 1000px #fff8f0 inset;
+  transition: background-color 5000s ease-in-out 0s;
+  caret-color: #000000;
+}
+
+.panel-muted {
+  @apply rounded-[24px] border border-stone-200/80 bg-[#f7efe5];
+}
+
+.metric-card {
+  @apply rounded-[24px] border border-stone-200 bg-[rgba(255,251,247,0.96)] p-5 shadow-lg shadow-stone-200/50;
+}
+
+.surface-subtle {
+  @apply rounded-[22px] border border-stone-200/80 bg-[#f7efe5];
+}
+
+.surface-quiet {
+  @apply rounded-[22px] border border-stone-200/70 bg-[#fffaf5];
+}
+
+.role-pill {
+  @apply inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em];
+}
+
+.section-kicker {
+  @apply text-xs font-semibold uppercase tracking-[0.28em];
+}
+
+.inbox-item {
+  @apply rounded-[22px] border border-stone-200 bg-[#fffaf5] p-4 transition-colors duration-200;
+}
+
+.inbox-item:hover {
+  @apply border-stone-300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

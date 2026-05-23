@@ -1,0 +1,295 @@
+import React, { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { BookOpen, Brain, Eye, HardDriveDownload, Trash2, Upload } from 'lucide-react'
+
+import AppShell from '../components/AppShell'
+import { useAuth } from '../context/AuthContext'
+import { getOfflineDocument } from '../lib/offlineDocuments'
+
+export default function DocumentsPage() {
+  const router = useRouter()
+  const { token, loading: authLoading } = useAuth()
+  const [documents, setDocuments] = useState([])
+  const [offlineStatus, setOfflineStatus] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [uploadOptions, setUploadOptions] = useState({
+    storageMode: 'full',
+    selectedPages: ''
+  })
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    fetchDocuments()
+  }, [authLoading, token])
+
+  const pdfCount = useMemo(
+    () => documents.filter((doc) => doc.file_name?.toLowerCase().endsWith('.pdf')).length,
+    [documents]
+  )
+
+  const fetchDocuments = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        const payload = await response.json()
+        const docs = payload || []
+        setDocuments(docs)
+        hydrateOfflineStatus(docs)
+      } else {
+        setError('Failed to load your materials.')
+      }
+    } catch (err) {
+      console.error('Document fetch error:', err)
+      setError('Unable to connect to the server.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const hydrateOfflineStatus = async (docs) => {
+    const pairs = await Promise.all(
+      docs.map(async (doc) => {
+        const cached = await getOfflineDocument(String(doc.id)).catch(() => null)
+        return [doc.id, Boolean(cached?.blob)]
+      })
+    )
+    setOfflineStatus(Object.fromEntries(pairs))
+  }
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setError('')
+    setSuccess('')
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('title', file.name.replace(/\.[^.]+$/, ''))
+    formData.append('storage_mode', uploadOptions.storageMode)
+    if (uploadOptions.selectedPages.trim()) {
+      formData.append('selected_pages', uploadOptions.selectedPages.trim())
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      })
+
+      if (response.ok) {
+        setSuccess(`"${file.name}" uploaded successfully.`)
+        event.target.value = ''
+        fetchDocuments()
+      } else {
+        const payload = await response.json().catch(() => ({}))
+        setError(payload?.detail || 'Upload failed.')
+      }
+    } catch (err) {
+      console.error('Upload error:', err)
+      setError('Unable to upload file right now.')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDelete = async (docId) => {
+    if (!window.confirm('Delete this material? This will remove the uploaded file from the app.')) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${docId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (response.ok) {
+        setSuccess('Material deleted successfully.')
+        setDocuments((current) => current.filter((doc) => doc.id !== docId))
+        setOfflineStatus((current) => {
+          const next = { ...current }
+          delete next[docId]
+          return next
+        })
+      } else {
+        setError('Failed to delete this material.')
+      }
+    } catch (err) {
+      console.error('Delete error:', err)
+      setError('Unable to delete this material right now.')
+    }
+  }
+
+  return (
+    <AppShell
+      title="Materials Library"
+      description="Upload notes and PDFs, open them in the study viewer, save them offline, or turn them into quizzes from the same library."
+      contentClassName="space-y-8"
+      actions={
+        <>
+          <Link href="/dashboard" className="btn btn-outline">Dashboard</Link>
+          <Link href="/start-quiz" className="btn btn-primary">Start Quiz</Link>
+        </>
+      }
+    >
+        <section className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
+          <div className="card p-8 bg-[linear-gradient(145deg,#3a2719_0%,#5f4028_56%,#8a5a36_100%)] text-white">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#f0dcc6] mb-3">Upload once, learn anywhere</p>
+            <h2 className="text-4xl font-bold leading-tight mb-4">
+              Open your uploaded material, save it offline, and turn it into quizzes from the same screen.
+            </h2>
+            <p className="text-stone-100/90 text-lg mb-6">
+              This page now replaces the broken demo actions with the real study flow: upload, open, offline view, quiz, and delete.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-3 rounded-xl bg-[#fff7ef] px-5 py-3 font-semibold text-[#6d472d] shadow-lg">
+                <Upload className="w-5 h-5" />
+                {uploading ? 'Uploading...' : 'Upload Material'}
+                <input type="file" className="hidden" accept=".pdf,.txt,.md" onChange={handleFileUpload} disabled={uploading} />
+              </label>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <select
+                  value={uploadOptions.storageMode}
+                  onChange={(e) => setUploadOptions((current) => ({ ...current, storageMode: e.target.value }))}
+                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white focus:border-[#f0dcc6] focus:outline-none"
+                >
+                  <option value="full" className="text-slate-900">Full upload with offline PDF viewer</option>
+                  <option value="text_only" className="text-slate-900">Low-data text-only study mode</option>
+                </select>
+                <input
+                  value={uploadOptions.selectedPages}
+                  onChange={(e) => setUploadOptions((current) => ({ ...current, selectedPages: e.target.value }))}
+                  placeholder="Optional pages: 1-5,8,10-12"
+                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-[#f0dcc6]/70 focus:border-[#f0dcc6] focus:outline-none"
+                />
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-stone-100/80">
+              Supported: PDF, TXT, Markdown. Choose <strong>text-only</strong> or specific page ranges when you want lighter processing and smaller stored material.
+            </p>
+          </div>
+
+          <div className="card p-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Library Snapshot</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <MiniStat label="Materials" value={documents.length} />
+              <MiniStat label="PDFs" value={pdfCount} />
+            </div>
+
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 mt-5 text-sm text-slate-700">
+              Use <strong>Open & Study</strong> to view the uploaded material, then click <strong>Save for Offline</strong> on the material page.
+            </div>
+          </div>
+        </section>
+
+        {(error || success) && (
+          <div className="space-y-3">
+            {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+            {success && <div className="rounded-xl border border-[#d8c1aa] bg-[#f5ebdf] px-4 py-3 text-[#6d472d]">{success}</div>}
+          </div>
+        )}
+
+        <section className="card p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Your Uploaded Materials</h2>
+              <p className="text-slate-600">Review files, open the offline viewer, generate quizzes, or remove old material.</p>
+            </div>
+            <Link href="/start-quiz" className="btn btn-primary inline-flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              Start General Quiz
+            </Link>
+          </div>
+
+          {loading ? (
+            <p className="text-slate-500">Loading your library...</p>
+          ) : documents.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-600">
+              No materials uploaded yet.
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {documents.map((doc) => (
+                <div key={doc.id} className="rounded-2xl border border-slate-200 p-5 bg-white">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">{doc.title}</h3>
+                      <p className="text-sm text-slate-600 mt-1">
+                        {doc.file_name} · {doc.pages} pages · {(doc.file_size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {doc.processing_status || 'completed'}
+                        </span>
+                        <span className="rounded-full bg-[#f2e4d4] px-3 py-1 text-xs font-semibold text-[#8a5a36]">
+                          {doc.storage_mode === 'text_only' ? 'Text-only low-data mode' : 'Full study mode'}
+                        </span>
+                        {Array.isArray(doc.selected_pages) && doc.selected_pages.length > 0 && (
+                          <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                            Pages {doc.selected_pages.slice(0, 5).join(', ')}{doc.selected_pages.length > 5 ? '…' : ''}
+                          </span>
+                        )}
+                        {doc.file_name?.toLowerCase().endsWith('.pdf') && (
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            offlineStatus[doc.id]
+                              ? 'bg-[#ead8c6] text-[#6d472d]'
+                              : 'bg-[#f3e6d6] text-[#8a5a36]'
+                          }`}>
+                            {offlineStatus[doc.id] ? 'Offline ready' : 'Offline not saved yet'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <Link href={`/document/${doc.id}`} className="btn btn-outline inline-flex items-center gap-2">
+                        <Eye className="w-4 h-4" />
+                        Open & Study
+                      </Link>
+                      <Link href={`/document/${doc.id}`} className="btn btn-outline inline-flex items-center gap-2">
+                        <HardDriveDownload className="w-4 h-4" />
+                        Offline Viewer
+                      </Link>
+                      <Link href={`/start-quiz?doc_id=${doc.id}`} className="btn btn-primary inline-flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Quiz from Material
+                      </Link>
+                      <button onClick={() => handleDelete(doc.id)} className="btn btn-outline inline-flex items-center gap-2">
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+    </AppShell>
+  )
+}
+
+function MiniStat({ label, value }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-sm font-semibold text-slate-500">{label}</p>
+      <p className="text-3xl font-bold text-slate-900 mt-2">{value}</p>
+    </div>
+  )
+}
