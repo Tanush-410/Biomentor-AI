@@ -43,6 +43,7 @@ htmlcov/
 
 # Data
 *.db
+*.db-*
 *.sqlite
 uploads/
 cache/

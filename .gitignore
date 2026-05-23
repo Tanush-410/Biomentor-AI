@@ -12,6 +12,7 @@ frontend/.env.local
 
 # Local databases and generated runtime data
 backend/*.db
+backend/*.db-*
 backend/*.sqlite
 backend/uploads/
 uploads/

@@ -1,5 +1,5 @@
 """Database initialization and connection management."""
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
@@ -11,22 +11,44 @@ from .models import Base
 DEFAULT_SQLITE_URL = "sqlite:///./app.db"
 SQLALCHEMY_DATABASE_URL = settings.database_url or DEFAULT_SQLITE_URL
 
-engine_kwargs = {
-    "pool_pre_ping": True,
-}
 
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
-    engine_kwargs.update(
-        {
-            "connect_args": {"check_same_thread": False},
-            "poolclass": StaticPool,
+def build_engine_kwargs(database_url: str) -> dict:
+    """Build engine kwargs for the configured database URL."""
+    engine_kwargs = {
+        "pool_pre_ping": True,
+    }
+
+    if database_url.startswith("sqlite"):
+        connect_args = {
+            "check_same_thread": False,
+            "timeout": 30,
         }
-    )
+        engine_kwargs["connect_args"] = connect_args
+
+        # StaticPool is useful for in-memory SQLite, but file-backed SQLite
+        # should use normal connection behavior to reduce lock contention.
+        if database_url in {"sqlite://", "sqlite:///:memory:"} or ":memory:" in database_url:
+            engine_kwargs["poolclass"] = StaticPool
+
+    return engine_kwargs
+
+
+engine_kwargs = build_engine_kwargs(SQLALCHEMY_DATABASE_URL)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     **engine_kwargs,
 )
+
+
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragmas(dbapi_connection, connection_record):  # noqa: ARG001
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
