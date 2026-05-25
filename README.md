@@ -93,7 +93,7 @@ The project includes:
 ## Local Setup
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.9.6
 - Node.js 18+
 - npm
 
