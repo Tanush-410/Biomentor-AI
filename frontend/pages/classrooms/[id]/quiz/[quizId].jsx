@@ -8,6 +8,8 @@ import { useAuth } from '../../../../context/AuthContext'
 import {
   getClassroom,
   getClassroomQuiz,
+  heartbeatClassroomQuizAttempt,
+  reportClassroomQuizWarning,
   reportClassroomQuizViolation,
   startClassroomQuizAttempt,
   submitClassroomQuizAttempt
@@ -29,9 +31,13 @@ export default function ClassroomQuizPage() {
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [attemptState, setAttemptState] = useState('idle')
   const [cameraError, setCameraError] = useState('')
+  const [warningCount, setWarningCount] = useState(0)
+  const [latestWarning, setLatestWarning] = useState('')
   const streamRef = useRef(null)
   const videoRef = useRef(null)
   const violationSentRef = useRef(false)
+  const warningTimestampsRef = useRef({})
+  const AI_DEBARMENT_REASON = 'ai_proctoring_debarred'
 
   const classroomId = typeof router.query.id === 'string' ? router.query.id : ''
   const quizId = typeof router.query.quizId === 'string' ? router.query.quizId : ''
@@ -73,6 +79,11 @@ export default function ClassroomQuizPage() {
   useEffect(() => {
     if (attemptState !== 'active' || !quiz?.proctoring_enabled) return undefined
 
+    const onBeforeUnload = (event) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
     const onVisibilityChange = () => {
       if (document.hidden) {
         handleViolation('tab_hidden', { hidden: true })
@@ -87,16 +98,64 @@ export default function ClassroomQuizPage() {
       }
     }
 
+    const onContextMenu = (event) => {
+      event.preventDefault()
+      handleViolation('context_menu', { x: event.clientX, y: event.clientY })
+    }
+
+    const onKeyDown = (event) => {
+      const key = event.key.toLowerCase()
+      const blockedCombo =
+        (event.ctrlKey || event.metaKey) && ['a', 'c', 'i', 'j', 'n', 'p', 'r', 's', 'u', 'v', 'w', 'x'].includes(key)
+      const blockedFunctionKey = event.key === 'F12'
+      if (!blockedCombo && !blockedFunctionKey) return
+      event.preventDefault()
+      handleViolation('blocked_shortcut', {
+        key: event.key,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey
+      })
+    }
+
+    window.addEventListener('beforeunload', onBeforeUnload)
     document.addEventListener('visibilitychange', onVisibilityChange)
     window.addEventListener('blur', onBlur)
     document.addEventListener('fullscreenchange', onFullscreenChange)
+    document.addEventListener('contextmenu', onContextMenu)
+    window.addEventListener('keydown', onKeyDown)
 
     return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload)
       document.removeEventListener('visibilitychange', onVisibilityChange)
       window.removeEventListener('blur', onBlur)
       document.removeEventListener('fullscreenchange', onFullscreenChange)
+      document.removeEventListener('contextmenu', onContextMenu)
+      window.removeEventListener('keydown', onKeyDown)
     }
   }, [attemptState, quiz?.proctoring_enabled, attempt?.id])
+
+  useEffect(() => {
+    if (attemptState !== 'active' || !quiz?.proctoring_enabled || !attempt?.id) return undefined
+
+    const heartbeat = async () => {
+      try {
+        const payload = await heartbeatClassroomQuizAttempt(token, classroomId, quizId, {
+          attempt_id: attempt.id
+        })
+        if (payload?.attempt) {
+          setAttempt((current) => ({ ...(current || {}), ...payload.attempt }))
+        }
+      } catch (_error) {
+        // Keep the student's attempt running locally and let hard proctoring events decide termination.
+      }
+    }
+
+    heartbeat()
+    const interval = window.setInterval(heartbeat, 15000)
+    return () => window.clearInterval(interval)
+  }, [attemptState, quiz?.proctoring_enabled, attempt?.id, token, classroomId, quizId])
 
   const loadPage = async () => {
     setLoading(true)
@@ -108,11 +167,13 @@ export default function ClassroomQuizPage() {
       ])
       setClassroom(classroomPayload.classroom)
       setQuiz(quizPayload.quiz)
-      setAttempt(quizPayload.quiz?.attempt || null)
-      if (quizPayload.quiz?.attempt?.status === 'submitted') {
-        setAttemptState('submitted')
-      } else if (quizPayload.quiz?.attempt?.status === 'terminated') {
+      const latestAttempt = quizPayload.quiz?.attempt || null
+      setAttempt(latestAttempt)
+      setWarningCount(latestAttempt?.violation_count || 0)
+      if (latestAttempt?.status === 'terminated' && !quizPayload.quiz?.can_start) {
         setAttemptState('terminated')
+      } else if (latestAttempt?.status === 'submitted' && !quizPayload.quiz?.can_start) {
+        setAttemptState('submitted')
       } else {
         setAttemptState('idle')
       }
@@ -167,14 +228,20 @@ export default function ClassroomQuizPage() {
   const handleStart = async () => {
     setStarting(true)
     setError('')
+    setLatestWarning('')
     try {
+      if (!quiz?.can_start) {
+        throw new Error('This classroom quiz is not open for a new attempt right now.')
+      }
       await ensureCameraAndFullscreen()
       const payload = await startClassroomQuizAttempt(token, classroomId, quizId)
       violationSentRef.current = false
+      warningTimestampsRef.current = {}
       setAttempt(payload.attempt)
       setQuiz(payload.quiz)
       setQuestions(payload.questions || [])
       setAnswers({})
+      setWarningCount(payload.attempt?.violation_count || 0)
       setCurrentIndex(0)
       setAttemptState('active')
     } catch (err) {
@@ -207,6 +274,50 @@ export default function ClassroomQuizPage() {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {})
       }
+    }
+  }
+
+  const handleWarning = async (type, details = {}) => {
+    if (!attempt?.id || attemptState !== 'active' || violationSentRef.current) return
+    const now = Date.now()
+    const lastSeenAt = warningTimestampsRef.current[type] || 0
+    if (now - lastSeenAt < 20000) return
+    warningTimestampsRef.current[type] = now
+
+    try {
+      const payload = await reportClassroomQuizWarning(token, classroomId, quizId, {
+        attempt_id: attempt.id,
+        warning_type: type,
+        details
+      })
+      if (payload?.attempt) {
+        setAttempt(payload.attempt)
+        setWarningCount(payload.warning_count || payload.attempt.violation_count || 0)
+      }
+      if (payload?.terminated) {
+        violationSentRef.current = true
+        setLatestWarning('AI proctoring detected repeated suspicious behaviour. Your attempt has been ended automatically.')
+        setError('This quiz was ended automatically after repeated AI proctoring warnings.')
+        if (payload?.attempt?.termination_reason === AI_DEBARMENT_REASON) {
+          setAttemptState('terminated')
+        } else {
+          setAttemptState('terminated')
+        }
+        stopCamera()
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {})
+        }
+        return
+      }
+
+      const warningMessages = {
+        ai_multiple_faces: 'AI warning: more than one face was detected in the frame.',
+        ai_face_missing: 'AI warning: your face is not clearly visible to the camera.',
+        ai_looking_down: 'AI warning: possible off-screen or phone glance detected.'
+      }
+      setLatestWarning(warningMessages[type] || 'AI proctoring warning recorded.')
+    } catch (_err) {
+      // Keep the quiz active if the warning endpoint is temporarily unavailable.
     }
   }
 
@@ -247,6 +358,48 @@ export default function ClassroomQuizPage() {
     if (quiz.availability_state === 'closed') return 'Closed'
     return 'Open'
   }, [quiz])
+
+  useEffect(() => {
+    if (attemptState !== 'active' || !quiz?.proctoring_enabled || !attempt?.id) return undefined
+    if (typeof window === 'undefined' || !('FaceDetector' in window) || !videoRef.current) return undefined
+
+    const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 2 })
+    let cancelled = false
+
+    const analyzeFrame = async () => {
+      if (cancelled || !videoRef.current || videoRef.current.readyState < 2) return
+      try {
+        const faces = await detector.detect(videoRef.current)
+        if (!faces?.length) {
+          await handleWarning('ai_face_missing', { reason: 'no_face_detected' })
+          return
+        }
+        if (faces.length > 1) {
+          await handleWarning('ai_multiple_faces', { detected_faces: faces.length })
+          return
+        }
+
+        const box = faces[0].boundingBox
+        if (box && videoRef.current.videoHeight) {
+          const faceMidY = box.y + box.height / 2
+          if (faceMidY > videoRef.current.videoHeight * 0.72) {
+            await handleWarning('ai_looking_down', {
+              face_mid_y: faceMidY,
+              frame_height: videoRef.current.videoHeight
+            })
+          }
+        }
+      } catch (_err) {
+        // Ignore detector errors and keep the quiz session alive.
+      }
+    }
+
+    const interval = window.setInterval(analyzeFrame, 7000)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [attemptState, quiz?.proctoring_enabled, attempt?.id])
 
   return (
     <ClassroomShell classroom={classroom} activeTab="classwork" isLoading={loading} error={error}>
@@ -295,10 +448,20 @@ export default function ClassroomQuizPage() {
               <p className="mt-3 text-sm leading-7 text-slate-600">
                 You must stay in fullscreen, keep this tab visible, and keep your camera on while the quiz is active. Breaking a proctoring rule ends the quiz automatically.
               </p>
+              {attempt?.status === 'submitted' && quiz?.can_start && (
+                <div className="mt-4 rounded-xl border border-[#d8c1aa] bg-[#f7ecdf] px-4 py-3 text-[#6d472d]">
+                  Your previous attempt has already been submitted. Because this quiz is still open, you can start a fresh monitored attempt.
+                </div>
+              )}
+              {attempt?.status === 'terminated' && quiz?.can_start && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+                  A previous attempt was terminated. You can start a fresh monitored attempt while this quiz is still open.
+                </div>
+              )}
               {cameraError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{cameraError}</div>}
               <div className="mt-6 flex flex-wrap gap-3">
-                <button type="button" className="btn btn-primary" onClick={handleStart} disabled={starting || quiz?.availability_state !== 'published'}>
-                  {starting ? 'Starting...' : 'Start Classroom Quiz'}
+                <button type="button" className="btn btn-primary" onClick={handleStart} disabled={starting || !quiz?.can_start}>
+                  {starting ? 'Starting...' : attempt?.status === 'in_progress' ? 'Resume Classroom Quiz' : attempt?.status ? 'Start New Attempt' : 'Start Classroom Quiz'}
                 </button>
                 <Link href={`/classrooms/${classroomId}/classwork`} className="btn btn-outline">Back to Classwork</Link>
               </div>
@@ -361,6 +524,7 @@ export default function ClassroomQuizPage() {
                   )}
                 </div>
               </div>
+              {latestWarning && <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{latestWarning}</div>}
             </div>
           )}
 
@@ -415,7 +579,8 @@ export default function ClassroomQuizPage() {
               </div>
               {attemptState === 'active' && (
                 <div className="surface-subtle p-4 text-sm text-slate-700">
-                  {answeredCount} of {questions.length} answered
+                  <div>{answeredCount} of {questions.length} answered</div>
+                  <div className="mt-2 font-semibold text-[#8a5a36]">{warningCount} of 3 AI warnings used</div>
                 </div>
               )}
             </div>

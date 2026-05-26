@@ -384,6 +384,18 @@ class ClassroomQuizViolationCreate(BaseModel):
     details: Optional[dict] = None
 
 
+class ClassroomQuizHeartbeatCreate(BaseModel):
+    """Keep an in-progress classroom quiz attempt marked as active."""
+    attempt_id: str
+
+
+class ClassroomQuizWarningCreate(BaseModel):
+    """Report an AI-assisted proctoring warning before debarment."""
+    attempt_id: str
+    warning_type: str
+    details: Optional[dict] = None
+
+
 class ReinforcementLessonCreate(BaseModel):
     """Assign a reinforcement lesson."""
     title: str
@@ -411,6 +423,32 @@ class LiveSessionCreate(BaseModel):
     classroom_id: Optional[str] = None
     meeting_url: Optional[str] = None
     resource_document_ids: Optional[List[str]] = None
+
+
+class ClassroomMeetingCreate(BaseModel):
+    """Teacher schedules a classroom-native live meeting."""
+    title: str
+    description: Optional[str] = None
+    scheduled_start: datetime
+    scheduled_end: datetime
+
+
+class ClassroomMeetingResponse(BaseModel):
+    """Serialized classroom-native live meeting."""
+    id: str
+    classroom_id: str
+    title: str
+    description: Optional[str] = None
+    scheduled_start: datetime
+    scheduled_end: datetime
+    created_by_teacher_id: str
+    meeting_token: Optional[str] = None
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class ClassroomLiveScheduleCreate(BaseModel):

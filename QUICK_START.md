@@ -37,11 +37,13 @@ npm run dev -- --hostname 127.0.0.1 --port 3000
 3. Upload a material file
 4. Test Learning Chat
 5. Test Start Quiz
-6. Test Classrooms
+6. Test Classrooms with an invite code
 7. Test Educator Quiz Maker
+8. Test Classroom Live meeting room
 
 ## Infrastructure note
 
 - If `DATABASE_URL` is unset, the backend falls back to local SQLite.
 - If `DATABASE_URL` is set correctly, the backend uses Supabase/Postgres.
 - Qdrant is optional for local startup but supported by the app.
+- TURN env vars are placeholders for production-ready classroom meeting relay.

@@ -56,10 +56,14 @@ export default function ClassroomsHomePage() {
     setError('')
     setSuccess('')
     try {
-      const payload = await joinClassroom(token, joinCode)
+      const normalizedCode = joinCode.trim().toUpperCase()
+      if (!normalizedCode) {
+        throw new Error('Enter a valid classroom invite code')
+      }
+      const payload = await joinClassroom(token, normalizedCode)
       setSuccess(payload.message || 'Joined classroom successfully.')
       setJoinCode('')
-      await loadPage()
+      await router.push(`/classrooms/${payload.classroom_id}/stream`)
     } catch (err) {
       setError(err.message || 'Could not join classroom')
     } finally {

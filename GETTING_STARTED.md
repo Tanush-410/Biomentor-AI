@@ -39,6 +39,7 @@ npm run dev -- --hostname 127.0.0.1 --port 3000
 - Supabase/Postgres if `DATABASE_URL` is provided
 - Qdrant if `QDRANT_URL` is configured
 - Groq if `GROQ_API_KEY` is configured
+- TURN placeholders for built-in classroom meetings
 
 ### Frontend
 
@@ -46,6 +47,9 @@ npm run dev -- --hostname 127.0.0.1 --port 3000
 
 ```env
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_TURN_URL=
+NEXT_PUBLIC_TURN_USERNAME=
+NEXT_PUBLIC_TURN_CREDENTIAL=
 ```
 
 ## First smoke test
@@ -57,6 +61,7 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 5. try Start Quiz
 6. open Classrooms
 7. open Educator Quiz Maker
+8. open Classroom Live and join a meeting room
 
 ## If Supabase is unreachable
 

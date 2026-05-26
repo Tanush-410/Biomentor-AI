@@ -1,18 +1,22 @@
 """Shared classroom hub routes for student and educator flows."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import secrets
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 
+from app.core import settings
 from app.database import get_db
 from app.database.models import (
     Classroom,
     ClassroomAnnouncement,
     ClassroomAssignment,
     ClassroomEnrollment,
+    ClassroomLiveMeeting,
     ClassroomQuiz,
     ClassroomQuizAttempt,
     ClassroomQuizViolation,
@@ -32,8 +36,12 @@ from app.routers.auth import get_current_user, require_roles
 from app.schemas import (
     ClassroomAnnouncementCreate,
     ClassroomAssignmentCreate,
+    ClassroomEnrollmentJoin,
+    ClassroomQuizHeartbeatCreate,
+    ClassroomMeetingCreate,
     ClassroomQuizAttemptSubmit,
     ClassroomQuizCreate,
+    ClassroomQuizWarningCreate,
     ClassroomLiveScheduleCreate,
     ClassroomMaterialShareCreate,
     ClassroomThreadCreate,
@@ -54,8 +62,10 @@ from app.services.classroom_hub import (
     get_thread_for_user,
     list_classroom_students,
 )
+from app.services.meeting_signaling import MeetingSignalingManager
 
 router = APIRouter(prefix="/api/classrooms", tags=["classrooms"])
+meeting_signaling_manager = MeetingSignalingManager()
 
 
 @router.get("/notifications")
@@ -172,6 +182,44 @@ async def list_classrooms(
             for classroom in classrooms
         ]
     }
+
+
+@router.post("/join")
+async def join_classroom(
+    payload: ClassroomEnrollmentJoin,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Join a classroom using an invite code from the shared classroom module."""
+    invite_code = payload.invite_code.strip().upper()
+    if not invite_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Enter a valid classroom invite code.")
+
+    classroom = db.query(Classroom).filter(Classroom.invite_code == invite_code, Classroom.is_active == True).first()  # noqa: E712
+    if not classroom:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite code not found")
+
+    existing = (
+        db.query(ClassroomEnrollment)
+        .filter(
+            ClassroomEnrollment.classroom_id == classroom.id,
+            ClassroomEnrollment.student_id == current_user.id,
+        )
+        .first()
+    )
+    if existing:
+        if existing.status != "active":
+            existing.status = "active"
+            existing.joined_at = datetime.utcnow()
+            current_user.class_code = classroom.invite_code
+            db.commit()
+        return {"message": "You are already enrolled in this classroom.", "classroom_id": classroom.id}
+
+    enrollment = ClassroomEnrollment(classroom_id=classroom.id, student_id=current_user.id, status="active")
+    db.add(enrollment)
+    current_user.class_code = classroom.invite_code
+    db.commit()
+    return {"message": "Joined classroom successfully.", "classroom_id": classroom.id}
 
 
 @router.get("/{classroom_id}")
@@ -601,9 +649,6 @@ async def start_classroom_quiz(
         .order_by(ClassroomQuizAttempt.created_at.desc())
         .first()
     )
-    if attempt and attempt.status in {"submitted", "terminated"}:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You have already finished this classroom quiz.")
-
     if attempt and attempt.status == "in_progress" and attempt.quiz_session_id:
         questions = load_session_questions(db, attempt.quiz_session_id, current_user.id)
         if questions:
@@ -612,6 +657,8 @@ async def start_classroom_quiz(
                 "quiz": serialize_classroom_quiz(quiz, document, educator, current_user, db),
                 "questions": sanitize_questions_for_student(questions),
             }
+    elif attempt and attempt.status in {"submitted", "terminated"}:
+        attempt = None
 
     session = QuizSession(
         user_id=current_user.id,
@@ -669,6 +716,97 @@ async def start_classroom_quiz(
         "attempt": serialize_quiz_attempt(attempt),
         "quiz": serialize_classroom_quiz(quiz, document, educator, current_user, db),
         "questions": sanitize_questions_for_student(questions),
+    }
+
+
+@router.post("/{classroom_id}/quizzes/{quiz_id}/heartbeat")
+async def heartbeat_classroom_quiz(
+    classroom_id: str,
+    quiz_id: str,
+    payload: ClassroomQuizHeartbeatCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Keep an active classroom quiz attempt alive while proctoring is in progress."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    quiz, _, _ = get_classroom_quiz_row(db, classroom.id, quiz_id)
+    attempt = get_quiz_attempt_for_student(db, quiz.id, payload.attempt_id, current_user.id)
+    if attempt.status != "in_progress":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This classroom quiz attempt is not active.")
+
+    attempt.last_heartbeat_at = datetime.utcnow()
+    session = db.query(QuizSession).filter(QuizSession.id == attempt.quiz_session_id).first()
+    if session and quiz.proctoring_enabled:
+        session.proctoring_status = "active"
+
+    db.commit()
+    db.refresh(attempt)
+    return {"message": "Heartbeat recorded.", "attempt": serialize_quiz_attempt(attempt)}
+
+
+@router.post("/{classroom_id}/quizzes/{quiz_id}/warning")
+async def report_quiz_warning(
+    classroom_id: str,
+    quiz_id: str,
+    payload: ClassroomQuizWarningCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Record an AI-assisted proctoring warning and debar after repeated suspicious behavior."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    quiz, _, educator = get_classroom_quiz_row(db, classroom.id, quiz_id)
+    attempt = get_quiz_attempt_for_student(db, quiz.id, payload.attempt_id, current_user.id)
+    if attempt.status != "in_progress":
+        return {
+            "message": "Attempt already closed.",
+            "attempt": serialize_quiz_attempt(attempt),
+            "warning_count": attempt.violation_count or 0,
+            "terminated": attempt.status == "terminated",
+        }
+
+    warning_count = (attempt.violation_count or 0) + 1
+    should_terminate = warning_count >= 3
+    warning = ClassroomQuizViolation(
+        classroom_quiz_id=quiz.id,
+        attempt_id=attempt.id,
+        classroom_id=classroom.id,
+        student_id=current_user.id,
+        violation_type=payload.warning_type,
+        details=payload.details or {},
+        action_taken="terminated" if should_terminate else "warning",
+    )
+    db.add(warning)
+    attempt.violation_count = warning_count
+
+    session = db.query(QuizSession).filter(QuizSession.id == attempt.quiz_session_id).first()
+    if should_terminate:
+        attempt.status = "terminated"
+        attempt.termination_reason = "ai_proctoring_debarred"
+        attempt.ended_at = datetime.utcnow()
+        if session:
+            session.is_completed = True
+            session.completed_at = datetime.utcnow()
+            session.proctoring_status = "terminated"
+            session.terminated_reason = "ai_proctoring_debarred"
+    elif session and quiz.proctoring_enabled:
+        session.proctoring_status = "warning"
+
+    db.commit()
+    if should_terminate:
+        await notify_educator_of_violation(db, classroom, quiz, educator, current_user, attempt, warning)
+        return {
+            "message": "Quiz terminated after repeated AI proctoring warnings.",
+            "attempt": serialize_quiz_attempt(attempt),
+            "warning_count": warning_count,
+            "terminated": True,
+        }
+
+    await notify_educator_of_warning(db, classroom, quiz, educator, current_user, attempt, warning, warning_count)
+    return {
+        "message": "AI proctoring warning recorded.",
+        "attempt": serialize_quiz_attempt(attempt),
+        "warning_count": warning_count,
+        "terminated": False,
     }
 
 
@@ -941,6 +1079,261 @@ async def post_thread_message(
     return {"message": "Thread message sent.", "message_id": message.id}
 
 
+@router.post("/{classroom_id}/meetings")
+async def create_classroom_meeting(
+    classroom_id: str,
+    payload: ClassroomMeetingCreate,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Teacher schedules a classroom-native live meeting."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    if payload.scheduled_end <= payload.scheduled_start:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Meeting end time must be after the start time.")
+
+    meeting = ClassroomLiveMeeting(
+        classroom_id=classroom.id,
+        title=payload.title,
+        description=payload.description,
+        scheduled_start=payload.scheduled_start,
+        scheduled_end=payload.scheduled_end,
+        created_by_teacher_id=current_user.id,
+        meeting_token=secrets.token_urlsafe(16),
+        status="scheduled",
+    )
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+
+    announcement = ClassroomAnnouncement(
+        classroom_id=classroom.id,
+        author_id=current_user.id,
+        title=payload.title,
+        content=payload.description or "A classroom meeting has been scheduled.",
+        post_type="live_meeting",
+    )
+    db.add(announcement)
+    db.commit()
+
+    student_ids = [student.id for _, student in list_classroom_students(db, classroom.id)]
+    create_notifications(
+        db,
+        student_ids,
+        classroom.id,
+        "classroom_meeting_scheduled",
+        payload.title,
+        payload.description or "A classroom meeting has been scheduled.",
+        f"/classrooms/{classroom.id}/live",
+    )
+    return {"message": "Meeting scheduled.", "meeting": serialize_classroom_meeting(meeting)}
+
+
+@router.get("/{classroom_id}/meetings")
+async def list_classroom_meetings(
+    classroom_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List classroom-native meetings visible to classroom members."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meetings = (
+        db.query(ClassroomLiveMeeting)
+        .filter(ClassroomLiveMeeting.classroom_id == classroom.id)
+        .order_by(ClassroomLiveMeeting.scheduled_start.asc(), ClassroomLiveMeeting.created_at.desc())
+        .all()
+    )
+    return {
+        "classroom": {"id": classroom.id, "name": classroom.name},
+        "meetings": [serialize_classroom_meeting(meeting, reveal_token=current_user.role in {"educator", "admin"}) for meeting in meetings],
+    }
+
+
+@router.get("/{classroom_id}/meetings/{meeting_id}")
+async def get_classroom_meeting_detail(
+    classroom_id: str,
+    meeting_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return one classroom live meeting."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    can_join = meeting.status == "live" or current_user.role in {"educator", "admin"}
+    return {
+        "classroom": {"id": classroom.id, "name": classroom.name},
+        "meeting": serialize_classroom_meeting(meeting, reveal_token=current_user.role in {"educator", "admin"}),
+        "can_join": can_join,
+    }
+
+
+@router.post("/{classroom_id}/meetings/{meeting_id}/start")
+async def start_classroom_meeting(
+    classroom_id: str,
+    meeting_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Teacher starts a scheduled classroom meeting."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    if meeting.status == "ended":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This meeting has already ended.")
+
+    meeting.status = "live"
+    meeting.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(meeting)
+
+    student_ids = [student.id for _, student in list_classroom_students(db, classroom.id)]
+    create_notifications(
+        db,
+        student_ids,
+        classroom.id,
+        "classroom_meeting_started",
+        meeting.title,
+        meeting.description or "Your educator started a classroom meeting.",
+        f"/classrooms/{classroom.id}/live/{meeting.id}/room",
+    )
+    return {"message": "Meeting started.", "meeting": serialize_classroom_meeting(meeting, reveal_token=True)}
+
+
+@router.post("/{classroom_id}/meetings/{meeting_id}/end")
+async def end_classroom_meeting(
+    classroom_id: str,
+    meeting_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Teacher ends a live classroom meeting."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    meeting.status = "ended"
+    meeting.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(meeting)
+
+    await meeting_signaling_manager.broadcast(
+        meeting.id,
+        {
+            "type": "end_meeting",
+            "meeting_id": meeting.id,
+            "ended_by": current_user.id,
+        },
+    )
+    return {"message": "Meeting ended.", "meeting": serialize_classroom_meeting(meeting, reveal_token=True)}
+
+
+@router.websocket("/ws/meetings/{meeting_id}")
+async def classroom_meeting_socket(
+    websocket: WebSocket,
+    meeting_id: str,
+    token: Optional[str] = Query(default=None),
+):
+    """WebSocket signaling channel for classroom-native WebRTC meetings."""
+    db = next(get_db())
+    current_user = None
+    meeting = None
+    try:
+        if not token:
+            await websocket.close(code=4401)
+            return
+        current_user = get_user_from_token(db, token)
+        meeting = db.query(ClassroomLiveMeeting).filter(ClassroomLiveMeeting.id == meeting_id).first()
+        if not meeting:
+            await websocket.close(code=4404)
+            return
+        get_accessible_classroom(db, meeting.classroom_id, current_user)
+        if meeting.status not in {"scheduled", "live"}:
+            await websocket.close(code=4403)
+            return
+        if current_user.role == "student" and meeting.status != "live":
+            await websocket.close(code=4403)
+            return
+
+        participant = {
+            "user_id": current_user.id,
+            "full_name": current_user.full_name,
+            "role": current_user.role,
+        }
+        await meeting_signaling_manager.connect(meeting.id, current_user.id, websocket, participant)
+        await websocket.send_json(
+            {
+                "type": "meeting_state",
+                "meeting_id": meeting.id,
+                "participants": meeting_signaling_manager.list_participants(meeting.id),
+                "status": meeting.status,
+            }
+        )
+
+        while True:
+            payload = await websocket.receive_json()
+            event_type = payload.get("type")
+            target_user_id = payload.get("target_user_id")
+
+            if event_type == "join_meeting":
+                await meeting_signaling_manager.broadcast(
+                    meeting.id,
+                    {
+                        "type": "user_joined",
+                        "meeting_id": meeting.id,
+                        "participant": participant,
+                    },
+                    exclude_user_id=current_user.id,
+                )
+            elif event_type in {"offer", "answer", "ice_candidate"} and target_user_id:
+                await meeting_signaling_manager.send_to(
+                    meeting.id,
+                    target_user_id,
+                    {
+                        "type": event_type,
+                        "meeting_id": meeting.id,
+                        "from_user_id": current_user.id,
+                        "payload": payload.get("payload"),
+                    },
+                )
+            elif event_type in {"mute_status", "camera_status"}:
+                await meeting_signaling_manager.broadcast(
+                    meeting.id,
+                    {
+                        "type": event_type,
+                        "meeting_id": meeting.id,
+                        "from_user_id": current_user.id,
+                        "payload": payload.get("payload"),
+                    },
+                    exclude_user_id=current_user.id,
+                )
+            elif event_type == "end_meeting":
+                if current_user.role not in {"educator", "admin"}:
+                    await websocket.send_json({"type": "error", "detail": "Only teachers can end meetings."})
+                    continue
+                meeting.status = "ended"
+                meeting.updated_at = datetime.utcnow()
+                db.commit()
+                await meeting_signaling_manager.broadcast(
+                    meeting.id,
+                    {
+                        "type": "end_meeting",
+                        "meeting_id": meeting.id,
+                        "ended_by": current_user.id,
+                    },
+                )
+                break
+    except WebSocketDisconnect:
+        pass
+    finally:
+        if current_user and meeting:
+            meeting_signaling_manager.disconnect(meeting.id, current_user.id)
+            await meeting_signaling_manager.broadcast(
+                meeting.id,
+                {
+                    "type": "user_left",
+                    "meeting_id": meeting.id,
+                    "user_id": current_user.id,
+                },
+            )
+        db.close()
+
+
 @router.get("/{classroom_id}/live")
 async def get_live_page(
     classroom_id: str,
@@ -1081,8 +1474,64 @@ def serialize_live_session(session: LiveSession | None) -> dict | None:
     }
 
 
+def serialize_classroom_meeting(meeting: ClassroomLiveMeeting | None, reveal_token: bool = False) -> dict | None:
+    if not meeting:
+        return None
+    return {
+        "id": meeting.id,
+        "classroom_id": meeting.classroom_id,
+        "title": meeting.title,
+        "description": meeting.description,
+        "scheduled_start": meeting.scheduled_start.isoformat() if meeting.scheduled_start else None,
+        "scheduled_end": meeting.scheduled_end.isoformat() if meeting.scheduled_end else None,
+        "created_by_teacher_id": meeting.created_by_teacher_id,
+        "meeting_token": meeting.meeting_token if reveal_token else None,
+        "status": meeting.status,
+        "created_at": meeting.created_at.isoformat(),
+        "updated_at": meeting.updated_at.isoformat(),
+    }
+
+
+def get_classroom_meeting(db: Session, classroom_id: str, meeting_id: str) -> ClassroomLiveMeeting:
+    meeting = (
+        db.query(ClassroomLiveMeeting)
+        .filter(
+            ClassroomLiveMeeting.id == meeting_id,
+            ClassroomLiveMeeting.classroom_id == classroom_id,
+        )
+        .first()
+    )
+    if not meeting:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
+    return meeting
+
+
+def get_user_from_token(db: Session, token: str) -> User:
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    return user
+
+
 def resolve_quiz_status(available_from: datetime | None, available_until: datetime | None) -> str:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
+    if available_from and available_from.tzinfo is None:
+        available_from = available_from.replace(tzinfo=timezone.utc)
+    elif available_from:
+        available_from = available_from.astimezone(timezone.utc)
+    if available_until and available_until.tzinfo is None:
+        available_until = available_until.replace(tzinfo=timezone.utc)
+    elif available_until:
+        available_until = available_until.astimezone(timezone.utc)
     if available_until and available_until <= now:
         return "closed"
     if available_from and available_from > now:
@@ -1182,7 +1631,7 @@ def serialize_classroom_quiz(
         ),
         "educator": serialize_user(educator),
         "attempt": serialize_quiz_attempt(attempt) if include_attempt else None,
-        "can_start": viewer.role == "student" and availability == "published" and (not attempt or attempt.status == "in_progress"),
+        "can_start": viewer.role == "student" and availability == "published",
         "created_at": quiz.created_at.isoformat(),
     }
 
@@ -1437,6 +1886,56 @@ async def notify_educator_of_violation(
                     "student_name": student.full_name,
                     "title": quiz.title,
                     "violation_type": violation.violation_type,
+                    "created_at": violation.created_at.isoformat(),
+                },
+            },
+        )
+    except Exception:
+        return
+
+
+async def notify_educator_of_warning(
+    db: Session,
+    classroom: Classroom,
+    quiz: ClassroomQuiz,
+    educator: User | None,
+    student: User,
+    attempt: ClassroomQuizAttempt,
+    violation: ClassroomQuizViolation,
+    warning_count: int,
+) -> None:
+    title = f"AI warning in {classroom.name}"
+    body = (
+        f"{student.full_name} triggered {violation.violation_type} during {quiz.title}. "
+        f"Warning {warning_count} of 3 has been recorded."
+    )
+    create_notifications(
+        db,
+        [classroom.educator_id],
+        classroom.id,
+        "classroom_quiz_warning",
+        title,
+        body,
+        f"/classrooms/{classroom.id}/quiz/{quiz.id}",
+    )
+
+    try:
+        from app.routers.educator import notification_manager
+
+        await notification_manager.notify(
+            classroom.educator_id,
+            {
+                "type": "quiz_warning",
+                "violation": {
+                    "quiz_id": quiz.id,
+                    "attempt_id": attempt.id,
+                    "classroom_id": classroom.id,
+                    "classroom_name": classroom.name,
+                    "student_id": student.id,
+                    "student_name": student.full_name,
+                    "title": quiz.title,
+                    "violation_type": violation.violation_type,
+                    "warning_count": warning_count,
                     "created_at": violation.created_at.isoformat(),
                 },
             },

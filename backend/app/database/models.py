@@ -416,6 +416,24 @@ class LiveSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class ClassroomLiveMeeting(Base):
+    """Classroom-native scheduled or live WebRTC meeting."""
+
+    __tablename__ = "classroom_live_meetings"
+
+    id = Column(String, primary_key=True, default=new_id)
+    classroom_id = Column(String, ForeignKey("classrooms.id"), nullable=False, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    scheduled_start = Column(DateTime, nullable=False, index=True)
+    scheduled_end = Column(DateTime, nullable=False)
+    created_by_teacher_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    meeting_token = Column(String, nullable=False, unique=True, index=True)
+    status = Column(String, default="scheduled", nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class LiveSessionParticipant(Base):
     """Tracks who joined a live session."""
 

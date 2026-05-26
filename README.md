@@ -16,21 +16,22 @@ The project includes:
 - read documents in-app with offline-friendly access
 - ask material-grounded questions in Learning Chat
 - generate quizzes from uploaded material
-- take classroom quizzes
+- join classrooms with invite codes
+- take classroom quizzes with protected attempts
 - track progress across practice activity
-- participate in classrooms, live sessions, and educator communication
+- participate in classrooms, built-in live meetings, and educator communication
 
 ### Educator experience
 - manage classrooms with dedicated pages
 - post public announcements to a class
 - send private teacher-student messages
 - share class materials
-- schedule and start live sessions using meeting links
+- schedule and run built-in classroom meetings
 - create quizzes in dual mode:
   - generate from material
   - build manually with answer keys
 - schedule quizzes for classrooms
-- use proctored classroom quiz flows
+- use proctored classroom quiz flows with warning/debar support
 - monitor student progress, alerts, and intervention signals
 
 ## Core Features
@@ -50,6 +51,10 @@ The project includes:
 - material-based quiz generation
 - manual quiz authoring with answer-key autograding
 - classroom quiz scheduling
+- built-in WebRTC classroom meetings with FastAPI signaling
+- dedicated meeting room route for live classes
+- invite-code classroom enrollment
+- AI-assisted browser-side proctoring warnings and auto-debar after repeated violations
 - circular progress indicators across major student and educator pages
 
 ## Project Structure
@@ -89,6 +94,7 @@ The project includes:
 - SQLite fallback for local development
 - Qdrant for vector storage and retrieval
 - Groq for LLM-backed answer and question generation
+- WebRTC mesh calls for built-in classroom meetings
 
 ## Local Setup
 
@@ -132,6 +138,7 @@ If you want hosted infra:
 - set `SUPABASE_SERVICE_KEY`
 - set `QDRANT_URL`
 - set `QDRANT_API_KEY` if needed
+- set `TURN_URL`, `TURN_USERNAME`, and `TURN_CREDENTIAL` for production-grade meeting relay support
 
 ### Start backend
 
@@ -158,6 +165,9 @@ cp .env.example .env.local
 
 ```env
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_TURN_URL=
+NEXT_PUBLIC_TURN_USERNAME=
+NEXT_PUBLIC_TURN_CREDENTIAL=
 ```
 
 ### Start frontend
@@ -212,6 +222,9 @@ Set in `backend/.env`:
 ```env
 QDRANT_URL=https://your-qdrant-endpoint
 QDRANT_API_KEY=your_qdrant_api_key
+TURN_URL=
+TURN_USERNAME=
+TURN_CREDENTIAL=
 ```
 
 The app is structured to use Qdrant-backed retrieval when available, with safer fallback behavior when vector search is unavailable.
@@ -240,6 +253,7 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 - `/classrooms/[id]/people`
 - `/classrooms/[id]/messages`
 - `/classrooms/[id]/live`
+- `/classrooms/[id]/live/[meetingId]/room`
 
 ### Educator pages
 - `/educator/quiz-maker`
@@ -258,6 +272,15 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 - `/api/classrooms`
 - `/api/educator`
 - `/api/collaboration`
+
+## What to Demo First
+
+1. Register one educator and one student
+2. Create a classroom as educator
+3. Join that classroom as student using the invite code
+4. Publish a classroom quiz from Educator Quiz Maker
+5. Open the same classroom as student and start the protected quiz
+6. Start a built-in live meeting from the classroom `Live` tab
 
 ## Testing and Verification
 

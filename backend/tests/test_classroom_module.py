@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 
@@ -11,6 +12,7 @@ if BACKEND_ROOT not in sys.path:
     sys.path.insert(0, BACKEND_ROOT)
 
 from app.main import app  # noqa: E402
+from app.routers.classrooms import resolve_quiz_status  # noqa: E402
 from app.database.models import (  # noqa: E402
     ClassroomAnnouncement,
     ClassroomAssignment,
@@ -59,6 +61,14 @@ class ClassroomRouteTest(unittest.TestCase):
         self.assertNotEqual(start_response.status_code, 404)
         self.assertNotEqual(submit_response.status_code, 404)
         self.assertNotEqual(violation_response.status_code, 404)
+
+
+class ClassroomQuizSchedulingTest(unittest.TestCase):
+    def test_resolve_quiz_status_accepts_timezone_aware_datetimes(self):
+        now = datetime.now(timezone.utc)
+        self.assertEqual(resolve_quiz_status(now - timedelta(minutes=1), now + timedelta(minutes=30)), "published")
+        self.assertEqual(resolve_quiz_status(now + timedelta(minutes=30), now + timedelta(minutes=60)), "scheduled")
+        self.assertEqual(resolve_quiz_status(now - timedelta(minutes=60), now - timedelta(minutes=30)), "closed")
 
 
 if __name__ == "__main__":

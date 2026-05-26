@@ -90,6 +90,20 @@ export function reportClassroomQuizViolation(token, classroomId, quizId, payload
   })
 }
 
+export function reportClassroomQuizWarning(token, classroomId, quizId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/quizzes/${quizId}/warning`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function heartbeatClassroomQuizAttempt(token, classroomId, quizId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/quizzes/${quizId}/heartbeat`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
 export function getClassroomPeople(token, classroomId) {
   return classroomRequest(`/api/classrooms/${classroomId}/people`, token)
 }
@@ -118,6 +132,35 @@ export function postClassroomThreadMessage(token, classroomId, threadId, payload
 
 export function getClassroomLive(token, classroomId) {
   return classroomRequest(`/api/classrooms/${classroomId}/live`, token)
+}
+
+export function listClassroomMeetings(token, classroomId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings`, token)
+}
+
+export function createClassroomMeeting(token, classroomId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function getClassroomMeeting(token, classroomId, meetingId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}`, token)
+}
+
+export function startClassroomMeeting(token, classroomId, meetingId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/start`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export function endClassroomMeeting(token, classroomId, meetingId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/end`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
 }
 
 export function scheduleClassroomLive(token, classroomId, payload) {
