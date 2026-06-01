@@ -3,12 +3,14 @@ import { useRouter } from 'next/router'
 
 import AppShell from '../../components/AppShell'
 import CircularProgress from '../../components/CircularProgress'
+import { CopilotRecommendationCard, EducatorCopilotPanel } from '../../components/EducatorCopilotPanel'
 import { useAuth } from '../../context/AuthContext'
 
 export default function ClassInsightsPage() {
   const router = useRouter()
   const { token, user, loading: authLoading } = useAuth()
   const [insights, setInsights] = useState(null)
+  const [copilot, setCopilot] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -26,14 +28,21 @@ export default function ClassInsightsPage() {
 
   const loadInsights = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/class-insights`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const [response, copilotResponse] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/class-insights`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/copilot/class-insights`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ])
       const payload = await response.json().catch(() => ({}))
+      const copilotPayload = await copilotResponse.json().catch(() => ({}))
       if (!response.ok) {
         throw new Error(payload.detail || 'Could not load class insights')
       }
       setInsights(payload)
+      setCopilot(copilotResponse.ok ? copilotPayload : null)
     } catch (err) {
       setError(err.message || 'Could not load class insights')
     }
@@ -86,19 +95,42 @@ export default function ClassInsightsPage() {
           </div>
         </div>
 
-        <div className="card p-6">
-          <h2 className="text-xl font-bold text-slate-950">Recommended Group Reviews</h2>
-          <div className="mt-5 space-y-3">
-            {(insights?.recommended_group_reviews || []).length === 0 ? (
-              <p className="text-slate-600">No group-review recommendations yet.</p>
-            ) : (
-              insights.recommended_group_reviews.map((item, index) => (
-                <div key={index} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700">
-                  {item}
-                </div>
-              ))
-            )}
-          </div>
+        <EducatorCopilotPanel
+          title="Copilot interpretation and group review guidance"
+          summary={copilot?.overview_summary}
+        >
+          {(copilot?.trend_explanations || []).length === 0 ? (
+            <div className="surface-subtle p-4 text-sm text-slate-600">
+              No copilot recommendations yet. Once quizzes generate topic-level trends, this panel will explain what to reteach next.
+            </div>
+          ) : (
+            (copilot?.trend_explanations || []).map((item) => (
+              <CopilotRecommendationCard key={`explanation-${item.topic}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
+            ))
+          )}
+          {(copilot?.group_review_recommendations || []).length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Group review recommendations</p>
+              {copilot.group_review_recommendations.map((item, index) => (
+                <CopilotRecommendationCard key={`recommendation-${item.topic}-${index}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
+              ))}
+            </div>
+          )}
+        </EducatorCopilotPanel>
+      </section>
+
+      <section className="card p-6">
+        <h2 className="text-xl font-bold text-slate-950">Recommended Group Reviews</h2>
+        <div className="mt-5 space-y-3">
+          {(insights?.recommended_group_reviews || []).length === 0 ? (
+            <p className="text-slate-600">No group-review recommendations yet.</p>
+          ) : (
+            insights.recommended_group_reviews.map((item, index) => (
+              <div key={index} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700">
+                {item}
+              </div>
+            ))
+          )}
         </div>
       </section>
     </AppShell>

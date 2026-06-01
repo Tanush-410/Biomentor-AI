@@ -25,6 +25,10 @@ export function getClassroom(token, classroomId) {
   return classroomRequest(`/api/classrooms/${classroomId}`, token)
 }
 
+export function getClassroomIntelligence(token, classroomId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/intelligence`, token)
+}
+
 export function getClassroomStream(token, classroomId) {
   return classroomRequest(`/api/classrooms/${classroomId}/stream`, token)
 }
@@ -60,6 +64,10 @@ export function listClassroomQuizzes(token, classroomId) {
 
 export function getClassroomQuiz(token, classroomId, quizId) {
   return classroomRequest(`/api/classrooms/${classroomId}/quizzes/${quizId}`, token)
+}
+
+export function getClassroomQuizProctorReview(token, classroomId, quizId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/quizzes/${quizId}/proctor-review`, token)
 }
 
 export function createClassroomQuiz(token, classroomId, payload) {
@@ -161,6 +169,28 @@ export function endClassroomMeeting(token, classroomId, meetingId) {
     method: 'POST',
     body: JSON.stringify({})
   })
+}
+
+export function postMeetingTranscript(token, classroomId, meetingId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/transcripts`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function postMeetingEvent(token, classroomId, meetingId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/events`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function getMeetingAssistantSnapshot(token, classroomId, meetingId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/assistant`, token)
+}
+
+export function getMeetingRecap(token, classroomId, meetingId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/recap`, token)
 }
 
 export function scheduleClassroomLive(token, classroomId, payload) {

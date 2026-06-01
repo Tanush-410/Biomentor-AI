@@ -4,6 +4,8 @@ import { useRouter } from 'next/router'
 import { BookOpen, Brain, Eye, HardDriveDownload, Trash2, Upload } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import MaterialIntelligencePanel from '../components/MaterialIntelligencePanel'
+import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 import { getOfflineDocument } from '../lib/offlineDocuments'
 
@@ -16,6 +18,8 @@ export default function DocumentsPage() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [coachMaterials, setCoachMaterials] = useState(null)
+  const [materialIntelligence, setMaterialIntelligence] = useState(null)
   const [uploadOptions, setUploadOptions] = useState({
     storageMode: 'full',
     selectedPages: ''
@@ -48,6 +52,8 @@ export default function DocumentsPage() {
         const docs = payload || []
         setDocuments(docs)
         hydrateOfflineStatus(docs)
+        loadStudyCoachMaterials()
+        loadMaterialIntelligence(docs)
       } else {
         setError('Failed to load your materials.')
       }
@@ -67,6 +73,39 @@ export default function DocumentsPage() {
       })
     )
     setOfflineStatus(Object.fromEntries(pairs))
+  }
+
+  const loadStudyCoachMaterials = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/materials`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const payload = await response.json()
+        setCoachMaterials(payload)
+      }
+    } catch (err) {
+      console.error('Study coach materials load error:', err)
+    }
+  }
+
+  const loadMaterialIntelligence = async (docs = documents) => {
+    const targetDoc = docs?.[0]
+    if (!targetDoc) {
+      setMaterialIntelligence(null)
+      return
+    }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${targetDoc.id}/material-intelligence`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const payload = await response.json()
+        setMaterialIntelligence(payload)
+      }
+    } catch (err) {
+      console.error('Material intelligence load error:', err)
+    }
   }
 
   const handleFileUpload = async (event) => {
@@ -281,6 +320,42 @@ export default function DocumentsPage() {
             </div>
           )}
         </section>
+
+        <StudyCoachPanel
+          title="What to open next"
+          summary="The coach uses your weakest recent Bloom level to recommend which uploaded material to revisit first."
+          confidenceReason={coachMaterials?.confidence_reason}
+          actionLabel="Open Learning Chat"
+          actionHref="/learning-chat"
+        >
+          {(coachMaterials?.recommendations || []).length === 0 ? (
+            <div className="surface-subtle p-4 text-sm text-slate-600">
+              Upload a study file to let the coach recommend your next review target.
+            </div>
+          ) : (
+            coachMaterials.recommendations.map((item) => (
+              <div key={item.document_id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-950">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
+                    <p className="mt-3 text-sm font-medium text-[#6d472d]">{item.suggested_action}</p>
+                  </div>
+                  <Link href={`/document/${item.document_id}`} className="btn btn-outline shrink-0">
+                    Open Material
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </StudyCoachPanel>
+
+        <MaterialIntelligencePanel
+          intelligence={materialIntelligence}
+          title={materialIntelligence ? `${materialIntelligence.document_title} at a glance` : 'AI Material Intelligence'}
+          actionHref={materialIntelligence ? `/document/${materialIntelligence.document_id}` : null}
+          actionLabel="Open and Study"
+        />
     </AppShell>
   )
 }

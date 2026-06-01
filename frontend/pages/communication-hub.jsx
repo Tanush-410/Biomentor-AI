@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import AppShell from '../components/AppShell'
+import { CopilotDraftCard, EducatorCopilotPanel } from '../components/EducatorCopilotPanel'
 import { useAuth } from '../context/AuthContext'
 
 export default function CommunicationHubPage() {
@@ -9,6 +10,7 @@ export default function CommunicationHubPage() {
   const { token, user, loading: authLoading } = useAuth()
   const [messages, setMessages] = useState([])
   const [complaints, setComplaints] = useState([])
+  const [copilot, setCopilot] = useState(null)
   const [form, setForm] = useState({ subject: '', content: '', audience: 'student' })
   const [activeView, setActiveView] = useState('complaints')
   const [error, setError] = useState('')
@@ -62,7 +64,10 @@ export default function CommunicationHubPage() {
 
   const loadCommunications = async () => {
     try {
-      const [messagesResponse, complaintsResponse] = await Promise.all([
+      const [copilotResponse, messagesResponse, complaintsResponse] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/copilot/communication`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/messages`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
@@ -71,6 +76,7 @@ export default function CommunicationHubPage() {
         })
       ])
 
+      const copilotPayload = await copilotResponse.json().catch(() => ({}))
       const messagesPayload = await messagesResponse.json().catch(() => ({}))
       const complaintsPayload = await complaintsResponse.json().catch(() => ({}))
 
@@ -81,11 +87,20 @@ export default function CommunicationHubPage() {
         throw new Error(complaintsPayload.detail || 'Could not load complaints')
       }
 
+      setCopilot(copilotResponse.ok ? copilotPayload : null)
       setMessages(messagesPayload.messages || [])
       setComplaints(complaintsPayload.complaints || [])
     } catch (err) {
       setError(err.message || 'Could not load communications')
     }
+  }
+
+  const applyDraft = (draft) => {
+    setForm({
+      subject: draft.subject,
+      content: draft.draft_reply,
+      audience: draft.target_audience === 'classroom' ? 'classroom' : 'student'
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -230,6 +245,21 @@ export default function CommunicationHubPage() {
         </div>
 
         <div className="grid gap-6">
+          <EducatorCopilotPanel
+            title="Draft replies and handling guidance"
+            summary={(copilot?.queue_summary || []).join(' ')}
+          >
+            {(copilot?.drafts || []).length === 0 ? (
+              <div className="surface-subtle p-4 text-sm text-slate-600">
+                The copilot will surface draft-ready responses here as new complaints and student messages arrive.
+              </div>
+            ) : (
+              (copilot?.drafts || []).slice(0, 2).map((draft) => (
+                <CopilotDraftCard key={draft.id} draft={draft} onUseDraft={applyDraft} data-confidence-reason={draft.confidence_reason || ''} />
+              ))
+            )}
+          </EducatorCopilotPanel>
+
           <div className="card p-6">
             <p className="section-kicker text-[#8a5a36]">Compose update</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Send a class-wide or targeted response.</h2>

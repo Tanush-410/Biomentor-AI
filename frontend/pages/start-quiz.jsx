@@ -115,13 +115,13 @@ export default function StartQuizPage() {
   return (
     <AppShell
       title="Start a Bloom's Quiz"
-      description="Choose one uploaded material or mix across your library, then generate AI quiz questions aligned to the Bloom's level you want to practice."
+      description="Choose one uploaded material or mix across your library, then generate AI quiz questions aligned to the Bloom&apos;s level you want to practice."
       contentClassName="max-w-5xl space-y-8"
       actions={
         <>
           <Link href="/documents" className="btn btn-outline">Back to Materials</Link>
           {user?.role !== 'student' && (
-            <Link href="/check-difficulty" className="btn btn-outline">Bloom's Tools</Link>
+            <Link href="/check-difficulty" className="btn btn-outline">Bloom&apos;s Tools</Link>
           )}
         </>
       }

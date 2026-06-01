@@ -110,7 +110,7 @@ export default function QuizPage() {
 
             {/* Bloom's Level Selector */}
             <div>
-              <label className="block text-sm font-medium mb-2">Current Bloom's Level</label>
+              <label className="block text-sm font-medium mb-2">Current Bloom&apos;s Level</label>
               <select
                 value={bloomLevel}
                 onChange={(e) => setBloomLevel(Number(e.target.value))}
@@ -150,7 +150,7 @@ export default function QuizPage() {
         {/* Analysis Result */}
         {analyzeResult && (
           <div className="card p-6 mb-8 bg-[#f4e7d8] border-2 border-[#d5b698]">
-            <h3 className="text-2xl font-bold mb-4 text-[#5f3d26]">Identified Bloom's Level</h3>
+            <h3 className="text-2xl font-bold mb-4 text-[#5f3d26]">Identified Bloom&apos;s Level</h3>
             <div className="space-y-4">
               <div className="bg-white p-4 rounded-lg">
                 <p className="text-sm text-slate-600 mb-1">Current Level</p>
@@ -215,7 +215,7 @@ export default function QuizPage() {
 
         {/* Bloom's Reference */}
         <div className="card mt-12 border border-[#d8c0a6] bg-[#f8efe3] p-6">
-          <h3 className="font-bold text-lg mb-4">Bloom's Taxonomy Levels</h3>
+          <h3 className="font-bold text-lg mb-4">Bloom&apos;s Taxonomy Levels</h3>
           <div className="grid md:grid-cols-2 gap-4 text-sm">
             <div><strong className="text-[#7a4d2f]">Level 1 - Remember:</strong> Recall facts and definitions</div>
             <div><strong className="text-[#7a4d2f]">Level 2 - Understand:</strong> Explain concepts and ideas</div>

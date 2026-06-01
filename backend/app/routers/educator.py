@@ -15,6 +15,9 @@ from app.database import get_db
 from app.database.models import (
     Classroom,
     ClassroomEnrollment,
+    ClassroomQuiz,
+    ClassroomQuizAttempt,
+    ClassroomQuizViolation,
     CommunicationMessage,
     LiveSession,
     ReinforcementLesson,
@@ -28,11 +31,25 @@ from app.schemas import (
     ClassroomEnrollmentJoin,
     ClassroomResponse,
     CommunicationMessageCreate,
+    EducatorClassInsightsCopilotResponse,
+    EducatorCommunicationCopilotResponse,
+    EducatorCopilotDashboardResponse,
+    ProctorReviewResponse,
+    QuizQualityReviewRequest,
+    QuizQualityReviewResponse,
     ReinforcementLessonCreate,
     SupportComplaintCreate,
     TeacherDashboardResponse,
 )
+from app.services.educator_copilot import (
+    build_class_insights_copilot_payload,
+    build_communication_copilot_payload,
+    build_dashboard_copilot_payload,
+    load_educator_signal_context,
+)
 from app.services.learning_analytics import build_gap_list, build_progress_payload
+from app.services.proctor_review import build_proctor_review_payload, serialize_proctor_incident_row
+from app.services.quiz_quality import build_quiz_quality_review
 
 router = APIRouter(prefix="/api", tags=["educator"])
 
@@ -347,6 +364,43 @@ async def get_student_analytics(
         .order_by(ReinforcementLesson.created_at.desc())
         .all()
     )
+    proctor_rows = (
+        db.query(ClassroomQuizViolation, ClassroomQuizAttempt, ClassroomQuiz, Classroom, User)
+        .join(ClassroomQuizAttempt, ClassroomQuizAttempt.id == ClassroomQuizViolation.attempt_id)
+        .join(ClassroomQuiz, ClassroomQuiz.id == ClassroomQuizViolation.classroom_quiz_id)
+        .join(Classroom, Classroom.id == ClassroomQuiz.classroom_id)
+        .join(User, User.id == ClassroomQuizViolation.student_id)
+        .filter(
+            ClassroomQuizViolation.student_id == student_id,
+            Classroom.educator_id == current_user.id if current_user.role != "admin" else True,
+        )
+        .order_by(ClassroomQuizViolation.created_at.desc())
+        .all()
+    )
+    attempt_payloads = {}
+    incident_payloads = []
+    latest_quiz_title = proctor_rows[0][2].title if proctor_rows else "Proctoring record"
+    for violation, attempt, _quiz, _classroom, violation_student in proctor_rows:
+        attempt_payloads[attempt.id] = {
+            "id": attempt.id,
+            "student_id": violation_student.id,
+            "student_name": violation_student.full_name,
+            "status": attempt.status,
+            "violation_count": attempt.violation_count or 0,
+            "termination_reason": attempt.termination_reason,
+            "score": attempt.score,
+            "started_at": attempt.started_at.isoformat() if attempt.started_at else None,
+            "submitted_at": attempt.submitted_at.isoformat() if attempt.submitted_at else None,
+            "ended_at": attempt.ended_at.isoformat() if attempt.ended_at else None,
+        }
+        incident_payloads.append(serialize_proctor_incident_row(violation, attempt, violation_student))
+
+    proctoring_review = build_proctor_review_payload(
+        quiz={"id": f"student-{student.id}", "title": latest_quiz_title},
+        incidents=incident_payloads,
+        attempts=list(attempt_payloads.values()),
+        student_name=student.full_name,
+    )
     return {
         "student": {
             "id": student.id,
@@ -367,6 +421,7 @@ async def get_student_analytics(
             }
             for lesson in lessons
         ],
+        "proctoring_review": proctoring_review,
     }
 
 
@@ -431,6 +486,54 @@ async def get_class_insights(
             f"Schedule a group review on {trend['topic']}." for trend in trends[:3]
         ],
     }
+
+
+@router.get("/educator/copilot/dashboard", response_model=EducatorCopilotDashboardResponse)
+async def get_dashboard_copilot(
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return educator dashboard priorities and next-action suggestions."""
+    context = load_educator_signal_context(db, current_user.id)
+    return build_dashboard_copilot_payload(
+        student_snapshots=context["student_snapshots"],
+        complaints=context["complaints"],
+        meeting_summaries=context["meeting_summaries"],
+    )
+
+
+@router.get("/educator/copilot/communication", response_model=EducatorCommunicationCopilotResponse)
+async def get_communication_copilot(
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return draft-ready communication support for educator inboxes."""
+    context = load_educator_signal_context(db, current_user.id)
+    return build_communication_copilot_payload(
+        messages=context["messages"],
+        complaints=context["complaints"],
+    )
+
+
+@router.get("/educator/copilot/class-insights", response_model=EducatorClassInsightsCopilotResponse)
+async def get_class_insights_copilot(
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return plain-language class insights and review recommendations."""
+    context = load_educator_signal_context(db, current_user.id)
+    return build_class_insights_copilot_payload(
+        topic_trends=context["topic_trends"],
+    )
+
+
+@router.post("/educator/quiz-quality/review", response_model=QuizQualityReviewResponse)
+async def review_quiz_quality(
+    payload: QuizQualityReviewRequest,
+    current_user: User = Depends(require_roles("educator", "admin")),
+):
+    """Review a quiz draft and return AI quality guidance before publication."""
+    return QuizQualityReviewResponse(**build_quiz_quality_review(payload.model_dump()))
 
 
 @router.post("/educator/messages")

@@ -15,6 +15,7 @@ The project includes:
 - upload study material and reopen it later
 - read documents in-app with offline-friendly access
 - ask material-grounded questions in Learning Chat
+- fall back to trusted web sources automatically when uploaded material is insufficient
 - generate quizzes from uploaded material
 - join classrooms with invite codes
 - take classroom quizzes with protected attempts
@@ -36,7 +37,8 @@ The project includes:
 
 ## Core Features
 
-- AI learning chat grounded in uploaded material
+- AI learning chat grounded in uploaded material with automatic trusted-web fallback
+- adaptive Quick Check mini-tests with short targeted feedback
 - offline-friendly document viewing
 - document upload and delete flows
 - classroom hub with:
@@ -95,6 +97,7 @@ The project includes:
 - Qdrant for vector storage and retrieval
 - Groq for LLM-backed answer and question generation
 - WebRTC mesh calls for built-in classroom meetings
+- requests-based web retrieval fallback for complex topic support
 
 ## Local Setup
 
@@ -138,6 +141,7 @@ If you want hosted infra:
 - set `SUPABASE_SERVICE_KEY`
 - set `QDRANT_URL`
 - set `QDRANT_API_KEY` if needed
+- tune `TRUSTED_SEARCH_DOMAINS` and `WEB_FALLBACK_TOP_K` if you want different fallback search behavior
 - set `TURN_URL`, `TURN_USERNAME`, and `TURN_CREDENTIAL` for production-grade meeting relay support
 
 ### Start backend

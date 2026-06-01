@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 import AppShell from '../../components/AppShell'
+import MaterialIntelligencePanel from '../../components/MaterialIntelligencePanel'
 import { useAuth } from '../../context/AuthContext'
 import { deleteOfflineDocument, getOfflineDocument, saveOfflineDocument } from '../../lib/offlineDocuments'
 
@@ -13,6 +14,7 @@ export default function StudyDocumentPage() {
   const { token, user, loading: authLoading } = useAuth()
   const [document, setDocument] = useState(null)
   const [insights, setInsights] = useState(null)
+  const [materialIntelligence, setMaterialIntelligence] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [viewerUrl, setViewerUrl] = useState('')
@@ -87,6 +89,7 @@ export default function StudyDocumentPage() {
         const payload = await response.json()
         setDocument(payload)
         fetchInsights(payload.id)
+        fetchMaterialIntelligence(payload.id)
         if (payload.file_name?.toLowerCase().endsWith('.pdf')) {
           await loadDocumentFile(payload, { preferCache: false })
         }
@@ -105,6 +108,7 @@ export default function StudyDocumentPage() {
       if (cached?.metadata) {
         setDocument(cached.metadata)
         fetchInsights(cached.metadata.id)
+        fetchMaterialIntelligence(cached.metadata.id)
         await loadDocumentFile(cached.metadata, { preferCache: true })
       } else {
         setError('Unable to connect to the server.')
@@ -127,6 +131,22 @@ export default function StudyDocumentPage() {
       }
     } catch (err) {
       console.error('Error loading document insights:', err)
+    }
+  }
+
+  const fetchMaterialIntelligence = async (documentId) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${documentId}/material-intelligence`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const payload = await response.json()
+        setMaterialIntelligence(payload)
+      }
+    } catch (err) {
+      console.error('Error loading material intelligence:', err)
     }
   }
 
@@ -426,6 +446,15 @@ export default function StudyDocumentPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {materialIntelligence && (
+              <MaterialIntelligencePanel
+                intelligence={materialIntelligence}
+                title="Study layer for this material"
+                actionHref="/learning-chat"
+                actionLabel="Open Learning Chat"
+              />
             )}
           </div>
         )}

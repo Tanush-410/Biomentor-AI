@@ -37,6 +37,16 @@ class Settings(BaseSettings):
     
     # Ollama (Local LLM)
     ollama_base_url: str = "http://localhost:11434"
+
+    # Agentic web fallback
+    trusted_search_domains: List[str] = [
+        "khanacademy.org",
+        "britannica.com",
+        "nih.gov",
+        "nasa.gov",
+        ".edu/",
+    ]
+    web_fallback_top_k: int = 4
     
     # API Settings
     api_host: str = "0.0.0.0"

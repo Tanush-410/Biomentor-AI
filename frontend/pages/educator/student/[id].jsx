@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 
 import AppShell from '../../../components/AppShell'
 import CircularProgress from '../../../components/CircularProgress'
+import ProctorReviewPanel from '../../../components/ProctorReviewPanel'
 import { useAuth } from '../../../context/AuthContext'
 
 const BLOOM_ORDER = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create']
@@ -184,6 +185,12 @@ export default function StudentAnalyticsPage() {
           </div>
         </div>
       </section>
+
+      <ProctorReviewPanel
+        review={analytics?.proctoring_review}
+        compact
+        title="AI Proctor Review"
+      />
     </AppShell>
   )
 }

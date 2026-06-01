@@ -226,12 +226,12 @@ export default function QuizSessionPage() {
           </div>
 
           <div className="card p-6 mt-8 bg-[#f6ede2] border border-[#d9bea1]">
-            <h3 className="font-semibold mb-3">What's Next?</h3>
+            <h3 className="font-semibold mb-3">What&apos;s Next?</h3>
             <ul className="text-sm text-slate-700 space-y-2">
               <li>✓ Your score has been recorded for progress tracking</li>
               <li>✓ Review your performance in the Progress page</li>
               <li>✓ Upload more materials to practice with different content</li>
-              <li>✓ Ask your educator to use Bloom's tools for cross-level question conversion</li>
+              <li>✓ Ask your educator to use Bloom&apos;s tools for cross-level question conversion</li>
             </ul>
           </div>
       </AppShell>

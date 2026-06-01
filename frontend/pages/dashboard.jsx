@@ -5,6 +5,8 @@ import { AlertTriangle, BarChart3, BookOpen, Brain, FileText, MessageSquare, Sch
 
 import AppShell from '../components/AppShell'
 import CircularProgress from '../components/CircularProgress'
+import { CopilotPriorityCard, EducatorCopilotPanel } from '../components/EducatorCopilotPanel'
+import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 
 const BLOOM_LABELS = {
@@ -20,7 +22,9 @@ export default function Dashboard() {
   const router = useRouter()
   const { token, user, loading: authLoading } = useAuth()
   const [studentData, setStudentData] = useState({ documents: [], progress: null, studyPlan: null })
+  const [studyCoach, setStudyCoach] = useState(null)
   const [educatorData, setEducatorData] = useState(null)
+  const [educatorCopilot, setEducatorCopilot] = useState(null)
   const [liveNotifications, setLiveNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -148,21 +152,24 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     try {
-      const [documentsResponse, progressResponse, recommendationsResponse] = await Promise.all([
+      const [documentsResponse, progressResponse, recommendationsResponse, coachResponse] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/progress`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recommendations/study-plan`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recommendations/study-plan`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/overview`, { headers: { Authorization: `Bearer ${token}` } })
       ])
 
       const documents = documentsResponse.ok ? await documentsResponse.json() : []
       const progress = progressResponse.ok ? await progressResponse.json() : null
       const recommendationsPayload = recommendationsResponse.ok ? await recommendationsResponse.json() : null
+      const coachPayload = coachResponse.ok ? await coachResponse.json() : null
 
       setStudentData({
         documents,
         progress,
         studyPlan: recommendationsPayload?.recommendations || null
       })
+      setStudyCoach(coachPayload)
 
       if (!documentsResponse.ok && !progressResponse.ok && !recommendationsResponse.ok) {
         setError('We could not load your dashboard right now.')
@@ -179,9 +186,10 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     try {
-      const [dashboardResponse, messagesResponse] = await Promise.all([
+      const [dashboardResponse, messagesResponse, copilotResponse] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/messages`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/messages`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/copilot/dashboard`, { headers: { Authorization: `Bearer ${token}` } })
       ])
 
       if (!dashboardResponse.ok) {
@@ -191,7 +199,9 @@ export default function Dashboard() {
 
       const dashboard = await dashboardResponse.json()
       const messages = messagesResponse.ok ? await messagesResponse.json() : { messages: [] }
+      const copilot = copilotResponse.ok ? await copilotResponse.json() : null
       setEducatorData({ ...dashboard, messages: messages.messages || [] })
+      setEducatorCopilot(copilot)
     } catch (err) {
       console.error('Educator dashboard load error:', err)
       setError(err.message || 'Unable to connect to the server.')
@@ -280,26 +290,55 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="card p-6">
-            <h3 className="text-xl font-bold text-slate-900">Live Collaboration</h3>
-            <div className="mt-4 space-y-3">
-              {(educatorData?.live_sessions || []).slice(0, 4).map((session) => (
-                <div key={session.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-900">{session.title}</p>
-                  <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{session.status}</p>
-                  <p className="mt-2 text-sm text-slate-600">Join code: {session.join_code}</p>
+          <div className="space-y-6">
+            <EducatorCopilotPanel
+              title="Daily intervention priorities"
+              summary={educatorCopilot?.summary || 'The copilot is watching complaints, low-mastery students, and meeting follow-ups so you can act quickly.'}
+              actionLabel="Open Communication Hub"
+              actionHref="/communication-hub"
+            >
+              {(educatorCopilot?.priorities || []).length === 0 ? (
+                <div className="surface-subtle p-4 text-sm text-slate-600">
+                  No urgent copilot actions yet. New quiz results, complaints, and meeting recaps will surface here automatically.
                 </div>
-              ))}
-            </div>
-            <div className="mt-6 space-y-3">
-              <Link href="/collaboration-hub" className="w-full btn btn-primary inline-flex items-center justify-center gap-2">
-                <Brain className="h-4 w-4" />
-                Launch Collaboration Hub
-              </Link>
-              <Link href="/communication-hub" className="w-full btn btn-outline inline-flex items-center justify-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Open Communication Hub
-              </Link>
+              ) : (
+                (educatorCopilot?.priorities || []).slice(0, 3).map((item) => (
+                  <CopilotPriorityCard key={item.id} item={item} data-confidence-reason={item.confidence_reason || ''} />
+                ))
+              )}
+              {(educatorCopilot?.meeting_follow_ups || []).length > 0 && (
+                <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Meeting follow-ups</p>
+                  <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                    {educatorCopilot.meeting_follow_ups.slice(0, 3).map((item, index) => (
+                      <p key={`${item}-${index}`}>• {item}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </EducatorCopilotPanel>
+
+            <div className="card p-6">
+              <h3 className="text-xl font-bold text-slate-900">Live Collaboration</h3>
+              <div className="mt-4 space-y-3">
+                {(educatorData?.live_sessions || []).slice(0, 4).map((session) => (
+                  <div key={session.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">{session.title}</p>
+                    <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{session.status}</p>
+                    <p className="mt-2 text-sm text-slate-600">Join code: {session.join_code}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 space-y-3">
+                <Link href="/collaboration-hub" className="w-full btn btn-primary inline-flex items-center justify-center gap-2">
+                  <Brain className="h-4 w-4" />
+                  Launch Collaboration Hub
+                </Link>
+                <Link href="/communication-hub" className="w-full btn btn-outline inline-flex items-center justify-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Open Communication Hub
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -469,6 +508,39 @@ export default function Dashboard() {
       </section>
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+
+      <StudyCoachPanel
+        summary={studyCoach?.rationale || 'The coach uses your live quiz history and uploaded material to tell you what to do next.'}
+        confidenceReason={studyCoach?.confidence_reason}
+        actionLabel="Open Progress"
+        actionHref="/progress"
+      >
+        {studyCoach ? (
+          <>
+            <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Next best move</p>
+              <p className="mt-3 text-lg font-bold text-slate-950">{studyCoach.next_action}</p>
+            </div>
+            <StudyCoachActionList actions={studyCoach.short_plan} />
+            {(studyCoach.weak_focus_areas || []).length > 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Weak focus areas</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {studyCoach.weak_focus_areas.map((area) => (
+                    <span key={area} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                      {area}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="surface-subtle p-4 text-sm text-slate-600">
+            Complete a quiz or upload material to unlock your guided study flow.
+          </div>
+        )}
+      </StudyCoachPanel>
 
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="card p-6 lg:col-span-2">

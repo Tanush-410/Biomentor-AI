@@ -7,13 +7,42 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.database.models import User
+from app.database.models import Document, User
 from app.routers.auth import get_current_user
 from app.routers.qa import build_answer_response
-from app.schemas import AnswerGenerationRequest
+from app.schemas import (
+    AnswerGenerationRequest,
+    StudyCoachChatSuggestionsResponse,
+    StudyCoachMaterialsResponse,
+    StudyCoachOverviewResponse,
+    StudyCoachProgressResponse,
+)
 from app.services.learning_analytics import build_gap_list, build_progress_payload, build_recommendations
+from app.services.study_coach import (
+    build_study_coach_chat_payload,
+    build_study_coach_materials_payload,
+    build_study_coach_overview,
+    build_study_coach_progress_payload,
+)
 
 router = APIRouter(prefix="/api", tags=["learning"])
+
+
+def _load_user_documents(db: Session, user_id: str) -> List[dict]:
+    documents = (
+        db.query(Document)
+        .filter(Document.user_id == user_id)
+        .order_by(Document.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": document.id,
+            "title": document.title,
+            "file_name": document.file_name,
+        }
+        for document in documents
+    ]
 
 
 class ChatMessage(BaseModel):
@@ -176,6 +205,50 @@ async def get_study_recommendations(
         return {"success": True, "recommendations": recommendations}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/study-coach/overview", response_model=StudyCoachOverviewResponse)
+async def get_study_coach_overview(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the dashboard-focused Study Coach payload."""
+    progress_payload = build_progress_payload(db, current_user.id)
+    recommendations = build_recommendations(db, current_user.id, progress_payload)
+    documents = _load_user_documents(db, current_user.id)
+    return build_study_coach_overview(progress_payload, recommendations, documents)
+
+
+@router.get("/study-coach/progress", response_model=StudyCoachProgressResponse)
+async def get_study_coach_progress(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return progress-specific Study Coach interpretation."""
+    progress_payload = build_progress_payload(db, current_user.id)
+    return build_study_coach_progress_payload(progress_payload)
+
+
+@router.get("/study-coach/materials", response_model=StudyCoachMaterialsResponse)
+async def get_study_coach_materials(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return materials-page Study Coach recommendations."""
+    progress_payload = build_progress_payload(db, current_user.id)
+    documents = _load_user_documents(db, current_user.id)
+    return build_study_coach_materials_payload(documents, build_gap_list(progress_payload))
+
+
+@router.get("/study-coach/chat-suggestions", response_model=StudyCoachChatSuggestionsResponse)
+async def get_study_coach_chat_suggestions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return Learning Chat follow-up coaching."""
+    progress_payload = build_progress_payload(db, current_user.id)
+    documents = _load_user_documents(db, current_user.id)
+    return build_study_coach_chat_payload(build_gap_list(progress_payload), documents)
 
 
 @router.get("/teacher/class-overview")

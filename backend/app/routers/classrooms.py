@@ -17,6 +17,7 @@ from app.database.models import (
     ClassroomAssignment,
     ClassroomEnrollment,
     ClassroomLiveMeeting,
+    ClassroomMeetingAISummary,
     ClassroomQuiz,
     ClassroomQuizAttempt,
     ClassroomQuizViolation,
@@ -37,24 +38,48 @@ from app.schemas import (
     ClassroomAnnouncementCreate,
     ClassroomAssignmentCreate,
     ClassroomEnrollmentJoin,
+    ClassroomIntelligenceResponse,
     ClassroomQuizHeartbeatCreate,
     ClassroomMeetingCreate,
     ClassroomQuizAttemptSubmit,
     ClassroomQuizCreate,
+    ProctorReviewResponse,
     ClassroomQuizWarningCreate,
     ClassroomLiveScheduleCreate,
     ClassroomMaterialShareCreate,
+    ClassroomMeetingResponse,
+    MeetingAssistantSnapshotResponse,
+    MeetingEventCreateRequest,
+    MeetingRecapResponse,
+    MeetingTranscriptCreateRequest,
     ClassroomThreadCreate,
     ClassroomThreadMessageCreate,
     ClassroomQuizViolationCreate,
     LiveSessionCreate,
 )
 from app.agents.question_generator import QuestionGenerator
+from app.services.classroom_intelligence import (
+    build_student_classroom_intelligence,
+    build_teacher_classroom_intelligence,
+    load_classroom_signal_context,
+)
 from app.services.classroom_quiz_authoring import (
     build_manual_generated_questions,
     normalize_manual_questions,
 )
 from app.services.document_context import build_context_window
+from app.services.meeting_assistant import (
+    finalize_meeting_assistant_outputs,
+    get_student_recap,
+    get_teacher_assistant_snapshot,
+    persist_meeting_event,
+    persist_meeting_transcript,
+    refresh_teacher_assistant_snapshot,
+)
+from app.services.proctor_review import (
+    build_proctor_review_payload,
+    serialize_proctor_incident_row,
+)
 from app.services.classroom_hub import (
     create_notifications,
     get_accessible_classroom,
@@ -260,6 +285,31 @@ async def get_classroom_detail(
             "next_live_session": serialize_live_session(latest_live) if latest_live else None,
         }
     }
+
+
+@router.get("/{classroom_id}/intelligence", response_model=ClassroomIntelligenceResponse)
+async def get_classroom_intelligence(
+    classroom_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return shared classroom intelligence with teacher and student-specific views."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    context = load_classroom_signal_context(db, classroom)
+
+    teacher_view = None
+    if current_user.role in {"educator", "admin"}:
+        teacher_view = build_teacher_classroom_intelligence(context)
+
+    student_view = build_student_classroom_intelligence(context, current_user)
+
+    return ClassroomIntelligenceResponse(
+        role=current_user.role,
+        classroom_id=classroom.id,
+        classroom_name=classroom.name,
+        teacher_view=teacher_view,
+        student_view=student_view,
+    )
 
 
 @router.get("/{classroom_id}/stream")
@@ -622,6 +672,62 @@ async def get_classroom_quiz_detail(
         "classroom": {"id": classroom.id, "name": classroom.name},
         "quiz": serialize_classroom_quiz(quiz, document, educator, current_user, db, include_attempt=True),
     }
+
+
+@router.get("/{classroom_id}/quizzes/{quiz_id}/proctor-review", response_model=ProctorReviewResponse)
+async def get_classroom_quiz_proctor_review(
+    classroom_id: str,
+    quiz_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return educator-facing AI review of proctor incidents for one classroom quiz."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    quiz, _, _ = get_classroom_quiz_row(db, classroom.id, quiz_id)
+
+    attempts = (
+        db.query(ClassroomQuizAttempt, User)
+        .join(User, User.id == ClassroomQuizAttempt.student_id)
+        .filter(ClassroomQuizAttempt.classroom_quiz_id == quiz.id)
+        .order_by(ClassroomQuizAttempt.created_at.desc())
+        .all()
+    )
+    attempt_ids = [attempt.id for attempt, _student in attempts]
+    violations = (
+        db.query(ClassroomQuizViolation, ClassroomQuizAttempt, User)
+        .join(ClassroomQuizAttempt, ClassroomQuizAttempt.id == ClassroomQuizViolation.attempt_id)
+        .join(User, User.id == ClassroomQuizViolation.student_id)
+        .filter(ClassroomQuizViolation.classroom_quiz_id == quiz.id)
+        .order_by(ClassroomQuizViolation.created_at.desc())
+        .all()
+    )
+
+    attempt_payloads = [
+        {
+            "id": attempt.id,
+            "student_id": student.id,
+            "student_name": student.full_name,
+            "status": attempt.status,
+            "violation_count": attempt.violation_count or 0,
+            "termination_reason": attempt.termination_reason,
+            "score": attempt.score,
+            "started_at": attempt.started_at.isoformat() if attempt.started_at else None,
+            "submitted_at": attempt.submitted_at.isoformat() if attempt.submitted_at else None,
+            "ended_at": attempt.ended_at.isoformat() if attempt.ended_at else None,
+        }
+        for attempt, student in attempts
+    ]
+    incident_payloads = [
+        serialize_proctor_incident_row(violation, attempt, student)
+        for violation, attempt, student in violations
+        if not attempt_ids or violation.attempt_id in attempt_ids
+    ]
+
+    return build_proctor_review_payload(
+        quiz={"id": quiz.id, "title": quiz.title},
+        incidents=incident_payloads,
+        attempts=attempt_payloads,
+    )
 
 
 @router.post("/{classroom_id}/quizzes/{quiz_id}/start")
@@ -1166,6 +1272,85 @@ async def get_classroom_meeting_detail(
     }
 
 
+@router.post("/{classroom_id}/meetings/{meeting_id}/transcripts")
+async def create_meeting_transcript(
+    classroom_id: str,
+    meeting_id: str,
+    payload: MeetingTranscriptCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Persist a transcript snippet from an authenticated meeting participant."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    transcript = persist_meeting_transcript(
+        db,
+        meeting=meeting,
+        current_user=current_user,
+        speaker_role=payload.speaker_role,
+        speaker_name=payload.speaker_name,
+        content=payload.content,
+    )
+    refresh_teacher_assistant_snapshot(db, meeting)
+    return {"status": "ok", "transcript_id": transcript.id}
+
+
+@router.post("/{classroom_id}/meetings/{meeting_id}/events")
+async def create_meeting_event(
+    classroom_id: str,
+    meeting_id: str,
+    payload: MeetingEventCreateRequest,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Persist a teacher-authored structured event for the meeting assistant."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    event = persist_meeting_event(
+        db,
+        meeting=meeting,
+        current_user=current_user,
+        event_type=payload.event_type,
+        payload=payload.payload,
+    )
+    refresh_teacher_assistant_snapshot(db, meeting)
+    return {"status": "ok", "event_id": event.id}
+
+
+@router.get("/{classroom_id}/meetings/{meeting_id}/assistant", response_model=MeetingAssistantSnapshotResponse)
+async def get_meeting_assistant_snapshot(
+    classroom_id: str,
+    meeting_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return the teacher-only meeting assistant snapshot."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    payload = get_teacher_assistant_snapshot(db, meeting)
+    payload["meeting_id"] = meeting.id
+    return payload
+
+
+@router.get("/{classroom_id}/meetings/{meeting_id}/recap", response_model=MeetingRecapResponse)
+async def get_meeting_recap(
+    classroom_id: str,
+    meeting_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the student-safe post-meeting recap when available."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    recap = get_student_recap(db, meeting) or {
+        "summary": "Meeting recap will appear after the session ends.",
+        "action_items": [],
+        "key_takeaways": [],
+    }
+    recap["meeting_id"] = meeting.id
+    return recap
+
+
 @router.post("/{classroom_id}/meetings/{meeting_id}/start")
 async def start_classroom_meeting(
     classroom_id: str,
@@ -1211,6 +1396,7 @@ async def end_classroom_meeting(
     meeting.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(meeting)
+    finalize_meeting_assistant_outputs(db, classroom, meeting)
 
     await meeting_signaling_manager.broadcast(
         meeting.id,
@@ -1583,6 +1769,17 @@ def get_quiz_attempt_for_student(db: Session, quiz_id: str, attempt_id: str, stu
     return attempt
 
 
+def serialize_utc_datetime(value: datetime | None) -> str | None:
+    """Return a stable ISO UTC timestamp for frontend timers."""
+    if not value:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.isoformat().replace("+00:00", "Z")
+
+
 def serialize_quiz_attempt(attempt: ClassroomQuizAttempt | None) -> dict | None:
     if not attempt:
         return None
@@ -1590,9 +1787,9 @@ def serialize_quiz_attempt(attempt: ClassroomQuizAttempt | None) -> dict | None:
         "id": attempt.id,
         "status": attempt.status,
         "score": attempt.score,
-        "started_at": attempt.started_at.isoformat() if attempt.started_at else None,
-        "submitted_at": attempt.submitted_at.isoformat() if attempt.submitted_at else None,
-        "ended_at": attempt.ended_at.isoformat() if attempt.ended_at else None,
+        "started_at": serialize_utc_datetime(attempt.started_at),
+        "submitted_at": serialize_utc_datetime(attempt.submitted_at),
+        "ended_at": serialize_utc_datetime(attempt.ended_at),
         "violation_count": attempt.violation_count,
         "termination_reason": attempt.termination_reason,
     }
@@ -1617,8 +1814,8 @@ def serialize_classroom_quiz(
         "bloom_level": quiz.bloom_level,
         "num_questions": quiz.num_questions,
         "duration_minutes": quiz.duration_minutes,
-        "available_from": quiz.available_from.isoformat() if quiz.available_from else None,
-        "available_until": quiz.available_until.isoformat() if quiz.available_until else None,
+        "available_from": serialize_utc_datetime(quiz.available_from),
+        "available_until": serialize_utc_datetime(quiz.available_until),
         "publish_to_stream": quiz.publish_to_stream,
         "proctoring_enabled": quiz.proctoring_enabled,
         "allow_late_entries": quiz.allow_late_entries,
@@ -1632,7 +1829,7 @@ def serialize_classroom_quiz(
         "educator": serialize_user(educator),
         "attempt": serialize_quiz_attempt(attempt) if include_attempt else None,
         "can_start": viewer.role == "student" and availability == "published",
-        "created_at": quiz.created_at.isoformat(),
+        "created_at": serialize_utc_datetime(quiz.created_at),
     }
 
 

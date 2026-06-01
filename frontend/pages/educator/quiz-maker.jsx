@@ -4,6 +4,7 @@ import { CalendarDays, Camera, Clock3, FileQuestion, ListChecks, PencilLine, Plu
 import { useRouter } from 'next/router'
 
 import AppShell from '../../components/AppShell'
+import QuizQualityPanel from '../../components/QuizQualityPanel'
 import { useAuth } from '../../context/AuthContext'
 import { createClassroomQuiz, listClassrooms, listDocuments } from '../../lib/classroomApi'
 
@@ -36,8 +37,11 @@ export default function EducatorQuizMakerPage() {
   const [classrooms, setClassrooms] = useState([])
   const [documents, setDocuments] = useState([])
   const [saving, setSaving] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
   const [error, setError] = useState('')
+  const [reviewError, setReviewError] = useState('')
   const [success, setSuccess] = useState(null)
+  const [qualityReview, setQualityReview] = useState(null)
   const [form, setForm] = useState({
     classroom_id: '',
     title: '',
@@ -157,6 +161,56 @@ export default function EducatorQuizMakerPage() {
       available_until: '',
       manual_questions: current.quiz_mode === 'manual' ? [buildManualQuestion(1)] : current.manual_questions
     }))
+    setQualityReview(null)
+  }
+
+  const buildReviewPayload = () => ({
+    title: form.title,
+    description: form.description || null,
+    document_id: form.document_id || null,
+    quiz_mode: form.quiz_mode,
+    bloom_level: form.quiz_mode === 'generated' && form.bloom_level ? Number(form.bloom_level) : null,
+    num_questions: form.quiz_mode === 'generated' ? Number(form.num_questions) : authoredQuestionCount,
+    duration_minutes: Number(form.duration_minutes),
+    available_from: form.available_from ? new Date(form.available_from).toISOString() : null,
+    available_until: form.available_until ? new Date(form.available_until).toISOString() : null,
+    publish_to_stream: form.publish_to_stream,
+    proctoring_enabled: form.proctoring_enabled,
+    allow_late_entries: form.allow_late_entries,
+    manual_questions:
+      form.quiz_mode === 'manual'
+        ? form.manual_questions.map((question) => ({
+            prompt: question.prompt,
+            explanation: question.explanation || null,
+            bloom_level: Number(question.bloom_level || 3),
+            correct_option_id: question.correct_option_id,
+            options: question.options.map((option) => ({ id: option.id, text: option.text }))
+          }))
+        : null
+  })
+
+  const handleReview = async () => {
+    setReviewing(true)
+    setReviewError('')
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/quiz-quality/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(buildReviewPayload())
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload.detail || payload.message || 'Could not review quiz quality.')
+      }
+      setQualityReview(payload)
+    } catch (err) {
+      setReviewError(err.message || 'Could not review quiz quality.')
+    } finally {
+      setReviewing(false)
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -179,32 +233,7 @@ export default function EducatorQuizMakerPage() {
     setSuccess(null)
 
     try {
-      const payload = {
-        title: form.title,
-        description: form.description || null,
-        document_id: form.document_id || null,
-        quiz_mode: form.quiz_mode,
-        bloom_level: form.quiz_mode === 'generated' && form.bloom_level ? Number(form.bloom_level) : null,
-        num_questions: form.quiz_mode === 'generated' ? Number(form.num_questions) : authoredQuestionCount,
-        duration_minutes: Number(form.duration_minutes),
-        available_from: form.available_from ? new Date(form.available_from).toISOString() : null,
-        available_until: form.available_until ? new Date(form.available_until).toISOString() : null,
-        publish_to_stream: form.publish_to_stream,
-        proctoring_enabled: form.proctoring_enabled,
-        allow_late_entries: form.allow_late_entries,
-        manual_questions:
-          form.quiz_mode === 'manual'
-            ? form.manual_questions.map((question) => ({
-                prompt: question.prompt,
-                explanation: question.explanation || null,
-                bloom_level: Number(question.bloom_level || 3),
-                correct_option_id: question.correct_option_id,
-                options: question.options.map((option) => ({ id: option.id, text: option.text }))
-              }))
-            : null
-      }
-
-      const response = await createClassroomQuiz(token, form.classroom_id, payload)
+      const response = await createClassroomQuiz(token, form.classroom_id, buildReviewPayload())
       setSuccess(response.quiz)
       resetSuccessfulFields()
     } catch (err) {
@@ -486,6 +515,7 @@ export default function EducatorQuizMakerPage() {
         </form>
 
         <aside className="space-y-6">
+          <QuizQualityPanel review={qualityReview} loading={reviewing} error={reviewError} onReview={handleReview} />
           <div className="card p-6">
             <p className="section-kicker text-[#8a5a36]">Publishing summary</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">{form.title || 'Your quiz summary will appear here'}</h3>

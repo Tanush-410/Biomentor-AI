@@ -12,7 +12,7 @@ if BACKEND_ROOT not in sys.path:
     sys.path.insert(0, BACKEND_ROOT)
 
 from app.main import app  # noqa: E402
-from app.routers.classrooms import resolve_quiz_status  # noqa: E402
+from app.routers.classrooms import resolve_quiz_status, serialize_utc_datetime  # noqa: E402
 from app.database.models import (  # noqa: E402
     ClassroomAnnouncement,
     ClassroomAssignment,
@@ -69,6 +69,10 @@ class ClassroomQuizSchedulingTest(unittest.TestCase):
         self.assertEqual(resolve_quiz_status(now - timedelta(minutes=1), now + timedelta(minutes=30)), "published")
         self.assertEqual(resolve_quiz_status(now + timedelta(minutes=30), now + timedelta(minutes=60)), "scheduled")
         self.assertEqual(resolve_quiz_status(now - timedelta(minutes=60), now - timedelta(minutes=30)), "closed")
+
+    def test_serialize_utc_datetime_marks_naive_timestamps_as_utc(self):
+        raw = datetime(2026, 5, 31, 16, 11, 14)
+        self.assertEqual(serialize_utc_datetime(raw), "2026-05-31T16:11:14Z")
 
 
 if __name__ == "__main__":

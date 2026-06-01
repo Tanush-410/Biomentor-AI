@@ -9,6 +9,7 @@ import { normalizeClassroomId, shouldApplyClassroomResponse } from '../../../lib
 import {
   createClassroomMeeting,
   getClassroom,
+  getMeetingRecap,
   listClassroomMeetings,
   startClassroomMeeting
 } from '../../../lib/classroomApi'
@@ -18,6 +19,7 @@ export default function ClassroomLivePage() {
   const { token, user, loading: authLoading } = useAuth()
   const [classroom, setClassroom] = useState(null)
   const [meetings, setMeetings] = useState([])
+  const [meetingRecaps, setMeetingRecaps] = useState({})
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -49,7 +51,27 @@ export default function ClassroomLivePage() {
         return
       }
       setClassroom(classroomPayload.classroom)
-      setMeetings(meetingsPayload.meetings || [])
+      const nextMeetings = meetingsPayload.meetings || []
+      setMeetings(nextMeetings)
+
+      const endedMeetings = nextMeetings.filter((meeting) => meeting.status === 'ended')
+      if (endedMeetings.length) {
+        const recapEntries = await Promise.all(
+          endedMeetings.map(async (meeting) => {
+            try {
+              const recapPayload = await getMeetingRecap(token, requestedId, meeting.id)
+              return [meeting.id, recapPayload]
+            } catch (recapError) {
+              return [meeting.id, null]
+            }
+          })
+        )
+        if (requestSequence.current === requestId) {
+          setMeetingRecaps(Object.fromEntries(recapEntries))
+        }
+      } else if (requestSequence.current === requestId) {
+        setMeetingRecaps({})
+      }
     } catch (err) {
       if (requestSequence.current === requestId) {
         setError(err.message || 'Could not load classroom meetings')
@@ -113,6 +135,34 @@ export default function ClassroomLivePage() {
           </div>
         )}
       </div>
+      {meetings.filter((meeting) => meeting.status === 'ended').length ? (
+        <div className="mt-6 space-y-4">
+          {meetings
+            .filter((meeting) => meeting.status === 'ended')
+            .map((meeting) => {
+              const recap = meetingRecaps[meeting.id]
+              return (
+                <section
+                  key={meeting.id}
+                  className="rounded-[28px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] p-6 shadow-[0_16px_40px_rgba(69,39,21,0.05)]"
+                >
+                  <p className="section-kicker text-[#8a5a36]">Meeting recap</p>
+                  <h3 className="mt-2 text-2xl font-bold text-slate-950">{meeting.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    {recap?.summary || 'Summary will appear after the meeting wrap-up.'}
+                  </p>
+                  {(recap?.action_items || []).length ? (
+                    <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-700">
+                      {recap.action_items.map((item) => (
+                        <li key={`${meeting.id}-${item}`}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </section>
+              )
+            })}
+        </div>
+      ) : null}
     </ClassroomShell>
   )
 }

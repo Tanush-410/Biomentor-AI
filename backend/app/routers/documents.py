@@ -13,13 +13,14 @@ from app.core.security import enforce_rate_limit, parse_page_selection, sanitize
 from app.database import get_db
 from app.database.models import Document, DocumentChunk
 from app.routers.auth import get_current_user
-from app.schemas import DocumentResponse
+from app.schemas import DocumentResponse, MaterialIntelligenceResponse
 from app.services.document_context import (
     build_document_insights,
     build_page_payloads_from_text,
     get_document_context,
     index_document_chunks,
 )
+from app.services.material_intelligence import build_material_intelligence
 from app.services.vector_store import delete_document_vectors
 
 
@@ -234,6 +235,44 @@ async def get_document_insights(
         "key_pages": insights["key_pages"],
         "total_chunks": insights["total_chunks"],
     }
+
+
+@router.get("/{document_id}/material-intelligence", response_model=MaterialIntelligenceResponse)
+async def get_material_intelligence(
+    document_id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Return a richer AI study layer for one uploaded document."""
+    user_id = current_user.id if hasattr(current_user, "id") else current_user
+    document = db.query(Document).filter(
+        Document.id == document_id,
+        Document.user_id == user_id
+    ).first()
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found"
+        )
+
+    contexts = get_document_context(db, user_id=user_id, document_ids=[document_id], top_k=24)
+    payload = build_material_intelligence(
+        {"id": document.id, "title": document.title, "file_name": document.file_name},
+        contexts,
+    )
+    return MaterialIntelligenceResponse(
+        document_id=document.id,
+        document_title=document.title,
+        summary=payload["summary"],
+        revision_bullets=payload.get("revision_bullets", []),
+        glossary=payload.get("glossary", []),
+        flashcards=payload.get("flashcards", []),
+        follow_up_prompts=payload.get("follow_up_prompts", []),
+        prerequisite_warning=payload.get("prerequisite_warning"),
+        concepts=payload.get("concepts", []),
+        key_pages=payload.get("key_pages", []),
+    )
 
 
 @router.get("/{document_id}/file")

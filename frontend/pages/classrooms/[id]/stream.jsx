@@ -3,17 +3,19 @@ import Link from 'next/link'
 import { CalendarDays, Pin, Video } from 'lucide-react'
 import { useRouter } from 'next/router'
 
+import ClassroomIntelligencePanel from '../../../components/ClassroomIntelligencePanel'
 import ClassroomShell from '../../../components/ClassroomShell'
 import ClassroomStreamComposer from '../../../components/ClassroomStreamComposer'
 import { useAuth } from '../../../context/AuthContext'
 import { normalizeClassroomId, shouldApplyClassroomResponse } from '../../../lib/classroomRouteState'
-import { createClassroomAnnouncement, getClassroom, getClassroomStream } from '../../../lib/classroomApi'
+import { createClassroomAnnouncement, getClassroom, getClassroomIntelligence, getClassroomStream } from '../../../lib/classroomApi'
 
 export default function ClassroomStreamPage() {
   const router = useRouter()
   const { token, user, loading: authLoading } = useAuth()
   const [classroom, setClassroom] = useState(null)
   const [posts, setPosts] = useState([])
+  const [intelligence, setIntelligence] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -35,15 +37,17 @@ export default function ClassroomStreamPage() {
     setLoading(true)
     setError('')
     try {
-      const [classroomPayload, streamPayload] = await Promise.all([
+      const [classroomPayload, streamPayload, intelligencePayload] = await Promise.all([
         getClassroom(token, requestedId),
-        getClassroomStream(token, requestedId)
+        getClassroomStream(token, requestedId),
+        getClassroomIntelligence(token, requestedId)
       ])
       if (requestSequence.current !== requestId || !shouldApplyClassroomResponse(requestedId, classroomPayload.classroom?.id)) {
         return
       }
       setClassroom(classroomPayload.classroom)
       setPosts(streamPayload.posts || [])
+      setIntelligence(intelligencePayload)
     } catch (err) {
       if (requestSequence.current === requestId) {
         setError(err.message || 'Could not load classroom stream')
@@ -86,6 +90,7 @@ export default function ClassroomStreamPage() {
         </div>
 
         <div className="space-y-6">
+          <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="stream" />
           {canPost && <ClassroomStreamComposer onSubmit={handleCreatePost} isSubmitting={submitting} />}
 
           {posts.length === 0 ? (

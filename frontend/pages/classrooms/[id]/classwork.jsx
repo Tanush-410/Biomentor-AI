@@ -3,12 +3,14 @@ import Link from 'next/link'
 import { CalendarDays, Camera, FileText, PlusCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
 
+import ClassroomIntelligencePanel from '../../../components/ClassroomIntelligencePanel'
 import ClassroomShell from '../../../components/ClassroomShell'
 import { useAuth } from '../../../context/AuthContext'
 import { normalizeClassroomId, shouldApplyClassroomResponse } from '../../../lib/classroomRouteState'
 import {
   createClassroomAssignment,
   getClassroom,
+  getClassroomIntelligence,
   getClasswork,
   listDocuments,
   shareClassroomMaterial
@@ -22,6 +24,7 @@ export default function ClassroomClassworkPage() {
   const [assignments, setAssignments] = useState([])
   const [quizzes, setQuizzes] = useState([])
   const [documents, setDocuments] = useState([])
+  const [intelligence, setIntelligence] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -52,11 +55,15 @@ export default function ClassroomClassworkPage() {
     setLoading(true)
     setError('')
     try {
-      const requests = [getClassroom(token, requestedId), getClasswork(token, requestedId)]
+      const requests = [
+        getClassroom(token, requestedId),
+        getClasswork(token, requestedId),
+        getClassroomIntelligence(token, requestedId)
+      ]
       if (['educator', 'admin'].includes(user?.role)) {
         requests.push(listDocuments(token))
       }
-      const [classroomPayload, classworkPayload, documentPayload] = await Promise.all(requests)
+      const [classroomPayload, classworkPayload, intelligencePayload, documentPayload] = await Promise.all(requests)
       if (requestSequence.current !== requestId || !shouldApplyClassroomResponse(requestedId, classroomPayload.classroom?.id)) {
         return
       }
@@ -64,6 +71,7 @@ export default function ClassroomClassworkPage() {
       setMaterials(classworkPayload.materials || [])
       setAssignments(classworkPayload.assignments || [])
       setQuizzes(classworkPayload.quizzes || [])
+      setIntelligence(intelligencePayload)
       setDocuments(documentPayload || [])
       if ((documentPayload || []).length > 0) {
         setMaterialForm((current) => ({ ...current, document_id: current.document_id || documentPayload[0].id }))
@@ -134,6 +142,8 @@ export default function ClassroomClassworkPage() {
               Keep study resources, assignments, and quiz references organized in one focused classwork space.
             </p>
           </div>
+
+          <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="classwork" />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card p-6">

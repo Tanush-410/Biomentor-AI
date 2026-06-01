@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import '@fontsource/source-sans-3/300.css'
+import '@fontsource/source-sans-3/400.css'
+import '@fontsource/source-sans-3/500.css'
+import '@fontsource/source-sans-3/600.css'
+import '@fontsource/source-sans-3/700.css'
+import '@fontsource/cormorant-garamond/500.css'
+import '@fontsource/cormorant-garamond/600.css'
+import '@fontsource/cormorant-garamond/700.css'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import '../styles/globals.css'
 

@@ -1,6 +1,6 @@
 """Pydantic schemas for request/response validation."""
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 from datetime import datetime
 
 
@@ -78,6 +78,32 @@ class DocumentResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class MaterialIntelligenceGlossaryItem(BaseModel):
+    """Glossary-style term extracted from uploaded material."""
+    term: str
+    meaning: str
+
+
+class MaterialIntelligenceFlashcard(BaseModel):
+    """Flashcard prompt and answer derived from uploaded material."""
+    prompt: str
+    answer: str
+
+
+class MaterialIntelligenceResponse(BaseModel):
+    """Document-level AI study layer."""
+    document_id: str
+    document_title: str
+    summary: str
+    revision_bullets: List[str] = Field(default_factory=list)
+    glossary: List[MaterialIntelligenceGlossaryItem] = Field(default_factory=list)
+    flashcards: List[MaterialIntelligenceFlashcard] = Field(default_factory=list)
+    follow_up_prompts: List[str] = Field(default_factory=list)
+    prerequisite_warning: Optional[str] = None
+    concepts: List[Dict[str, Any]] = Field(default_factory=list)
+    key_pages: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 # ===== BLOOM'S TAXONOMY SCHEMAS =====
@@ -264,9 +290,64 @@ class SourceReference(BaseModel):
     """Source reference for answer."""
     document_id: Optional[str] = None
     document_title: str
-    page_number: int
+    page_number: Optional[int] = None
     chunk_index: Optional[int] = None
     excerpt: str
+    url: Optional[str] = None
+    source_type: str = "material"
+
+
+class QuickCheckQuestionOption(BaseModel):
+    """One option for a lightweight chat quick check."""
+    id: str
+    text: str
+
+
+class QuickCheckQuestion(BaseModel):
+    """One mini-test question in the learning chat."""
+    id: str
+    prompt: str
+    options: List[QuickCheckQuestionOption]
+    correct_option_id: Optional[str] = None
+    explanation: Optional[str] = None
+
+
+class QuickCheckPayload(BaseModel):
+    """Adaptive quick check payload attached to a chat answer."""
+    id: str
+    title: str
+    questions: List[QuickCheckQuestion]
+
+
+class QuickCheckAnswer(BaseModel):
+    """Student answer for one quick-check question."""
+    question_id: str
+    selected_option_id: str
+
+
+class QuickCheckEvaluationRequest(BaseModel):
+    """Submit quick-check answers for grading."""
+    quick_check_id: str
+    quick_check: QuickCheckPayload
+    answers: List[QuickCheckAnswer]
+
+
+class QuickCheckEvaluationResult(BaseModel):
+    """One graded quick-check result."""
+    question_id: str
+    selected_option_id: str
+    correct_option_id: str
+    is_correct: bool
+    explanation: str
+
+
+class QuickCheckEvaluationResponse(BaseModel):
+    """Targeted feedback for a quick check."""
+    quick_check_id: str
+    score: int
+    total_questions: int
+    results: List[QuickCheckEvaluationResult]
+    next_step: str
 
 
 class AnswerGenerationResponse(BaseModel):
@@ -275,6 +356,14 @@ class AnswerGenerationResponse(BaseModel):
     answer: str
     sources: List[SourceReference]
     confidence: float
+    confidence_label: str = "medium"
+    confidence_reason: str = ""
+    answer_origin: str = "material"
+    source_badge: str = "Answered from your material"
+    fallback_used: bool = False
+    complexity: str = "simple"
+    show_quick_check: bool = False
+    quick_check: Optional[QuickCheckPayload] = None
     generated_at: datetime
 
 
@@ -364,6 +453,54 @@ class ClassroomQuizCreate(BaseModel):
     manual_questions: Optional[List[ManualClassroomQuizQuestion]] = None
 
 
+class QuizQualityIssue(BaseModel):
+    """One issue detected during quiz-quality review."""
+    severity: str
+    title: str
+    detail: str
+
+
+class QuizQualitySuggestion(BaseModel):
+    """One suggestion emitted by the quiz-quality layer."""
+    title: str
+    detail: str
+
+
+class QuizQualityBloomMetric(BaseModel):
+    """Bloom-distribution summary for a quiz draft."""
+    level: int
+    label: str
+    count: int
+    percentage: int
+
+
+class QuizQualityReviewRequest(BaseModel):
+    """Educator draft-review request before publishing a classroom quiz."""
+    title: str
+    description: Optional[str] = None
+    document_id: Optional[str] = None
+    quiz_mode: str = "generated"
+    bloom_level: Optional[int] = None
+    num_questions: int = 5
+    duration_minutes: int = 15
+    available_from: Optional[datetime] = None
+    available_until: Optional[datetime] = None
+    publish_to_stream: bool = True
+    proctoring_enabled: bool = True
+    allow_late_entries: bool = False
+    manual_questions: Optional[List[ManualClassroomQuizQuestion]] = None
+
+
+class QuizQualityReviewResponse(BaseModel):
+    """Educator-facing AI quiz-quality review payload."""
+    quality_score: int
+    readiness: str
+    summary: str
+    issues: List[QuizQualityIssue] = Field(default_factory=list)
+    suggestions: List[QuizQualitySuggestion] = Field(default_factory=list)
+    bloom_distribution: List[QuizQualityBloomMetric] = Field(default_factory=list)
+
+
 class ClassroomQuizSubmissionAnswer(BaseModel):
     """Single answer inside a classroom quiz attempt."""
     question_id: str
@@ -451,6 +588,42 @@ class ClassroomMeetingResponse(BaseModel):
         from_attributes = True
 
 
+class MeetingTranscriptCreateRequest(BaseModel):
+    """Transcript snippet posted from the live meeting room."""
+    speaker_role: str = "participant"
+    speaker_name: Optional[str] = None
+    content: str
+
+
+class MeetingEventCreateRequest(BaseModel):
+    """Structured classroom meeting event for the assistant."""
+    event_type: str
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class MeetingAssistantSection(BaseModel):
+    """One assistant panel section."""
+    items: List[str] = Field(default_factory=list)
+
+
+class MeetingAssistantSnapshotResponse(BaseModel):
+    """Teacher-facing AI meeting assistant state."""
+    meeting_id: str
+    live_notes: MeetingAssistantSection
+    action_items: MeetingAssistantSection
+    unresolved_doubts: MeetingAssistantSection
+    follow_up_suggestions: MeetingAssistantSection
+    updated_at: Optional[datetime] = None
+
+
+class MeetingRecapResponse(BaseModel):
+    """Student-safe post-meeting recap payload."""
+    meeting_id: str
+    summary: str
+    action_items: List[str] = Field(default_factory=list)
+    key_takeaways: List[str] = Field(default_factory=list)
+
+
 class ClassroomLiveScheduleCreate(BaseModel):
     """Schedule a classroom live session backed by an external meeting link."""
     title: str
@@ -517,3 +690,202 @@ class AdminAnalyticsResponse(BaseModel):
     class_comparisons: List[dict]
     complaint_summary: dict
     live_sessions: List[dict]
+
+
+class EducatorCopilotPriority(BaseModel):
+    """One educator dashboard priority emitted by the copilot."""
+    id: str
+    title: str
+    rationale: str
+    recommended_action: str
+    severity: str
+    category: str
+    target_url: Optional[str] = None
+
+
+class EducatorCopilotDashboardResponse(BaseModel):
+    """Dashboard-facing educator copilot payload."""
+    priorities: List[EducatorCopilotPriority] = Field(default_factory=list)
+    meeting_follow_ups: List[str] = Field(default_factory=list)
+    suggested_announcements: List[str] = Field(default_factory=list)
+    summary: Optional[str] = None
+
+
+class EducatorCopilotDraft(BaseModel):
+    """Draft educator response or intervention suggestion."""
+    id: str
+    source_type: str
+    source_id: str
+    subject: str
+    summary: str
+    suggested_tone: str
+    handling_mode: str
+    draft_reply: str
+    recommended_next_step: str
+    target_audience: str
+
+
+class EducatorCommunicationCopilotResponse(BaseModel):
+    """Communication hub copilot payload."""
+    queue_summary: List[str] = Field(default_factory=list)
+    drafts: List[EducatorCopilotDraft] = Field(default_factory=list)
+
+
+class EducatorTrendExplanation(BaseModel):
+    """Plain-language explanation for a weak topic trend."""
+    topic: str
+    explanation: str
+    why_it_matters: str
+    recommended_action: str
+
+
+class EducatorGroupReviewRecommendation(BaseModel):
+    """Suggested group review based on class-wide weakness."""
+    topic: str
+    classroom_name: str
+    rationale: str
+    suggested_format: str
+    next_step: str
+
+
+class EducatorClassInsightsCopilotResponse(BaseModel):
+    """Class-insights-facing educator copilot payload."""
+    overview_summary: str
+    trend_explanations: List[EducatorTrendExplanation] = Field(default_factory=list)
+    group_review_recommendations: List[EducatorGroupReviewRecommendation] = Field(default_factory=list)
+
+
+class StudyCoachAction(BaseModel):
+    """One short, student-facing study action."""
+    label: str
+    reason: str
+    target_url: Optional[str] = None
+
+
+class StudyCoachOverviewResponse(BaseModel):
+    """Dashboard-facing study coach payload."""
+    next_action: str
+    rationale: str
+    short_plan: List[StudyCoachAction] = Field(default_factory=list)
+    weak_focus_areas: List[str] = Field(default_factory=list)
+
+
+class StudyCoachProgressResponse(BaseModel):
+    """Progress-page coaching payload."""
+    summary: str
+    practice_order: List[str] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
+
+
+class StudyCoachMaterialRecommendation(BaseModel):
+    """Recommendation for what material to study next."""
+    document_id: str
+    title: str
+    suggested_action: str
+    reason: str
+
+
+class StudyCoachMaterialsResponse(BaseModel):
+    """Materials-page study coach payload."""
+    recommendations: List[StudyCoachMaterialRecommendation] = Field(default_factory=list)
+
+
+class StudyCoachChatSuggestionsResponse(BaseModel):
+    """Learning-chat coaching payload."""
+    follow_up_prompts: List[str] = Field(default_factory=list)
+    quick_check_guidance: Optional[str] = None
+    next_step: Optional[str] = None
+
+
+class ClassroomIntelligenceAction(BaseModel):
+    """One suggested teacher or student classroom action."""
+    label: str
+    reason: str
+    target_url: Optional[str] = None
+
+
+class ClassroomTeacherAttentionSignal(BaseModel):
+    """Teacher-facing classroom alert or support signal."""
+    title: str
+    detail: str
+    severity: str
+    target_url: Optional[str] = None
+
+
+class ClassroomTeacherIntelligenceResponse(BaseModel):
+    """Teacher-focused classroom intelligence payload."""
+    overview_summary: str
+    focus_topics: List[str] = Field(default_factory=list)
+    attention_signals: List[ClassroomTeacherAttentionSignal] = Field(default_factory=list)
+    recommended_actions: List[ClassroomIntelligenceAction] = Field(default_factory=list)
+    meeting_follow_up: List[str] = Field(default_factory=list)
+
+
+class ClassroomStudentIntelligenceResponse(BaseModel):
+    """Student-facing classroom focus and next-step payload."""
+    overview_summary: str
+    focus_topics: List[str] = Field(default_factory=list)
+    personalized_focus: Optional[str] = None
+    key_takeaways: List[str] = Field(default_factory=list)
+    next_steps: List[ClassroomIntelligenceAction] = Field(default_factory=list)
+
+
+class ClassroomIntelligenceResponse(BaseModel):
+    """Shared classroom intelligence response with role-aware subviews."""
+    role: str
+    classroom_id: str
+    classroom_name: str
+    teacher_view: Optional[ClassroomTeacherIntelligenceResponse] = None
+    student_view: Optional[ClassroomStudentIntelligenceResponse] = None
+
+
+class ProctorReviewSignal(BaseModel):
+    """Top recurring incident signal inside a proctored quiz."""
+    incident_type: str
+    count: int
+
+
+class ProctorReviewStudentSummary(BaseModel):
+    """Student-level summary for an educator reviewing quiz incidents."""
+    student_id: str
+    student_name: str
+    attempt_status: str
+    warning_count: int
+    termination_reason: Optional[str] = None
+    incident_count: int
+    top_incident: str
+    latest_incident_at: Optional[str] = None
+
+
+class ProctorReviewIncident(BaseModel):
+    """A timeline event recorded during a proctored quiz."""
+    id: str
+    student_name: str
+    incident_type: str
+    severity: str
+    action_taken: str
+    details: Dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+
+
+class ProctorReviewIncidentTotals(BaseModel):
+    """Aggregate counts for proctor review dashboards."""
+    total_incidents: int
+    warning_events: int
+    terminated_events: int
+    submitted_with_warnings: int
+    terminated_attempts: int
+    submitted_attempts: int
+
+
+class ProctorReviewResponse(BaseModel):
+    """Educator-facing summary of proctored quiz incidents."""
+    quiz_id: str
+    quiz_title: str
+    overall_severity: str
+    review_summary: str
+    incident_totals: ProctorReviewIncidentTotals
+    top_signals: List[ProctorReviewSignal] = Field(default_factory=list)
+    student_summaries: List[ProctorReviewStudentSummary] = Field(default_factory=list)
+    timeline: List[ProctorReviewIncident] = Field(default_factory=list)
+    educator_recommendations: List[str] = Field(default_factory=list)

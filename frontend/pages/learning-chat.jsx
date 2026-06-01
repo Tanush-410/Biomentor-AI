@@ -4,6 +4,8 @@ import { useRouter } from 'next/router'
 import { Bot, Send, Sparkles } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import QuickCheckCard from '../components/QuickCheckCard'
+import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 
 export default function LearningChatPage() {
@@ -21,6 +23,7 @@ export default function LearningChatPage() {
     }
   ])
   const [inputValue, setInputValue] = useState('')
+  const [chatCoach, setChatCoach] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -48,8 +51,23 @@ export default function LearningChatPage() {
           setSelectedDocumentId(String(payload[0].id))
         }
       }
+      fetchStudyCoachSuggestions()
     } catch (err) {
       console.error('Failed to load documents for chat:', err)
+    }
+  }
+
+  const fetchStudyCoachSuggestions = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/chat-suggestions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (response.ok) {
+        const payload = await response.json()
+        setChatCoach(payload)
+      }
+    } catch (err) {
+      console.error('Failed to load study coach chat suggestions:', err)
     }
   }
 
@@ -98,7 +116,13 @@ export default function LearningChatPage() {
             id: `assistant-${Date.now()}`,
             role: 'assistant',
             content: payload.answer,
-            sources: payload.sources || []
+            sources: payload.sources || [],
+            answerOrigin: payload.answer_origin || 'material',
+            sourceBadge: payload.source_badge || null,
+            confidenceLabel: payload.confidence_label || 'medium',
+            confidenceReason: payload.confidence_reason || '',
+            fallbackUsed: Boolean(payload.fallback_used),
+            quickCheck: payload.quick_check || null
           }
         ])
       } else {
@@ -166,6 +190,30 @@ export default function LearningChatPage() {
           </div>
         </div>
 
+        <StudyCoachPanel
+          title="Chat follow-up guidance"
+          summary={chatCoach?.next_step || 'The coach can suggest what to ask next and when to use Quick Check after a complex answer.'}
+          confidenceReason={chatCoach?.confidence_reason}
+          actionLabel="Open Progress"
+          actionHref="/progress"
+        >
+          {(chatCoach?.follow_up_prompts || []).length > 0 ? (
+            <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Suggested follow-up prompts</p>
+              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                {chatCoach.follow_up_prompts.map((prompt, index) => (
+                  <p key={`${prompt}-${index}`}>• {prompt}</p>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {chatCoach?.quick_check_guidance ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
+              {chatCoach.quick_check_guidance}
+            </div>
+          ) : null}
+        </StudyCoachPanel>
+
         <div className="card p-0 overflow-hidden">
           <div className="h-[60vh] overflow-y-auto px-6 py-6 bg-gradient-to-b from-[#fffaf5] to-[#f5ebdf]">
             <div className="space-y-5">
@@ -184,6 +232,20 @@ export default function LearningChatPage() {
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="whitespace-pre-wrap break-words leading-7">{message.content}</p>
+                        {message.role === 'assistant' && message.answerOrigin ? (
+                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">
+                            {message.sourceBadge || (message.answerOrigin === 'material'
+                              ? 'Answered from your material'
+                              : message.answerOrigin === 'trusted_web'
+                                ? 'Enhanced with trusted web sources'
+                                : 'Enhanced with web sources')}
+                          </p>
+                        ) : null}
+                        {message.role === 'assistant' && message.confidenceReason ? (
+                          <p className={`mt-2 text-sm leading-6 ${message.confidenceLabel === 'low' ? 'text-amber-800' : 'text-slate-600'}`}>
+                            {message.confidenceReason}
+                          </p>
+                        ) : null}
                         {message.role === 'assistant' && message.sources?.length > 0 && (
                           <div className="mt-4 space-y-2">
                             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources</p>
@@ -193,10 +255,19 @@ export default function LearningChatPage() {
                                   <p className="min-w-0 break-words font-semibold">{source.document_title}</p>
                                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                     {source.page_number ? <span>Page {source.page_number}</span> : null}
+                                    {source.source_type && source.source_type !== 'material' ? (
+                                      <span className="rounded-full bg-[#f2e4d4] px-2 py-0.5 font-semibold text-[#8a5a36]">
+                                        {source.source_type === 'trusted_web' ? 'Trusted Web' : 'Web'}
+                                      </span>
+                                    ) : null}
                                     {source.document_id ? (
                                       <Link href={`/document/${source.document_id}?page=${source.page_number || 1}`} className="font-semibold text-[#8a5a36] hover:text-[#6d472d]">
                                         Open source
                                       </Link>
+                                    ) : source.url ? (
+                                      <a href={source.url} target="_blank" rel="noreferrer" className="font-semibold text-[#8a5a36] hover:text-[#6d472d]">
+                                        Open source
+                                      </a>
                                     ) : null}
                                   </div>
                                 </div>
@@ -205,6 +276,9 @@ export default function LearningChatPage() {
                             ))}
                           </div>
                         )}
+                        {message.role === 'assistant' && message.quickCheck ? (
+                          <QuickCheckCard quickCheck={message.quickCheck} token={token} />
+                        ) : null}
                       </div>
                     </div>
                   </div>

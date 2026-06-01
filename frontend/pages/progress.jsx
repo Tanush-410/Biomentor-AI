@@ -5,6 +5,7 @@ import { BarChart3, BrainCircuit, Target, TrendingUp } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
 import CircularProgress from '../components/CircularProgress'
+import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 
 const LEVEL_COLORS = {
@@ -20,6 +21,7 @@ export default function ProgressPage() {
   const router = useRouter()
   const { token, loading: authLoading } = useAuth()
   const [progress, setProgress] = useState(null)
+  const [coachProgress, setCoachProgress] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -72,15 +74,26 @@ export default function ProgressPage() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/progress`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const [response, coachResponse] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/progress`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/progress`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      ])
 
       if (response.ok) {
         const payload = await response.json()
         setProgress(payload)
+        if (coachResponse.ok) {
+          const coachPayload = await coachResponse.json()
+          setCoachProgress(coachPayload)
+        }
       } else {
         setError('Unable to load progress data.')
       }
@@ -156,6 +169,42 @@ export default function ProgressPage() {
           </div>
 
           <div className="space-y-6">
+            <StudyCoachPanel
+              title="Practice guidance"
+              summary={coachProgress?.summary || 'The coach interprets your weakest Bloom levels so you know what to practice next.'}
+              confidenceReason={coachProgress?.confidence_reason}
+              actionLabel="Open Learning Chat"
+              actionHref="/learning-chat"
+            >
+              {coachProgress ? (
+                <>
+                  {(coachProgress.practice_order || []).length > 0 ? (
+                    <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Recommended practice order</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {coachProgress.practice_order.map((item) => (
+                          <span key={item} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  <StudyCoachActionList
+                    actions={(coachProgress.recommendations || []).map((item) => ({
+                      label: item,
+                      reason: 'This order is based on your lowest-mastery Bloom levels.',
+                      target_url: '/start-quiz'
+                    }))}
+                  />
+                </>
+              ) : (
+                <div className="surface-subtle p-4 text-sm text-slate-600">
+                  Your coach will start interpreting your progress once quiz results are available.
+                </div>
+              )}
+            </StudyCoachPanel>
+
             <div className="card p-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-4">Recommendations</h2>
               {recommendations.length === 0 ? (

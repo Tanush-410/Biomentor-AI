@@ -4,10 +4,12 @@ import { AlertTriangle, Camera, CheckCircle, Clock3, Shield, Video } from 'lucid
 import { useRouter } from 'next/router'
 
 import ClassroomShell from '../../../../components/ClassroomShell'
+import ProctorReviewPanel from '../../../../components/ProctorReviewPanel'
 import { useAuth } from '../../../../context/AuthContext'
 import {
   getClassroom,
   getClassroomQuiz,
+  getClassroomQuizProctorReview,
   heartbeatClassroomQuizAttempt,
   reportClassroomQuizWarning,
   reportClassroomQuizViolation,
@@ -33,6 +35,7 @@ export default function ClassroomQuizPage() {
   const [cameraError, setCameraError] = useState('')
   const [warningCount, setWarningCount] = useState(0)
   const [latestWarning, setLatestWarning] = useState('')
+  const [proctorReview, setProctorReview] = useState(null)
   const streamRef = useRef(null)
   const videoRef = useRef(null)
   const violationSentRef = useRef(false)
@@ -43,6 +46,7 @@ export default function ClassroomQuizPage() {
   const quizId = typeof router.query.quizId === 'string' ? router.query.quizId : ''
   const isStudent = user?.role === 'student'
   const isEducator = ['educator', 'admin'].includes(user?.role)
+  const canBeginQuiz = quiz?.availability_state === 'published'
 
   useEffect(() => {
     if (authLoading || !router.isReady) return
@@ -61,9 +65,9 @@ export default function ClassroomQuizPage() {
 
     const tick = () => {
       const now = Date.now()
-      const startedAt = attempt.started_at ? new Date(attempt.started_at).getTime() : now
+      const startedAt = parseServerDate(attempt.started_at)?.getTime() || now
       const durationEnd = startedAt + (quiz.duration_minutes || 15) * 60 * 1000
-      const hardClose = quiz.available_until ? new Date(quiz.available_until).getTime() : durationEnd
+      const hardClose = parseServerDate(quiz.available_until)?.getTime() || durationEnd
       const remaining = Math.max(0, Math.floor((Math.min(durationEnd, hardClose) - now) / 1000))
       setTimeRemaining(remaining)
       if (remaining === 0) {
@@ -161,18 +165,21 @@ export default function ClassroomQuizPage() {
     setLoading(true)
     setError('')
     try {
-      const [classroomPayload, quizPayload] = await Promise.all([
+      const [classroomPayload, quizPayload, reviewPayload] = await Promise.all([
         getClassroom(token, classroomId),
-        getClassroomQuiz(token, classroomId, quizId)
+        getClassroomQuiz(token, classroomId, quizId),
+        isEducator ? getClassroomQuizProctorReview(token, classroomId, quizId) : Promise.resolve(null)
       ])
       setClassroom(classroomPayload.classroom)
       setQuiz(quizPayload.quiz)
+      setProctorReview(reviewPayload)
       const latestAttempt = quizPayload.quiz?.attempt || null
       setAttempt(latestAttempt)
       setWarningCount(latestAttempt?.violation_count || 0)
-      if (latestAttempt?.status === 'terminated' && !quizPayload.quiz?.can_start) {
+      const quizStillOpen = quizPayload.quiz?.availability_state === 'published'
+      if (latestAttempt?.status === 'terminated' && !quizStillOpen) {
         setAttemptState('terminated')
-      } else if (latestAttempt?.status === 'submitted' && !quizPayload.quiz?.can_start) {
+      } else if (latestAttempt?.status === 'submitted' && !quizStillOpen) {
         setAttemptState('submitted')
       } else {
         setAttemptState('idle')
@@ -230,7 +237,7 @@ export default function ClassroomQuizPage() {
     setError('')
     setLatestWarning('')
     try {
-      if (!quiz?.can_start) {
+      if (!canBeginQuiz) {
         throw new Error('This classroom quiz is not open for a new attempt right now.')
       }
       await ensureCameraAndFullscreen()
@@ -430,16 +437,19 @@ export default function ClassroomQuizPage() {
           </div>
 
           {!isStudent && (
-            <div className="card p-8">
-              <h3 className="text-2xl font-bold text-slate-950">Educator view</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                This quiz is published to the classroom. Students will see it in Classwork and can only begin during the allowed time window. If proctoring is enabled, any fullscreen, tab, or camera violation ends the attempt and notifies you immediately.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href={`/classrooms/${classroomId}/classwork`} className="btn btn-outline">Back to Classwork</Link>
-                <Link href="/educator/quiz-maker" className="btn btn-primary">Create Another Quiz</Link>
+            <>
+              <div className="card p-8">
+                <h3 className="text-2xl font-bold text-slate-950">Educator view</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  This quiz is published to the classroom. Students will see it in Classwork and can only begin during the allowed time window. If proctoring is enabled, any fullscreen, tab, or camera violation ends the attempt and notifies you immediately.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link href={`/classrooms/${classroomId}/classwork`} className="btn btn-outline">Back to Classwork</Link>
+                  <Link href="/educator/quiz-maker" className="btn btn-primary">Create Another Quiz</Link>
+                </div>
               </div>
-            </div>
+              <ProctorReviewPanel review={proctorReview} title="AI Proctor Review" />
+            </>
           )}
 
           {isStudent && attemptState === 'idle' && (
@@ -448,19 +458,19 @@ export default function ClassroomQuizPage() {
               <p className="mt-3 text-sm leading-7 text-slate-600">
                 You must stay in fullscreen, keep this tab visible, and keep your camera on while the quiz is active. Breaking a proctoring rule ends the quiz automatically.
               </p>
-              {attempt?.status === 'submitted' && quiz?.can_start && (
+              {attempt?.status === 'submitted' && canBeginQuiz && (
                 <div className="mt-4 rounded-xl border border-[#d8c1aa] bg-[#f7ecdf] px-4 py-3 text-[#6d472d]">
                   Your previous attempt has already been submitted. Because this quiz is still open, you can start a fresh monitored attempt.
                 </div>
               )}
-              {attempt?.status === 'terminated' && quiz?.can_start && (
+              {attempt?.status === 'terminated' && canBeginQuiz && (
                 <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
                   A previous attempt was terminated. You can start a fresh monitored attempt while this quiz is still open.
                 </div>
               )}
               {cameraError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{cameraError}</div>}
               <div className="mt-6 flex flex-wrap gap-3">
-                <button type="button" className="btn btn-primary" onClick={handleStart} disabled={starting || !quiz?.can_start}>
+                <button type="button" className="btn btn-primary" onClick={handleStart} disabled={starting || !canBeginQuiz}>
                   {starting ? 'Starting...' : attempt?.status === 'in_progress' ? 'Resume Classroom Quiz' : attempt?.status ? 'Start New Attempt' : 'Start Classroom Quiz'}
                 </button>
                 <Link href={`/classrooms/${classroomId}/classwork`} className="btn btn-outline">Back to Classwork</Link>
@@ -589,4 +599,11 @@ export default function ClassroomQuizPage() {
       </section>
     </ClassroomShell>
   )
+}
+
+function parseServerDate(value) {
+  if (!value || typeof value !== 'string') return null
+  const normalized = /(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`
+  const parsed = new Date(normalized)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
 }

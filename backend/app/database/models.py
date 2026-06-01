@@ -434,6 +434,48 @@ class ClassroomLiveMeeting(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class ClassroomMeetingTranscript(Base):
+    """Transcript snippet captured during a classroom live meeting."""
+
+    __tablename__ = "classroom_meeting_transcripts"
+
+    id = Column(String, primary_key=True, default=new_id)
+    meeting_id = Column(String, ForeignKey("classroom_live_meetings.id"), nullable=False, index=True)
+    classroom_id = Column(String, ForeignKey("classrooms.id"), nullable=False, index=True)
+    speaker_role = Column(String, default="participant", nullable=False)
+    speaker_name = Column(String, nullable=True)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ClassroomMeetingEvent(Base):
+    """Structured meeting event used by the AI meeting assistant."""
+
+    __tablename__ = "classroom_meeting_events"
+
+    id = Column(String, primary_key=True, default=new_id)
+    meeting_id = Column(String, ForeignKey("classroom_live_meetings.id"), nullable=False, index=True)
+    classroom_id = Column(String, ForeignKey("classrooms.id"), nullable=False, index=True)
+    actor_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
+    event_type = Column(String, nullable=False, index=True)
+    payload = Column(JSON, nullable=False, default=dict)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class ClassroomMeetingAISummary(Base):
+    """Persisted teacher and student AI summary payloads for meetings."""
+
+    __tablename__ = "classroom_meeting_ai_summaries"
+
+    id = Column(String, primary_key=True, default=new_id)
+    meeting_id = Column(String, ForeignKey("classroom_live_meetings.id"), nullable=False, index=True)
+    classroom_id = Column(String, ForeignKey("classrooms.id"), nullable=False, index=True)
+    summary_type = Column(String, nullable=False, index=True)
+    content_json = Column(JSON, nullable=False, default=dict)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 class LiveSessionParticipant(Base):
     """Tracks who joined a live session."""
 
