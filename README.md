@@ -59,6 +59,46 @@ The project includes:
 - AI-assisted browser-side proctoring warnings and auto-debar after repeated violations
 - circular progress indicators across major student and educator pages
 
+## AI Features Map
+
+These AI systems are part of the project and are implemented inside the `backend` and `frontend` folders, not as separate top-level root files.
+
+### AI Meeting Assistant
+- backend: `backend/app/services/meeting_assistant.py`
+- frontend: `frontend/components/MeetingAssistantPanel.jsx`
+
+### AI Educator Copilot
+- backend: `backend/app/services/educator_copilot.py`
+- frontend: `frontend/components/EducatorCopilotPanel.jsx`
+
+### AI Study Coach
+- backend: `backend/app/services/study_coach.py`
+- frontend: `frontend/components/StudyCoachPanel.jsx`
+
+### AI Classroom Intelligence
+- backend: `backend/app/services/classroom_intelligence.py`
+- frontend: `frontend/components/ClassroomIntelligencePanel.jsx`
+
+### AI Quiz Quality Layer
+- backend: `backend/app/services/quiz_quality.py`
+- frontend: `frontend/components/QuizQualityPanel.jsx`
+
+### AI Material Intelligence
+- backend: `backend/app/services/material_intelligence.py`
+- frontend: `frontend/components/MaterialIntelligencePanel.jsx`
+
+### AI Proctor Review
+- backend: `backend/app/services/proctor_review.py`
+- frontend: `frontend/components/ProctorReviewPanel.jsx`
+
+### Shared AI Quality + Retrieval Support
+- `backend/app/services/ai_quality.py`
+- `backend/app/services/ai_evidence.py`
+- `backend/app/services/ai_generation.py`
+- `backend/app/services/ai_evaluation.py`
+- `backend/app/services/web_retrieval.py`
+- `frontend/components/QuickCheckCard.jsx`
+
 ## Project Structure
 
 ```text
