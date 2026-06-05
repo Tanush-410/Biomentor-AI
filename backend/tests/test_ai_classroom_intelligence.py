@@ -47,6 +47,12 @@ class ClassroomIntelligenceServiceTest(unittest.TestCase):
         self.assertTrue(payload["attention_signals"])
         self.assertTrue(payload["recommended_actions"])
         self.assertEqual(payload["focus_topic_details"][0]["status"], "confirmed")
+        self.assertTrue(payload["class_pattern_summary"])
+        self.assertTrue(payload["reteach_recommendations"])
+        self.assertTrue(payload["student_focus_groups"])
+        self.assertIn("now", payload["teacher_brief"])
+        self.assertIn("next", payload["teacher_brief"])
+        self.assertIn("later", payload["teacher_brief"])
 
     def test_student_payload_surfaces_personal_focus_and_next_steps(self):
         payload = build_student_classroom_intelligence(
@@ -74,6 +80,10 @@ class ClassroomIntelligenceServiceTest(unittest.TestCase):
         )
         self.assertEqual(payload["personalized_focus"], "Analyze")
         self.assertTrue(payload["next_steps"])
+        self.assertTrue(payload["class_focus_reason"])
+        self.assertTrue(payload["personal_focus_reason"])
+        self.assertTrue(payload["study_targets"])
+        self.assertTrue(payload["ask_next"])
 
     def test_teacher_payload_marks_emerging_topics_when_data_is_thin(self):
         payload = build_teacher_classroom_intelligence(

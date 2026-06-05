@@ -7,7 +7,7 @@ export function EducatorCopilotPanel({ eyebrow = 'AI Educator Copilot', title, s
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="section-kicker text-[#8a5a36]">{eyebrow}</p>
-          <h3 className="mt-2 text-xl font-bold text-slate-950">{title}</h3>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">{title}</h3>
           {summary && <p className="mt-2 text-sm leading-6 text-slate-600">{summary}</p>}
         </div>
         {actionLabel && actionHref && (
@@ -39,6 +39,16 @@ export function CopilotPriorityCard({ item }) {
       {item.confidence_reason ? (
         <p className="mt-2 text-xs font-medium leading-5 text-[#6d472d]">{item.confidence_reason}</p>
       ) : null}
+      {item.why_now ? (
+        <p className="mt-3 text-sm leading-6 text-slate-700">
+          <span className="font-semibold text-[#8a5a36]">Why now:</span> {item.why_now}
+        </p>
+      ) : null}
+      {item.recommended_window ? (
+        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">
+          Recommended window: {item.recommended_window}
+        </p>
+      ) : null}
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-medium text-[#6d472d]">{item.recommended_action}</p>
         {item.target_url && (
@@ -67,6 +77,16 @@ export function CopilotDraftCard({ draft, onUseDraft }) {
       <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">
         Tone: {draft.suggested_tone}
       </p>
+      {draft.draft_reason ? (
+        <p className="mt-2 text-sm leading-6 text-slate-700">
+          <span className="font-semibold text-[#8a5a36]">Draft reason:</span> {draft.draft_reason}
+        </p>
+      ) : null}
+      {draft.escalation_signal ? (
+        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">
+          Escalation signal: {draft.escalation_signal.replace(/_/g, ' ')}
+        </p>
+      ) : null}
       {draft.confidence_reason ? (
         <p className="mt-2 text-xs font-medium leading-5 text-[#6d472d]">{draft.confidence_reason}</p>
       ) : null}
@@ -91,12 +111,27 @@ export function CopilotRecommendationCard({ item }) {
       {item.confidence_reason ? (
         <p className="mt-2 text-xs font-medium leading-5 text-[#6d472d]">{item.confidence_reason}</p>
       ) : null}
+      {item.teaching_move ? (
+        <p className="mt-3 text-sm leading-6 text-slate-700">
+          <span className="font-semibold text-[#8a5a36]">Teaching move:</span> {item.teaching_move}
+        </p>
+      ) : null}
       {item.why_it_matters && (
         <p className="mt-3 text-sm leading-6 text-slate-700">{item.why_it_matters}</p>
       )}
       <p className="mt-3 text-sm font-medium text-[#6d472d]">
         {item.recommended_action || item.next_step}
       </p>
+      {item.review_sequence?.length ? (
+        <div className="mt-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Review sequence</p>
+          <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-700">
+            {item.review_sequence.map((step) => (
+              <li key={`${item.topic}-${step}`}>• {step}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {item.suggested_format && (
         <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">
           Suggested format: {item.suggested_format}

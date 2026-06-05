@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { Bot, Send, Sparkles } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import AISpotlightBanner from '../components/AISpotlightBanner'
 import QuickCheckCard from '../components/QuickCheckCard'
 import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
@@ -165,6 +166,16 @@ export default function LearningChatPage() {
         </>
       }
     >
+        <AISpotlightBanner
+          eyebrow="Chat AI Surface"
+          title="AI Reasoning Mode"
+          description="Ask from your own material first, then let BioMentor widen the search when needed. This workspace is built to show where the answer came from, how confident the system is, and when a Quick Check should lock in the concept."
+          highlights={['PDF-first grounding', 'Trusted web fallback', 'Adaptive quick checks']}
+          primaryAction={{ label: 'Start Reasoning Session', href: '#chat-transcript' }}
+          secondaryAction={{ label: 'Open Materials', href: '/documents#material-intelligence-studio' }}
+          status="Use this when the concept is complex, the topic crosses documents, or you want the AI to show its evidence instead of giving a shallow answer."
+        />
+
         <div className="card p-6 mb-6">
           <div className="grid md:grid-cols-[1fr_auto] gap-4 items-end">
             <div>
@@ -190,31 +201,35 @@ export default function LearningChatPage() {
           </div>
         </div>
 
-        <StudyCoachPanel
-          title="Chat follow-up guidance"
-          summary={chatCoach?.next_step || 'The coach can suggest what to ask next and when to use Quick Check after a complex answer.'}
-          confidenceReason={chatCoach?.confidence_reason}
-          actionLabel="Open Progress"
-          actionHref="/progress"
-        >
-          {(chatCoach?.follow_up_prompts || []).length > 0 ? (
-            <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Suggested follow-up prompts</p>
-              <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                {chatCoach.follow_up_prompts.map((prompt, index) => (
-                  <p key={`${prompt}-${index}`}>• {prompt}</p>
-                ))}
+        <div id="chat-coach">
+          <StudyCoachPanel
+            title="Coach next question"
+            summary={chatCoach?.next_step || 'The coach can suggest what to ask next and when to use Quick Check after a complex answer.'}
+            confidenceReason={chatCoach?.confidence_reason}
+            actionLabel="Open Progress"
+            actionHref="/progress"
+            dailyGoal={chatCoach?.checkpoint_goal}
+          >
+            {(chatCoach?.follow_up_prompts || []).length > 0 ? (
+              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Suggested follow-up prompts</p>
+                <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                  {chatCoach.follow_up_prompts.map((prompt, index) => (
+                    <p key={`${prompt}-${index}`}>• {prompt}</p>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
-          {chatCoach?.quick_check_guidance ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
-              {chatCoach.quick_check_guidance}
-            </div>
-          ) : null}
-        </StudyCoachPanel>
+            ) : null}
+            {chatCoach?.quick_check_guidance ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Quick Check timing</p>
+                <p className="mt-2">{chatCoach.quick_check_guidance}</p>
+              </div>
+            ) : null}
+          </StudyCoachPanel>
+        </div>
 
-        <div className="card p-0 overflow-hidden">
+        <div id="chat-transcript" className="card p-0 overflow-hidden">
           <div className="h-[60vh] overflow-y-auto px-6 py-6 bg-gradient-to-b from-[#fffaf5] to-[#f5ebdf]">
             <div className="space-y-5">
               {messages.map((message) => (

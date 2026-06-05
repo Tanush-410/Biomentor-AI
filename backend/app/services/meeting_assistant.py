@@ -43,6 +43,15 @@ def build_teacher_assistant_snapshot(
         and event.get("payload", {}).get("question", "").strip()
     ]
 
+    concept_signals = []
+    for note in live_notes[:3]:
+        cleaned = note.rstrip(".")
+        concept_signals.append(cleaned)
+    for doubt in unresolved_doubts[:2]:
+        concept_signals.append(f"Students are still unsure about: {doubt}")
+    if meeting_title and not concept_signals:
+        concept_signals.append(f"{meeting_title} still needs one clearer anchor explanation before students leave the session.")
+
     action_items = []
     if meeting_title:
         action_items.append(f"Revisit {meeting_title} in the next class.")
@@ -50,6 +59,50 @@ def build_teacher_assistant_snapshot(
         action_items.append("Convert the key discussion points into a short revision task.")
     else:
         action_items.append("Capture the core teaching points before the meeting ends.")
+
+    teacher_moves = []
+    if unresolved_doubts:
+        teacher_moves.append(
+            {
+                "label": "Clarify the most repeated doubt before closing",
+                "reason": "Students are still leaving the meeting with unresolved conceptual confusion."
+            }
+        )
+    if live_notes:
+        teacher_moves.append(
+            {
+                "label": "Turn today’s explanation into one follow-up checkpoint",
+                "reason": "The meeting already surfaced enough teaching evidence to support a short reinforcement task."
+            }
+        )
+    if not teacher_moves:
+        teacher_moves.append(
+            {
+                "label": "Mark one key teaching point before ending the room",
+                "reason": "The assistant has too little transcript evidence to build a strong recap without one clearer anchor."
+            }
+        )
+
+    student_risk_flags = []
+    if unresolved_doubts:
+        student_risk_flags.append("Repeated unresolved doubts suggest that part of the class may leave with a shaky understanding.")
+    if not live_notes:
+        student_risk_flags.append("Transcript evidence is thin, so some important explanation may not yet be captured clearly.")
+
+    follow_up_assets = []
+    if meeting_title:
+        follow_up_assets.append(
+            {
+                "label": f"Share a {meeting_title} recap note",
+                "reason": "Students will benefit from a short written anchor after the live explanation."
+            }
+        )
+    follow_up_assets.append(
+        {
+            "label": "Post one short practice or retrieval prompt",
+            "reason": "A fast post-meeting check will confirm whether the live explanation actually landed."
+        }
+    )
 
     follow_up_suggestions = [
         "Prepare a short follow-up quiz from today's discussion.",
@@ -64,8 +117,12 @@ def build_teacher_assistant_snapshot(
 
     return {
         "live_notes": {"items": live_notes},
+        "concept_signals": {"items": concept_signals[:4]},
         "action_items": {"items": action_items},
+        "teacher_moves": teacher_moves[:3],
+        "student_risk_flags": {"items": student_risk_flags[:3]},
         "unresolved_doubts": {"items": unresolved_doubts},
+        "follow_up_assets": follow_up_assets[:3],
         "follow_up_suggestions": {"items": follow_up_suggestions},
         "confidence": confidence_meta["confidence"],
         "confidence_reason": confidence_meta["confidence_reason"],
@@ -295,8 +352,12 @@ def get_teacher_assistant_snapshot(db: Session, meeting: ClassroomLiveMeeting) -
     payload = dict(summary.content_json or {})
     payload.setdefault("meeting_id", meeting.id)
     payload.setdefault("live_notes", {"items": []})
+    payload.setdefault("concept_signals", {"items": []})
     payload.setdefault("action_items", {"items": []})
+    payload.setdefault("teacher_moves", [])
+    payload.setdefault("student_risk_flags", {"items": []})
     payload.setdefault("unresolved_doubts", {"items": []})
+    payload.setdefault("follow_up_assets", [])
     payload.setdefault("follow_up_suggestions", {"items": []})
     payload["updated_at"] = summary.updated_at
     return payload
@@ -313,9 +374,14 @@ def build_teacher_summary_payload(
     if isinstance(generated, dict):
         return {
             "summary": generated.get("summary") or " ".join(snapshot["live_notes"]["items"][:3]).strip() or "Meeting completed. Review the class discussion points.",
+            "study_recap": generated.get("study_recap") or snapshot["concept_signals"]["items"][:3],
             "action_items": generated.get("action_items") or snapshot["action_items"]["items"],
             "unresolved_doubts": generated.get("unresolved_doubts") or snapshot["unresolved_doubts"]["items"],
+            "unresolved_questions": generated.get("unresolved_questions") or generated.get("unresolved_doubts") or snapshot["unresolved_doubts"]["items"],
+            "next_class_moves": generated.get("next_class_moves") or [move["label"] for move in snapshot["teacher_moves"]],
             "follow_up_suggestions": generated.get("follow_up_suggestions") or snapshot["follow_up_suggestions"]["items"],
+            "teacher_moves": generated.get("teacher_moves") or snapshot["teacher_moves"],
+            "follow_up_assets": generated.get("follow_up_assets") or snapshot["follow_up_assets"],
             "confidence": snapshot["confidence"],
             "confidence_reason": snapshot["confidence_reason"],
             "fallback_used": snapshot["fallback_used"],
@@ -323,9 +389,14 @@ def build_teacher_summary_payload(
     summary_text = " ".join(snapshot["live_notes"]["items"][:3]).strip() or "Meeting completed. Review the class discussion points."
     return {
         "summary": summary_text,
+        "study_recap": snapshot["concept_signals"]["items"][:3],
         "action_items": snapshot["action_items"]["items"],
         "unresolved_doubts": snapshot["unresolved_doubts"]["items"],
+        "unresolved_questions": snapshot["unresolved_doubts"]["items"],
+        "next_class_moves": [move["label"] for move in snapshot["teacher_moves"]],
         "follow_up_suggestions": snapshot["follow_up_suggestions"]["items"],
+        "teacher_moves": snapshot["teacher_moves"],
+        "follow_up_assets": snapshot["follow_up_assets"],
         "confidence": snapshot["confidence"],
         "confidence_reason": snapshot["confidence_reason"],
         "fallback_used": snapshot["fallback_used"],
@@ -343,8 +414,11 @@ def build_student_summary_payload(
     if isinstance(generated, dict):
         return {
             "summary": generated.get("summary") or " ".join(snapshot["live_notes"]["items"][:2]).strip() or "Your educator has shared a recap for this meeting.",
+            "study_recap": generated.get("study_recap") or snapshot["concept_signals"]["items"][:3],
             "action_items": generated.get("action_items") or snapshot["action_items"]["items"][:2],
             "key_takeaways": generated.get("key_takeaways") or snapshot["live_notes"]["items"][:3],
+            "unresolved_questions": generated.get("unresolved_questions") or snapshot["unresolved_doubts"]["items"][:2],
+            "next_class_moves": generated.get("next_class_moves") or [asset["label"] for asset in snapshot["follow_up_assets"][:2]],
             "confidence": snapshot["confidence"],
             "confidence_reason": snapshot["confidence_reason"],
             "fallback_used": snapshot["fallback_used"],
@@ -352,8 +426,11 @@ def build_student_summary_payload(
     student_actions = snapshot["action_items"]["items"][:2]
     return {
         "summary": " ".join(snapshot["live_notes"]["items"][:2]).strip() or "Your educator has shared a recap for this meeting.",
+        "study_recap": snapshot["concept_signals"]["items"][:3],
         "action_items": student_actions,
         "key_takeaways": snapshot["live_notes"]["items"][:3],
+        "unresolved_questions": snapshot["unresolved_doubts"]["items"][:2],
+        "next_class_moves": [asset["label"] for asset in snapshot["follow_up_assets"][:2]],
         "confidence": snapshot["confidence"],
         "confidence_reason": snapshot["confidence_reason"],
         "fallback_used": snapshot["fallback_used"],

@@ -4,6 +4,7 @@ import { CalendarDays, Camera, Clock3, FileQuestion, ListChecks, PencilLine, Plu
 import { useRouter } from 'next/router'
 
 import AppShell from '../../components/AppShell'
+import AISpotlightBanner from '../../components/AISpotlightBanner'
 import QuizQualityPanel from '../../components/QuizQualityPanel'
 import { useAuth } from '../../context/AuthContext'
 import { createClassroomQuiz, listClassrooms, listDocuments } from '../../lib/classroomApi'
@@ -267,8 +268,18 @@ export default function EducatorQuizMakerPage() {
         </div>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
-        <form onSubmit={handleSubmit} className="card p-8 space-y-6">
+      <AISpotlightBanner
+        eyebrow="Assessment AI Surface"
+        title="Assessment Intelligence Studio"
+        description="Design, review, schedule, and harden classroom quizzes from one visible AI assessment workspace. The quality layer now checks what the quiz is really measuring before you release it."
+        highlights={['Quality review', 'Bloom coverage', 'Release risk']}
+        primaryAction={{ label: 'Open Assessment Review', href: '#assessment-release-gate' }}
+        secondaryAction={{ label: 'Jump to Authoring Form', href: '#quiz-authoring-studio' }}
+        status="Use this studio before publishing any classroom quiz so the assessment feels intentional, defensible, and aligned with the material it came from."
+      />
+
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px]">
+        <form id="quiz-authoring-studio" onSubmit={handleSubmit} className="card p-8 space-y-6">
           <div>
             <p className="section-kicker text-[#8a5a36]">Authoring studio</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-950">Build classroom quizzes your way, then release them on schedule.</h2>
@@ -515,6 +526,13 @@ export default function EducatorQuizMakerPage() {
         </form>
 
         <aside className="space-y-6">
+          <div id="assessment-release-gate" className="card border-[#ead8c6] bg-[#fff8f1] p-6">
+            <p className="section-kicker text-[#8a5a36]">Assessment release gate</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-950">Use the AI assessment command before you release this quiz.</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-700">
+              This review does more than catch weak wording. It tells you what the quiz is really measuring, which fixes matter first, and how to turn the results into follow-up teaching action.
+            </p>
+          </div>
           <QuizQualityPanel review={qualityReview} loading={reviewing} error={reviewError} onReview={handleReview} />
           <div className="card p-6">
             <p className="section-kicker text-[#8a5a36]">Publishing summary</p>

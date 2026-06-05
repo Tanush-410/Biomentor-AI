@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AlertCircle, Camera, Mic, PhoneOff, Video } from 'lucide-react'
 
 import MeetingAssistantPanel from './MeetingAssistantPanel'
+import AISpotlightBanner from './AISpotlightBanner'
 import { useWebRTCMeeting } from '../hooks/useWebRTCMeeting'
 import { getMeetingAssistantSnapshot, postMeetingEvent, postMeetingTranscript } from '../lib/classroomApi'
 import { createMeetingTranscriptClient } from '../lib/meetingTranscriptClient'
@@ -129,6 +130,31 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
     <div className="space-y-6">
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div> : null}
       {assistantError ? <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{assistantError}</div> : null}
+
+      <AISpotlightBanner
+        eyebrow="Live AI Surface"
+        title="AI Teaching Room"
+        description="The meeting room is now a dedicated teaching surface: run the live session, watch who is present, and let the meeting assistant turn discussion into teacher moves, doubts, and follow-up study assets."
+        highlights={['Live teacher copilot', 'Doubt flags', 'Post-meeting recap']}
+        primaryAction={isTeacher ? { label: 'Open Meeting Copilot', href: '#meeting-copilot' } : undefined}
+        secondaryAction={{ label: 'Return to Live Lobby', href: `/classrooms/${classroomId}/live` }}
+        status="Use the room for the session itself. Use the copilot to capture what happened and what the class should do next."
+      />
+
+      {isTeacher ? (
+        <div id="meeting-copilot" className="card p-6">
+          <p className="section-kicker text-[#8a5a36]">Meeting Copilot</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">Live teacher guidance during the session.</h3>
+          <p className="mt-3 text-sm leading-7 text-slate-600">
+            BioMentor is reading transcript snippets and your explicit meeting flags to suggest what to reteach, what students are still unsure about, and what should happen after the room ends.
+          </p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="surface-subtle p-4 text-sm text-slate-700">Use <strong>Flag Doubt</strong> when a concept remains unresolved.</div>
+            <div className="surface-subtle p-4 text-sm text-slate-700">The teacher copilot refreshes automatically while the room stays open.</div>
+            <div className="surface-subtle p-4 text-sm text-slate-700">Ended meetings publish a cleaner student-safe recap back in the class live page.</div>
+          </div>
+        </div>
+      ) : null}
 
       <div className={`grid gap-5 ${isTeacher ? '2xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
         <div className="space-y-5">

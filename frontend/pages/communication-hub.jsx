@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import AppShell from '../components/AppShell'
+import AISpotlightBanner from '../components/AISpotlightBanner'
 import { CopilotDraftCard, EducatorCopilotPanel } from '../components/EducatorCopilotPanel'
 import { useAuth } from '../context/AuthContext'
 
@@ -154,6 +155,16 @@ export default function CommunicationHubPage() {
     >
       {error && <div className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-red-700 break-words">{error}</div>}
 
+      <AISpotlightBanner
+        eyebrow="Communication AI Surface"
+        title="Copilot Response Center"
+        description="This hub is no longer just an inbox. BioMentor now drafts educator responses, highlights what is urgent, and helps you decide whether a signal should stay private, become a direct reply, or turn into a class-wide update."
+        highlights={['Draft-ready replies', 'Escalation guidance', 'Inbox triage signals']}
+        primaryAction={{ label: 'Open Copilot Drafts', href: '#educator-copilot' }}
+        secondaryAction={{ label: 'Compose Response', href: '#compose-response' }}
+        status="Use the copilot first, then write or approve the response. That keeps communication faster, more consistent, and more aligned with what the student or class actually needs."
+      />
+
       <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <div className="card p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -245,22 +256,30 @@ export default function CommunicationHubPage() {
         </div>
 
         <div className="grid gap-6">
-          <EducatorCopilotPanel
-            title="Draft replies and handling guidance"
-            summary={(copilot?.queue_summary || []).join(' ')}
-          >
-            {(copilot?.drafts || []).length === 0 ? (
-              <div className="surface-subtle p-4 text-sm text-slate-600">
-                The copilot will surface draft-ready responses here as new complaints and student messages arrive.
+          <div id="educator-copilot">
+            <EducatorCopilotPanel
+              title="Educator Command Center"
+              summary={(copilot?.queue_summary || []).join(' ')}
+            >
+              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4 text-sm leading-6 text-slate-700">
+                <p className="font-semibold text-[#8a5a36]">Draft reason</p>
+                <p className="mt-1">Each draft explains why the copilot chose that response strategy before you send anything.</p>
+                <p className="mt-3 font-semibold text-[#8a5a36]">Escalation signal</p>
+                <p className="mt-1">You can quickly see whether the issue looks private, repeatable, or likely to need class-wide clarification.</p>
               </div>
-            ) : (
-              (copilot?.drafts || []).slice(0, 2).map((draft) => (
-                <CopilotDraftCard key={draft.id} draft={draft} onUseDraft={applyDraft} data-confidence-reason={draft.confidence_reason || ''} />
-              ))
-            )}
-          </EducatorCopilotPanel>
+              {(copilot?.drafts || []).length === 0 ? (
+                <div className="surface-subtle p-4 text-sm text-slate-600">
+                  The copilot will surface draft-ready responses here as new complaints and student messages arrive.
+                </div>
+              ) : (
+                (copilot?.drafts || []).slice(0, 2).map((draft) => (
+                  <CopilotDraftCard key={draft.id} draft={draft} onUseDraft={applyDraft} data-confidence-reason={draft.confidence_reason || ''} />
+                ))
+              )}
+            </EducatorCopilotPanel>
+          </div>
 
-          <div className="card p-6">
+          <div id="compose-response" className="card p-6">
             <p className="section-kicker text-[#8a5a36]">Compose update</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Send a class-wide or targeted response.</h2>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">

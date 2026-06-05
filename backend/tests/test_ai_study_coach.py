@@ -42,6 +42,10 @@ class StudyCoachServiceTest(unittest.TestCase):
         self.assertIn("next_action", payload)
         self.assertGreaterEqual(len(payload["short_plan"]), 2)
         self.assertIn("Analyze", payload["weak_focus_areas"])
+        self.assertIn("study_mode", payload)
+        self.assertIn("daily_goal", payload)
+        self.assertIn("weekly_plan", payload)
+        self.assertIn("recovery_path", payload)
 
     def test_material_recommendation_prefers_uploaded_pdf_when_gaps_exist(self):
         payload = build_study_coach_materials_payload(
@@ -49,6 +53,8 @@ class StudyCoachServiceTest(unittest.TestCase):
             gap_list=[{"level": "Analyze", "gap_percentage": 58.0}],
         )
         self.assertEqual(payload["recommendations"][0]["document_id"], "doc-1")
+        self.assertGreaterEqual(len(payload["recommendations"]), 1)
+        self.assertIn("sequence_reason", payload)
 
     def test_chat_suggestions_offer_follow_up_prompts_and_quick_check_guidance(self):
         payload = build_study_coach_chat_payload(
@@ -57,6 +63,7 @@ class StudyCoachServiceTest(unittest.TestCase):
         )
         self.assertTrue(payload["follow_up_prompts"])
         self.assertIn("Quick Check", payload["quick_check_guidance"])
+        self.assertIn("checkpoint_goal", payload)
 
     def test_progress_payload_explains_practice_order(self):
         payload = build_study_coach_progress_payload(
@@ -68,11 +75,30 @@ class StudyCoachServiceTest(unittest.TestCase):
             }
         )
         self.assertIn("Analyze", payload["practice_order"])
+        self.assertIn("study_mode", payload)
+        self.assertIn("mode_reason", payload)
+        self.assertIn("checkpoint_goal", payload)
 
     def test_sparse_progress_avoids_overpersonalizing(self):
         payload = build_study_coach_progress_payload({"averageScore": 0, "bloomLevelStats": {}})
         self.assertIn("first quiz", payload["summary"].lower())
         self.assertEqual(payload["confidence"], "low")
+
+    def test_overview_assigns_reinforcement_mode_for_low_mastery(self):
+        payload = build_study_coach_overview(
+            progress_payload={
+                "averageScore": 41,
+                "totalQuizzes": 4,
+                "bloomLevelStats": {
+                    4: {"name": "Analyze", "count": 8, "average": 35},
+                    2: {"name": "Understand", "count": 5, "average": 58},
+                },
+            },
+            recommendations={"immediate": [], "short_term": [], "next_steps": []},
+            documents=[{"id": "doc-1", "title": "Cell Biology Notes"}],
+        )
+        self.assertEqual(payload["study_mode"], "reinforcement")
+        self.assertTrue(payload["daily_goal"]["label"])
 
 
 class StudyCoachRouteTest(unittest.TestCase):

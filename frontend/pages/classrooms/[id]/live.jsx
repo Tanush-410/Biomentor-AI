@@ -151,12 +151,45 @@ export default function ClassroomLivePage() {
                   <p className="mt-3 text-sm leading-7 text-slate-600">
                     {recap?.summary || 'Summary will appear after the meeting wrap-up.'}
                   </p>
+                  {(recap?.study_recap || []).length ? (
+                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#8a5a36]">Study recap</p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                        {recap.study_recap.map((item) => (
+                          <li key={`${meeting.id}-study-${item}`}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                   {(recap?.action_items || []).length ? (
-                    <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-700">
-                      {recap.action_items.map((item) => (
-                        <li key={`${meeting.id}-${item}`}>{item}</li>
-                      ))}
-                    </ul>
+                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#8a5a36]">Action items</p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                        {recap.action_items.map((item) => (
+                          <li key={`${meeting.id}-action-${item}`}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(recap?.unresolved_questions || []).length ? (
+                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#8a5a36]">Unresolved questions</p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                        {recap.unresolved_questions.map((item) => (
+                          <li key={`${meeting.id}-question-${item}`}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {(recap?.next_class_moves || []).length ? (
+                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#8a5a36]">Next class moves</p>
+                      <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                        {recap.next_class_moves.map((item) => (
+                          <li key={`${meeting.id}-next-${item}`}>• {item}</li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : null}
                 </section>
               )

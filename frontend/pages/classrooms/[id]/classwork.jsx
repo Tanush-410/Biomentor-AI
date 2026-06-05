@@ -135,6 +135,7 @@ export default function ClassroomClassworkPage() {
     <ClassroomShell classroom={classroom} activeTab="classwork" isLoading={loading} error={error}>
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
+          <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="classwork" />
           <div className="card p-6">
             <p className="section-kicker text-[#8a5a36]">Classwork board</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Materials, tasks, quizzes, and due dates.</h3>
@@ -142,8 +143,6 @@ export default function ClassroomClassworkPage() {
               Keep study resources, assignments, and quiz references organized in one focused classwork space.
             </p>
           </div>
-
-          <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="classwork" />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card p-6">

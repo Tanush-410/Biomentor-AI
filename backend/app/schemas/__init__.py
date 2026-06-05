@@ -92,11 +92,45 @@ class MaterialIntelligenceFlashcard(BaseModel):
     answer: str
 
 
+class MaterialLayeredSummaries(BaseModel):
+    """Three study depths for the same material."""
+    quick: str
+    standard: str
+    exam_focus: str
+
+
+class MaterialConceptNode(BaseModel):
+    """One concept and its connections inside the document."""
+    label: str
+    importance: str
+    connects_to: List[str] = Field(default_factory=list)
+
+
+class MaterialTrapItem(BaseModel):
+    """One misconception trap and the correction."""
+    concept: str
+    trap: str
+    correction: str
+
+
+class MaterialVivaQuestion(BaseModel):
+    """A likely viva/oral question from the material."""
+    question: str
+    expected_focus: str
+
+
+class MaterialStudyStep(BaseModel):
+    """One recommended next study action."""
+    label: str
+    reason: str
+
+
 class MaterialIntelligenceResponse(BaseModel):
     """Document-level AI study layer."""
     document_id: str
     document_title: str
     summary: str
+    layered_summaries: MaterialLayeredSummaries
     revision_bullets: List[str] = Field(default_factory=list)
     glossary: List[MaterialIntelligenceGlossaryItem] = Field(default_factory=list)
     flashcards: List[MaterialIntelligenceFlashcard] = Field(default_factory=list)
@@ -104,6 +138,12 @@ class MaterialIntelligenceResponse(BaseModel):
     prerequisite_warning: Optional[str] = None
     concepts: List[Dict[str, Any]] = Field(default_factory=list)
     key_pages: List[Dict[str, Any]] = Field(default_factory=list)
+    concept_map: List[MaterialConceptNode] = Field(default_factory=list)
+    misconception_traps: List[MaterialTrapItem] = Field(default_factory=list)
+    viva_questions: List[MaterialVivaQuestion] = Field(default_factory=list)
+    study_path: List[MaterialStudyStep] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 # ===== BLOOM'S TAXONOMY SCHEMAS =====
@@ -474,6 +514,27 @@ class QuizQualityBloomMetric(BaseModel):
     percentage: int
 
 
+class QuizQualityQuestionHealth(BaseModel):
+    """Per-question health summary for manual quiz review."""
+    question_number: int
+    status: str
+    title: str
+    detail: str
+
+
+class QuizQualityFixFirstItem(BaseModel):
+    """Highest-priority action before releasing a quiz."""
+    title: str
+    detail: str
+    impact: str
+
+
+class QuizQualityRemediationStep(BaseModel):
+    """Post-release coaching step tied to quiz shape."""
+    phase: str
+    action: str
+
+
 class QuizQualityReviewRequest(BaseModel):
     """Educator draft-review request before publishing a classroom quiz."""
     title: str
@@ -496,9 +557,16 @@ class QuizQualityReviewResponse(BaseModel):
     quality_score: int
     readiness: str
     summary: str
+    assessment_focus: str
+    release_risk: str
     issues: List[QuizQualityIssue] = Field(default_factory=list)
     suggestions: List[QuizQualitySuggestion] = Field(default_factory=list)
     bloom_distribution: List[QuizQualityBloomMetric] = Field(default_factory=list)
+    question_health: List[QuizQualityQuestionHealth] = Field(default_factory=list)
+    fix_first: List[QuizQualityFixFirstItem] = Field(default_factory=list)
+    remediation_plan: List[QuizQualityRemediationStep] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class ClassroomQuizSubmissionAnswer(BaseModel):
@@ -606,12 +674,28 @@ class MeetingAssistantSection(BaseModel):
     items: List[str] = Field(default_factory=list)
 
 
+class MeetingAssistantTeacherMove(BaseModel):
+    """Teacher move suggested by the meeting assistant."""
+    label: str
+    reason: str
+
+
+class MeetingAssistantFollowUpAsset(BaseModel):
+    """Suggested artifact to share after the meeting."""
+    label: str
+    reason: str
+
+
 class MeetingAssistantSnapshotResponse(BaseModel):
     """Teacher-facing AI meeting assistant state."""
     meeting_id: str
     live_notes: MeetingAssistantSection
+    concept_signals: MeetingAssistantSection
     action_items: MeetingAssistantSection
+    teacher_moves: List[MeetingAssistantTeacherMove] = Field(default_factory=list)
+    student_risk_flags: MeetingAssistantSection
     unresolved_doubts: MeetingAssistantSection
+    follow_up_assets: List[MeetingAssistantFollowUpAsset] = Field(default_factory=list)
     follow_up_suggestions: MeetingAssistantSection
     updated_at: Optional[datetime] = None
 
@@ -620,8 +704,11 @@ class MeetingRecapResponse(BaseModel):
     """Student-safe post-meeting recap payload."""
     meeting_id: str
     summary: str
+    study_recap: List[str] = Field(default_factory=list)
     action_items: List[str] = Field(default_factory=list)
     key_takeaways: List[str] = Field(default_factory=list)
+    unresolved_questions: List[str] = Field(default_factory=list)
+    next_class_moves: List[str] = Field(default_factory=list)
 
 
 class ClassroomLiveScheduleCreate(BaseModel):
@@ -701,6 +788,9 @@ class EducatorCopilotPriority(BaseModel):
     severity: str
     category: str
     target_url: Optional[str] = None
+    why_now: Optional[str] = None
+    recommended_window: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class EducatorCopilotDashboardResponse(BaseModel):
@@ -708,6 +798,7 @@ class EducatorCopilotDashboardResponse(BaseModel):
     priorities: List[EducatorCopilotPriority] = Field(default_factory=list)
     meeting_follow_ups: List[str] = Field(default_factory=list)
     suggested_announcements: List[str] = Field(default_factory=list)
+    intervention_plan: List[str] = Field(default_factory=list)
     summary: Optional[str] = None
 
 
@@ -723,6 +814,9 @@ class EducatorCopilotDraft(BaseModel):
     draft_reply: str
     recommended_next_step: str
     target_audience: str
+    draft_reason: Optional[str] = None
+    escalation_signal: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class EducatorCommunicationCopilotResponse(BaseModel):
@@ -737,6 +831,8 @@ class EducatorTrendExplanation(BaseModel):
     explanation: str
     why_it_matters: str
     recommended_action: str
+    teaching_move: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class EducatorGroupReviewRecommendation(BaseModel):
@@ -746,6 +842,8 @@ class EducatorGroupReviewRecommendation(BaseModel):
     rationale: str
     suggested_format: str
     next_step: str
+    review_sequence: List[str] = Field(default_factory=list)
+    confidence_reason: Optional[str] = None
 
 
 class EducatorClassInsightsCopilotResponse(BaseModel):
@@ -762,19 +860,37 @@ class StudyCoachAction(BaseModel):
     target_url: Optional[str] = None
 
 
+class StudyCoachGoal(BaseModel):
+    """A focused goal emitted by the coach."""
+    label: str
+    reason: str
+
+
 class StudyCoachOverviewResponse(BaseModel):
     """Dashboard-facing study coach payload."""
+    study_mode: str
+    mode_reason: str
     next_action: str
     rationale: str
+    daily_goal: StudyCoachGoal
+    weekly_plan: List[StudyCoachAction] = Field(default_factory=list)
+    recovery_path: List[StudyCoachAction] = Field(default_factory=list)
     short_plan: List[StudyCoachAction] = Field(default_factory=list)
     weak_focus_areas: List[str] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class StudyCoachProgressResponse(BaseModel):
     """Progress-page coaching payload."""
+    study_mode: str
+    mode_reason: str
     summary: str
+    checkpoint_goal: StudyCoachGoal
     practice_order: List[str] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class StudyCoachMaterialRecommendation(BaseModel):
@@ -787,7 +903,10 @@ class StudyCoachMaterialRecommendation(BaseModel):
 
 class StudyCoachMaterialsResponse(BaseModel):
     """Materials-page study coach payload."""
+    sequence_reason: Optional[str] = None
     recommendations: List[StudyCoachMaterialRecommendation] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class StudyCoachChatSuggestionsResponse(BaseModel):
@@ -795,6 +914,9 @@ class StudyCoachChatSuggestionsResponse(BaseModel):
     follow_up_prompts: List[str] = Field(default_factory=list)
     quick_check_guidance: Optional[str] = None
     next_step: Optional[str] = None
+    checkpoint_goal: Optional[StudyCoachGoal] = None
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class ClassroomIntelligenceAction(BaseModel):
@@ -812,13 +934,48 @@ class ClassroomTeacherAttentionSignal(BaseModel):
     target_url: Optional[str] = None
 
 
+class ClassroomTeacherFocusGroup(BaseModel):
+    """Grouped set of learners that need a similar classroom response."""
+    label: str
+    reason: str
+    learner_count: int
+
+
+class ClassroomTeacherReteachRecommendation(BaseModel):
+    """One reteach move for a recurring class-level weakness."""
+    topic: str
+    reason: str
+    recommended_move: str
+
+
+class ClassroomTeacherBrief(BaseModel):
+    """Teacher-facing summary of what matters now versus later."""
+    now: str
+    next: str
+    later: str
+
+
 class ClassroomTeacherIntelligenceResponse(BaseModel):
     """Teacher-focused classroom intelligence payload."""
     overview_summary: str
     focus_topics: List[str] = Field(default_factory=list)
+    focus_topic_details: List[Dict[str, Any]] = Field(default_factory=list)
+    class_pattern_summary: List[str] = Field(default_factory=list)
     attention_signals: List[ClassroomTeacherAttentionSignal] = Field(default_factory=list)
+    student_focus_groups: List[ClassroomTeacherFocusGroup] = Field(default_factory=list)
+    reteach_recommendations: List[ClassroomTeacherReteachRecommendation] = Field(default_factory=list)
     recommended_actions: List[ClassroomIntelligenceAction] = Field(default_factory=list)
     meeting_follow_up: List[str] = Field(default_factory=list)
+    teacher_brief: Optional[ClassroomTeacherBrief] = None
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
+
+
+class ClassroomStudentStudyTarget(BaseModel):
+    """One class-specific student study target."""
+    label: str
+    reason: str
+    target_url: Optional[str] = None
 
 
 class ClassroomStudentIntelligenceResponse(BaseModel):
@@ -826,8 +983,14 @@ class ClassroomStudentIntelligenceResponse(BaseModel):
     overview_summary: str
     focus_topics: List[str] = Field(default_factory=list)
     personalized_focus: Optional[str] = None
+    class_focus_reason: Optional[str] = None
+    personal_focus_reason: Optional[str] = None
     key_takeaways: List[str] = Field(default_factory=list)
     next_steps: List[ClassroomIntelligenceAction] = Field(default_factory=list)
+    study_targets: List[ClassroomStudentStudyTarget] = Field(default_factory=list)
+    ask_next: List[str] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None
 
 
 class ClassroomIntelligenceResponse(BaseModel):
@@ -878,14 +1041,33 @@ class ProctorReviewIncidentTotals(BaseModel):
     submitted_attempts: int
 
 
+class ProctorReviewDebarGuidance(BaseModel):
+    """Educator-facing debar review note for serious attempts."""
+    status: str
+    rationale: str
+
+
+class ProctorReviewFollowUpAction(BaseModel):
+    """One educator follow-up move after reviewing incidents."""
+    phase: str
+    action: str
+
+
 class ProctorReviewResponse(BaseModel):
     """Educator-facing summary of proctored quiz incidents."""
     quiz_id: str
     quiz_title: str
     overall_severity: str
     review_summary: str
+    case_posture: str
+    evidence_strength: str
+    review_priority: str
     incident_totals: ProctorReviewIncidentTotals
     top_signals: List[ProctorReviewSignal] = Field(default_factory=list)
     student_summaries: List[ProctorReviewStudentSummary] = Field(default_factory=list)
     timeline: List[ProctorReviewIncident] = Field(default_factory=list)
+    debarrment_guidance: Optional[ProctorReviewDebarGuidance] = None
+    follow_up_actions: List[ProctorReviewFollowUpAction] = Field(default_factory=list)
     educator_recommendations: List[str] = Field(default_factory=list)
+    confidence: Optional[str] = None
+    confidence_reason: Optional[str] = None

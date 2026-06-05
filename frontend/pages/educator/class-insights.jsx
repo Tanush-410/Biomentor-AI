@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import AppShell from '../../components/AppShell'
+import AISpotlightBanner from '../../components/AISpotlightBanner'
 import CircularProgress from '../../components/CircularProgress'
 import { CopilotRecommendationCard, EducatorCopilotPanel } from '../../components/EducatorCopilotPanel'
 import { useAuth } from '../../context/AuthContext'
@@ -57,6 +58,16 @@ export default function ClassInsightsPage() {
     >
       {error && <div className="rounded-xl border border-[#d5b598] bg-[#f5e7d8] px-4 py-3 text-[#7a5030]">{error}</div>}
 
+      <AISpotlightBanner
+        eyebrow="Insights AI Surface"
+        title="Insight Command Deck"
+        description="This is the educator-facing AI deck for class-wide patterns. Use it to see what topics are slipping, which reteach move matters most, and how the copilot wants you to run the next review cycle."
+        highlights={['Topic trend diagnosis', 'Group review moves', 'Teaching sequence guidance']}
+        primaryAction={{ label: 'Open Insight Copilot', href: '#insight-copilot' }}
+        secondaryAction={{ label: 'Jump to Topic Trends', href: '#topic-trends' }}
+        status="This deck turns quiz and classroom signals into teaching decisions, so class insight leads directly to class action."
+      />
+
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Classrooms" value={insights?.overview?.classrooms || 0} />
         <StatCard label="Students Measured" value={insights?.overview?.students_measured || 0} />
@@ -65,7 +76,7 @@ export default function ClassInsightsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="card p-6">
+        <div id="topic-trends" className="card p-6">
           <h2 className="text-xl font-bold text-slate-950">Topic-Level Trends</h2>
           <div className="mt-5 space-y-4">
             {(insights?.topic_trends || []).length === 0 ? (
@@ -95,28 +106,36 @@ export default function ClassInsightsPage() {
           </div>
         </div>
 
-        <EducatorCopilotPanel
-          title="Copilot interpretation and group review guidance"
-          summary={copilot?.overview_summary}
-        >
-          {(copilot?.trend_explanations || []).length === 0 ? (
-            <div className="surface-subtle p-4 text-sm text-slate-600">
-              No copilot recommendations yet. Once quizzes generate topic-level trends, this panel will explain what to reteach next.
+        <div id="insight-copilot">
+          <EducatorCopilotPanel
+            title="Educator Command Center"
+            summary={copilot?.overview_summary}
+          >
+            <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4 text-sm leading-6 text-slate-700">
+              <p className="font-semibold text-[#8a5a36]">Teaching move</p>
+              <p className="mt-1">The copilot explains the exact reteach move it recommends for each weak topic.</p>
+              <p className="mt-3 font-semibold text-[#8a5a36]">Review sequence</p>
+              <p className="mt-1">Group-review suggestions now include a clearer sequence for how the educator should run the reteach cycle.</p>
             </div>
-          ) : (
-            (copilot?.trend_explanations || []).map((item) => (
-              <CopilotRecommendationCard key={`explanation-${item.topic}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
-            ))
-          )}
-          {(copilot?.group_review_recommendations || []).length > 0 && (
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Group review recommendations</p>
-              {copilot.group_review_recommendations.map((item, index) => (
-                <CopilotRecommendationCard key={`recommendation-${item.topic}-${index}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
-              ))}
-            </div>
-          )}
-        </EducatorCopilotPanel>
+            {(copilot?.trend_explanations || []).length === 0 ? (
+              <div className="surface-subtle p-4 text-sm text-slate-600">
+                No copilot recommendations yet. Once quizzes generate topic-level trends, this panel will explain what to reteach next.
+              </div>
+            ) : (
+              (copilot?.trend_explanations || []).map((item) => (
+                <CopilotRecommendationCard key={`explanation-${item.topic}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
+              ))
+            )}
+            {(copilot?.group_review_recommendations || []).length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Group review recommendations</p>
+                {copilot.group_review_recommendations.map((item, index) => (
+                  <CopilotRecommendationCard key={`recommendation-${item.topic}-${index}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
+                ))}
+              </div>
+            )}
+          </EducatorCopilotPanel>
+        </div>
       </section>
 
       <section className="card p-6">

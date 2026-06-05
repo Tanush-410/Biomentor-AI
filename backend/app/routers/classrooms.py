@@ -1344,8 +1344,11 @@ async def get_meeting_recap(
     meeting = get_classroom_meeting(db, classroom.id, meeting_id)
     recap = get_student_recap(db, meeting) or {
         "summary": "Meeting recap will appear after the session ends.",
+        "study_recap": [],
         "action_items": [],
         "key_takeaways": [],
+        "unresolved_questions": [],
+        "next_class_moves": [],
     }
     recap["meeting_id"] = meeting.id
     return recap

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 import AppShell from '../../components/AppShell'
+import AISpotlightBanner from '../../components/AISpotlightBanner'
 import MaterialIntelligencePanel from '../../components/MaterialIntelligencePanel'
 import { useAuth } from '../../context/AuthContext'
 import { deleteOfflineDocument, getOfflineDocument, saveOfflineDocument } from '../../lib/offlineDocuments'
@@ -277,6 +278,16 @@ export default function StudyDocumentPage() {
 
         {!loading && !error && document && (
           <div className="space-y-6">
+            <AISpotlightBanner
+              eyebrow="Document AI Surface"
+              title="Deep Study Mode"
+              description="This page is no longer just a viewer. It is your document-level AI study room: inspect the file, jump to key pages, open the intelligence workspace, and turn the same material into chat or quiz action."
+              highlights={['Material intelligence', 'Key-page jumps', 'Quiz from this material']}
+              primaryAction={{ label: 'Open Material Workspace', href: '#material-intelligence-workspace' }}
+              secondaryAction={{ label: 'Jump to PDF Viewer', href: '#pdf-viewer' }}
+              status="Use this mode when one document deserves focused revision. It is built to help you study deeper, not just read passively."
+            />
+
             <div className="card p-8">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
                 <div>
@@ -342,7 +353,7 @@ export default function StudyDocumentPage() {
             </div>
 
             {isPdf && (
-              <div className="card p-8">
+              <div id="pdf-viewer" className="card p-8">
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <h3 className="text-xl font-bold">PDF Viewer</h3>
                   {fileLoading && <p className="text-sm text-slate-500">Preparing PDF...</p>}
@@ -449,12 +460,30 @@ export default function StudyDocumentPage() {
             )}
 
             {materialIntelligence && (
-              <MaterialIntelligencePanel
-                intelligence={materialIntelligence}
-                title="Study layer for this material"
-                actionHref="/learning-chat"
-                actionLabel="Open Learning Chat"
-              />
+              <section id="material-intelligence-workspace" className="card p-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="max-w-3xl">
+                    <p className="section-kicker text-[#8a5a36]">AI Study Engine</p>
+                    <h3 className="mt-2 text-3xl font-bold text-slate-950">Material Intelligence Workspace</h3>
+                    <p className="mt-3 text-base leading-7 text-slate-600">
+                      Break this document into concepts, traps, viva prompts, and the best order to study it before you jump into questions.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <Link href="/learning-chat" className="btn btn-outline">Ask Learning Chat</Link>
+                    <button type="button" onClick={handleStartQuiz} className="btn btn-primary">
+                      Generate Quiz From This Material
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <MaterialIntelligencePanel
+                    intelligence={materialIntelligence}
+                    title="Use the document as an exam-focused study engine"
+                  />
+                </div>
+              </section>
             )}
           </div>
         )}

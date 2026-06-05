@@ -59,6 +59,11 @@ class ProctorReviewServiceTest(unittest.TestCase):
         self.assertTrue(payload["educator_recommendations"])
         self.assertIn("terminated", payload["review_summary"])
         self.assertIn("confidence_reason", payload)
+        self.assertIn("case_posture", payload)
+        self.assertIn("evidence_strength", payload)
+        self.assertIn("review_priority", payload)
+        self.assertIn("debarrment_guidance", payload)
+        self.assertTrue(payload["follow_up_actions"])
 
     def test_heuristic_only_incidents_require_review_language(self):
         payload = build_proctor_review_payload(
@@ -89,6 +94,9 @@ class ProctorReviewServiceTest(unittest.TestCase):
         )
         joined = " ".join(payload["educator_recommendations"]).lower()
         self.assertIn("review", joined)
+        self.assertEqual(payload["case_posture"], "review_required")
+        self.assertIn(payload["evidence_strength"], {"mixed", "limited"})
+        self.assertTrue(payload["follow_up_actions"])
 
 
 class ProctorReviewRouteTest(unittest.TestCase):

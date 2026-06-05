@@ -59,6 +59,9 @@ class EducatorCopilotServiceTest(unittest.TestCase):
         self.assertIn("urgent item", payload["summary"])
         self.assertIn("Share the osmosis recap sheet.", payload["meeting_follow_ups"])
         self.assertTrue(payload["priorities"][0]["confidence_reason"])
+        self.assertTrue(payload["priorities"][0]["why_now"])
+        self.assertTrue(payload["priorities"][0]["recommended_window"])
+        self.assertTrue(payload["intervention_plan"])
 
     def test_communication_payload_creates_reply_drafts(self):
         payload = build_communication_copilot_payload(
@@ -88,6 +91,8 @@ class EducatorCopilotServiceTest(unittest.TestCase):
         self.assertIn("open complaint", payload["queue_summary"][0])
         self.assertEqual(payload["drafts"][0]["handling_mode"], "private_then_classwide")
         self.assertTrue(payload["drafts"][0]["confidence_reason"])
+        self.assertTrue(payload["drafts"][0]["draft_reason"])
+        self.assertTrue(payload["drafts"][0]["escalation_signal"])
 
     def test_class_insights_payload_explains_trends_and_review_actions(self):
         payload = build_class_insights_copilot_payload(
@@ -105,6 +110,8 @@ class EducatorCopilotServiceTest(unittest.TestCase):
         self.assertEqual(payload["trend_explanations"][0]["topic"], "Analyze")
         self.assertEqual(payload["group_review_recommendations"][0]["classroom_name"], "Biology Lab")
         self.assertTrue(payload["group_review_recommendations"][0]["confidence_reason"])
+        self.assertTrue(payload["trend_explanations"][0]["teaching_move"])
+        self.assertTrue(payload["group_review_recommendations"][0]["review_sequence"])
 
 
 class EducatorCopilotRouteTest(unittest.TestCase):

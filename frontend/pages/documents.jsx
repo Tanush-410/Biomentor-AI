@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { BookOpen, Brain, Eye, HardDriveDownload, Trash2, Upload } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import AISpotlightBanner from '../components/AISpotlightBanner'
 import MaterialIntelligencePanel from '../components/MaterialIntelligencePanel'
 import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
@@ -244,6 +245,16 @@ export default function DocumentsPage() {
           </div>
         )}
 
+        <AISpotlightBanner
+          eyebrow="Document AI Surface"
+          title="Material Intelligence Studio"
+          description="Turn every uploaded note or PDF into a visible AI study workspace: layered summaries, concept maps, misconception traps, viva prompts, and the exact path to revise it well."
+          highlights={['Layered summaries', 'Concept map', 'Exam-focused study path']}
+          primaryAction={{ label: 'Open Material Intelligence', href: '#material-intelligence-studio' }}
+          secondaryAction={{ label: 'Review Coach Sequence', href: '#study-coach-materials' }}
+          status="This is where BioMentor stops being a file locker and starts acting like a study engine built around your own material."
+        />
+
         <section className="card p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
@@ -321,41 +332,62 @@ export default function DocumentsPage() {
           )}
         </section>
 
-        <StudyCoachPanel
-          title="What to open next"
-          summary="The coach uses your weakest recent Bloom level to recommend which uploaded material to revisit first."
-          confidenceReason={coachMaterials?.confidence_reason}
-          actionLabel="Open Learning Chat"
-          actionHref="/learning-chat"
-        >
-          {(coachMaterials?.recommendations || []).length === 0 ? (
-            <div className="surface-subtle p-4 text-sm text-slate-600">
-              Upload a study file to let the coach recommend your next review target.
-            </div>
-          ) : (
-            coachMaterials.recommendations.map((item) => (
-              <div key={item.document_id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-950">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
-                    <p className="mt-3 text-sm font-medium text-[#6d472d]">{item.suggested_action}</p>
-                  </div>
-                  <Link href={`/document/${item.document_id}`} className="btn btn-outline shrink-0">
-                    Open Material
-                  </Link>
-                </div>
+        <div id="study-coach-materials">
+          <StudyCoachPanel
+            title="Coach Recommended Review Path"
+            summary={coachMaterials?.sequence_reason || 'The coach orders your uploaded materials so you know exactly what to revisit first.'}
+            confidenceReason={coachMaterials?.confidence_reason}
+            actionLabel="Open Learning Chat"
+            actionHref="/learning-chat"
+          >
+            {(coachMaterials?.recommendations || []).length === 0 ? (
+              <div className="surface-subtle p-4 text-sm text-slate-600">
+                Upload a study file to let the coach recommend your next review target.
               </div>
-            ))
-          )}
-        </StudyCoachPanel>
+            ) : (
+              coachMaterials.recommendations.map((item) => (
+                <div key={item.document_id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-950">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
+                      <p className="mt-3 text-sm font-medium text-[#6d472d]">{item.suggested_action}</p>
+                    </div>
+                    <Link href={`/document/${item.document_id}`} className="btn btn-outline shrink-0">
+                      Open Material
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </StudyCoachPanel>
+        </div>
 
-        <MaterialIntelligencePanel
-          intelligence={materialIntelligence}
-          title={materialIntelligence ? `${materialIntelligence.document_title} at a glance` : 'AI Material Intelligence'}
-          actionHref={materialIntelligence ? `/document/${materialIntelligence.document_id}` : null}
-          actionLabel="Open and Study"
-        />
+        <section id="material-intelligence-studio" className="card p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="section-kicker text-[#8a5a36]">Material Intelligence Studio</p>
+              <h2 className="text-3xl font-bold text-slate-950">Material Intelligence Preview, now upgraded into a full study workspace.</h2>
+              <p className="mt-2 max-w-3xl text-slate-600">
+                See what this material is really about before opening it: the strongest concepts, likely traps, viva prompts, and the best path to study it.
+              </p>
+            </div>
+            {materialIntelligence ? (
+              <Link href={`/document/${materialIntelligence.document_id}`} className="btn btn-primary shrink-0">
+                Review With Material Intelligence
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="mt-6">
+            <MaterialIntelligencePanel
+              intelligence={materialIntelligence}
+              title={materialIntelligence ? `${materialIntelligence.document_title} at a glance` : 'AI Material Intelligence'}
+              actionHref={materialIntelligence ? `/document/${materialIntelligence.document_id}` : null}
+              actionLabel="Open Full Study View"
+            />
+          </div>
+        </section>
     </AppShell>
   )
 }

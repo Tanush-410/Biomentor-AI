@@ -122,6 +122,10 @@ def build_proctor_review_payload(
         average_relevance=0.82 if terminated_attempts else 0.56 if incidents else 0.22,
         has_primary_sources=bool(incidents),
     )
+    case_posture = _infer_case_posture(incidents, terminated_attempts, severity_totals)
+    evidence_strength = _infer_evidence_strength(incidents, terminated_attempts, top_incident_type)
+    review_priority = _infer_review_priority(terminated_attempts, severity_totals, len(incidents))
+    debarrment_guidance = _build_debar_guidance(terminated_attempts, top_incident_type)
 
     educator_recommendations = []
     if terminated_attempts:
@@ -144,12 +148,21 @@ def build_proctor_review_payload(
         educator_recommendations.append(
             "No major intervention is needed. Keep this review on file and monitor the next scheduled attempt."
         )
+    follow_up_actions = _build_follow_up_actions(
+        terminated_attempts=terminated_attempts,
+        warning_only_attempts=warning_only_attempts,
+        top_incident_type=top_incident_type,
+        case_posture=case_posture,
+    )
 
     return {
         "quiz_id": quiz["id"],
         "quiz_title": quiz["title"],
         "overall_severity": overall_severity,
         "review_summary": review_summary,
+        "case_posture": case_posture,
+        "evidence_strength": evidence_strength,
+        "review_priority": review_priority,
         "incident_totals": {
             "total_incidents": len(incidents),
             "warning_events": action_counts.get("warning", 0),
@@ -167,10 +180,111 @@ def build_proctor_review_payload(
         ],
         "student_summaries": student_summaries,
         "timeline": timeline[:12],
+        "debarrment_guidance": debarrment_guidance,
+        "follow_up_actions": follow_up_actions,
         "educator_recommendations": educator_recommendations,
         "confidence": confidence_meta["confidence"],
         "confidence_reason": confidence_meta["confidence_reason"],
     }
+
+
+def _infer_case_posture(
+    incidents: list[dict[str, Any]],
+    terminated_attempts: list[dict[str, Any]],
+    severity_totals: Counter,
+) -> str:
+    if terminated_attempts or severity_totals.get("critical"):
+        return "debarrment_candidate"
+    if any(
+        item["violation_type"] in {"ai_multiple_faces", "blocked_shortcut", "window_blur", "ai_looking_down", "ai_face_missing"}
+        for item in incidents
+    ):
+        return "review_required"
+    if incidents:
+        return "monitor"
+    return "clear"
+
+
+def _infer_evidence_strength(
+    incidents: list[dict[str, Any]],
+    terminated_attempts: list[dict[str, Any]],
+    top_incident_type: str | None,
+) -> str:
+    if terminated_attempts:
+        return "strong"
+    if top_incident_type in {"ai_looking_down", "ai_face_missing"}:
+        return "limited"
+    if incidents:
+        return "mixed"
+    return "limited"
+
+
+def _infer_review_priority(
+    terminated_attempts: list[dict[str, Any]],
+    severity_totals: Counter,
+    incident_count: int,
+) -> str:
+    if terminated_attempts or severity_totals.get("critical"):
+        return "immediate"
+    if severity_totals.get("high") or incident_count >= 3:
+        return "same_day"
+    return "routine"
+
+
+def _build_debar_guidance(
+    terminated_attempts: list[dict[str, Any]],
+    top_incident_type: str | None,
+) -> dict[str, str] | None:
+    if terminated_attempts:
+        return {
+            "status": "Review before reinstatement",
+            "rationale": "This attempt ended automatically. Confirm the timeline and camera context before allowing another protected sitting.",
+        }
+    if top_incident_type in {"ai_multiple_faces", "fullscreen_exit", "tab_hidden"}:
+        return {
+            "status": "Not yet debarred",
+            "rationale": "Signals are serious enough to review manually, but they are not final misconduct decisions on their own.",
+        }
+    return None
+
+
+def _build_follow_up_actions(
+    *,
+    terminated_attempts: list[dict[str, Any]],
+    warning_only_attempts: list[dict[str, Any]],
+    top_incident_type: str | None,
+    case_posture: str,
+) -> list[dict[str, str]]:
+    actions: list[dict[str, str]] = []
+    if terminated_attempts:
+        actions.append(
+            {
+                "phase": "Immediate",
+                "action": "Review the terminated attempt first and confirm whether the debar outcome should stand before reopening access.",
+            }
+        )
+    if warning_only_attempts:
+        actions.append(
+            {
+                "phase": "Student follow-up",
+                "action": "Message warned students with a short explanation of the flagged behavior and tell them whether a monitored retry is required.",
+            }
+        )
+    if top_incident_type in {"ai_looking_down", "ai_face_missing"}:
+        actions.append(
+            {
+                "phase": "Before next quiz",
+                "action": "Share a camera-position reminder and device-placement rule before the next protected assessment begins.",
+            }
+        )
+    if case_posture == "clear":
+        actions.append(
+            {
+                "phase": "Record keeping",
+                "action": "Keep the clean review on file and continue monitoring later attempts without extra intervention.",
+            }
+        )
+    return actions
 
 
 def serialize_proctor_incident_row(

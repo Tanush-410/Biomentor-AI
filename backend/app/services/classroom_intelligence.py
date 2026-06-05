@@ -239,6 +239,98 @@ def build_teacher_classroom_intelligence(context: Dict) -> Dict:
             }
         )
 
+    class_pattern_summary: List[str] = []
+    if focus_topic_details:
+        strongest_topic = focus_topic_details[0]
+        class_pattern_summary.append(
+            f"{strongest_topic['topic']} is the clearest class-wide weak point, showing up in {strongest_topic['count']} recent learner-gap signal(s)."
+        )
+    if average_attempt_score is not None:
+        class_pattern_summary.append(
+            f"Recent submitted classroom quiz attempts are averaging {average_attempt_score}%, which suggests the class needs tighter reinforcement before the next check."
+        )
+    if open_complaints:
+        class_pattern_summary.append(
+            f"{len(open_complaints)} open classroom complaint(s) are still unresolved, so communication clarity is becoming part of the learning risk."
+        )
+    if not class_pattern_summary:
+        class_pattern_summary.append(
+            "This classroom has only early signal data so far, so use the next quiz or material review to confirm where the real gap is."
+        )
+
+    high_risk_count = len([student for student in student_snapshots if student["risk"] == "high"])
+    medium_risk_count = len([student for student in student_snapshots if student["risk"] == "medium"])
+    low_attempt_count = len([student for student in student_snapshots if student["total_quizzes"] == 0])
+    student_focus_groups: List[Dict] = []
+    if high_risk_count:
+        top_gap = next(
+            (
+                student["top_gaps"][0]["level"]
+                for student in student_snapshots
+                if student["risk"] == "high" and student["top_gaps"]
+            ),
+            focus_topics[0] if focus_topics else "the current focus topic",
+        )
+        student_focus_groups.append(
+            {
+                "label": "High-risk reteach group",
+                "reason": f"These learners are currently slipping most around {top_gap} and need direct support before the next classroom check.",
+                "learner_count": high_risk_count,
+            }
+        )
+    if medium_risk_count:
+        medium_gap = next(
+            (
+                student["top_gaps"][0]["level"]
+                for student in student_snapshots
+                if student["risk"] == "medium" and student["top_gaps"]
+            ),
+            focus_topics[0] if focus_topics else "recent class material",
+        )
+        student_focus_groups.append(
+            {
+                "label": "Watch-list reinforcement group",
+                "reason": f"These learners are not yet critical, but they are beginning to drift on {medium_gap}.",
+                "learner_count": medium_risk_count,
+            }
+        )
+    if low_attempt_count:
+        student_focus_groups.append(
+            {
+                "label": "Low-evidence learners",
+                "reason": "These learners have little or no quiz evidence yet, so one short checkpoint would make the classroom picture much clearer.",
+                "learner_count": low_attempt_count,
+            }
+        )
+
+    reteach_recommendations: List[Dict] = []
+    for topic_detail in focus_topic_details[:2]:
+        reteach_recommendations.append(
+            {
+                "topic": topic_detail["topic"],
+                "reason": f"{topic_detail['topic']} appears repeatedly in the current classroom gap pattern.",
+                "recommended_move": (
+                    f"Post one worked example and one short follow-up task for {topic_detail['topic']} before the next classroom quiz."
+                ),
+            }
+        )
+    if not materials:
+        reteach_recommendations.append(
+            {
+                "topic": "Classroom study structure",
+                "reason": "Students do not yet have a shared classroom resource to revisit after class.",
+                "recommended_move": "Share one anchor material and tie the next task directly to it."
+            }
+        )
+    if not assignments:
+        reteach_recommendations.append(
+            {
+                "topic": "Follow-up accountability",
+                "reason": "The class has too few structured next steps after materials or meetings.",
+                "recommended_move": "Create one lightweight review task that checks whether students can apply the current focus."
+            }
+        )
+
     recommended_actions: List[Dict] = []
     if focus_topics:
         recommended_actions.append(
@@ -283,13 +375,39 @@ def build_teacher_classroom_intelligence(context: Dict) -> Dict:
             *(meeting_payload.get("unresolved_doubts") or [])[:1],
         ]
 
+    teacher_brief = {
+        "now": (
+            attention_signals[0]["title"]
+            if attention_signals
+            else (
+                f"Reinforce {focus_topics[0]} while the class signal is still fresh."
+                if focus_topics
+                else "Create one measurable classroom checkpoint to strengthen the signal quality."
+            )
+        ),
+        "next": (
+            recommended_actions[0]["label"]
+            if recommended_actions
+            else "Post one class update that clarifies what students should review next."
+        ),
+        "later": (
+            "Review the next submitted quiz batch to see whether the current class gap is shrinking."
+            if student_snapshots
+            else "Once learners start submitting quizzes, revisit this classroom intelligence view for stronger patterns."
+        ),
+    }
+
     return {
         "overview_summary": overview_summary,
         "focus_topics": focus_topics,
         "focus_topic_details": focus_topic_details,
+        "class_pattern_summary": class_pattern_summary[:3],
         "attention_signals": attention_signals[:4],
+        "student_focus_groups": student_focus_groups[:3],
+        "reteach_recommendations": reteach_recommendations[:3],
         "recommended_actions": recommended_actions[:4],
         "meeting_follow_up": meeting_follow_up[:3],
+        "teacher_brief": teacher_brief,
         "confidence": overall_confidence["confidence"],
         "confidence_reason": overall_confidence["confidence_reason"],
     }
@@ -325,7 +443,15 @@ def build_student_classroom_intelligence(context: Dict, current_user: Optional[U
     )
 
     next_steps: List[Dict] = []
+    study_targets: List[Dict] = []
     if latest_material:
+        study_targets.append(
+            {
+                "label": f"Review {latest_material.title}",
+                "reason": "This is the fastest way to revisit the latest shared class explanation before your next task or quiz.",
+                "target_url": f"/document/{latest_material.id}",
+            }
+        )
         next_steps.append(
             {
                 "label": f"Open {latest_material.title}",
@@ -334,6 +460,13 @@ def build_student_classroom_intelligence(context: Dict, current_user: Optional[U
             }
         )
     if upcoming_quiz:
+        study_targets.append(
+            {
+                "label": f"Practice before {upcoming_quiz.title}",
+                "reason": "A classroom quiz is already live or coming soon, so revise the current focus before you open it.",
+                "target_url": f"/classrooms/{classroom.id}/classwork",
+            }
+        )
         next_steps.append(
             {
                 "label": f"Prepare for {upcoming_quiz.title}",
@@ -342,6 +475,13 @@ def build_student_classroom_intelligence(context: Dict, current_user: Optional[U
             }
         )
     if latest_assignment:
+        study_targets.append(
+            {
+                "label": f"Check {latest_assignment.title}",
+                "reason": "This is the classwork item most likely to reinforce today’s classroom focus.",
+                "target_url": f"/classrooms/{classroom.id}/classwork",
+            }
+        )
         next_steps.append(
             {
                 "label": f"Check {latest_assignment.title}",
@@ -358,6 +498,7 @@ def build_student_classroom_intelligence(context: Dict, current_user: Optional[U
     )
 
     personalized_focus = None
+    personal_focus_reason = None
     if current_user:
         snapshot = next(
             (student for student in context["student_snapshots"] if student["student_id"] == current_user.id),
@@ -365,13 +506,49 @@ def build_student_classroom_intelligence(context: Dict, current_user: Optional[U
         )
         if snapshot and snapshot["top_gaps"]:
             personalized_focus = snapshot["top_gaps"][0]["level"]
+            personal_focus_reason = (
+                f"Your own recent quiz pattern shows the most pressure around {personalized_focus}, so that is the best place to focus before the next check."
+            )
+        elif snapshot:
+            personal_focus_reason = (
+                "Your current signal looks steadier than the class average, so staying aligned with the class focus is the smartest next move."
+            )
+
+    class_focus_reason = (
+        f"The class focus is currently centered on {focus_topics[0]} because it appears most often across recent weak-topic signals."
+        if focus_topics
+        else "The class focus will become sharper once more materials, quizzes, or meeting signals accumulate."
+    )
+    if not personal_focus_reason:
+        personal_focus_reason = (
+            f"Start with {focus_topics[0]} so your private practice stays aligned with what the whole classroom is working through."
+            if focus_topics
+            else "Use the latest classroom material and quiz cue to build your next study step."
+        )
+
+    ask_next = []
+    if personalized_focus:
+        ask_next.append(
+            f"Ask Learning Chat to explain {personalized_focus} using this classroom’s latest material and one exam-style example."
+        )
+    if focus_topics:
+        ask_next.append(
+            f"Ask Learning Chat to compare {focus_topics[0]} with the next closest classroom topic so the difference becomes easier to remember."
+        )
+    ask_next.append(
+        "Ask Learning Chat for one short self-test before you return to classwork."
+    )
 
     return {
         "overview_summary": overview_summary,
         "focus_topics": focus_topics,
         "personalized_focus": personalized_focus,
+        "class_focus_reason": class_focus_reason,
+        "personal_focus_reason": personal_focus_reason,
         "key_takeaways": key_takeaways,
         "next_steps": next_steps[:4],
+        "study_targets": study_targets[:4],
+        "ask_next": ask_next[:3],
         "confidence": overall_confidence["confidence"],
         "confidence_reason": overall_confidence["confidence_reason"],
     }

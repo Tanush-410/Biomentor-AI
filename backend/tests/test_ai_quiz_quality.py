@@ -41,6 +41,11 @@ class QuizQualityServiceTest(unittest.TestCase):
         self.assertEqual(payload["readiness"], "revise")
         self.assertTrue(any(issue["severity"] == "high" for issue in payload["issues"]))
         self.assertTrue(payload["suggestions"])
+        self.assertIn("assessment_focus", payload)
+        self.assertIn("release_risk", payload)
+        self.assertTrue(payload["question_health"])
+        self.assertTrue(payload["fix_first"])
+        self.assertTrue(payload["remediation_plan"])
 
     def test_generated_quiz_review_flags_missing_document_and_mixed_bloom(self):
         payload = build_quiz_quality_review(
@@ -55,6 +60,8 @@ class QuizQualityServiceTest(unittest.TestCase):
         self.assertTrue(any(issue["severity"] == "high" for issue in payload["issues"]))
         self.assertGreaterEqual(payload["quality_score"], 42)
         self.assertIn("confidence", payload)
+        self.assertIn(payload["release_risk"], {"low", "medium", "high"})
+        self.assertTrue(payload["remediation_plan"])
 
     def test_small_quiz_review_avoids_overclaiming(self):
         payload = build_quiz_quality_review(
@@ -77,6 +84,44 @@ class QuizQualityServiceTest(unittest.TestCase):
             }
         )
         self.assertEqual(payload["confidence"], "low")
+
+    def test_manual_quiz_review_builds_actionable_question_health(self):
+        payload = build_quiz_quality_review(
+            {
+                "quiz_mode": "manual",
+                "duration_minutes": 12,
+                "proctoring_enabled": True,
+                "manual_questions": [
+                    {
+                        "prompt": "Define diffusion briefly",
+                        "bloom_level": 2,
+                        "correct_option_id": "A",
+                        "explanation": "",
+                        "options": [
+                            {"id": "A", "text": "Movement of particles from high concentration to low concentration"},
+                            {"id": "B", "text": "Movement of particles from high concentration to low concentration"},
+                            {"id": "C", "text": "Cell wall"},
+                            {"id": "D", "text": "ATP"},
+                        ],
+                    },
+                    {
+                        "prompt": "Explain how osmosis differs from diffusion in one case.",
+                        "bloom_level": 3,
+                        "correct_option_id": "B",
+                        "explanation": "Osmosis specifically concerns water movement across a selectively permeable membrane.",
+                        "options": [
+                            {"id": "A", "text": "It is always active transport."},
+                            {"id": "B", "text": "It focuses on water movement through a selectively permeable membrane."},
+                            {"id": "C", "text": "It never occurs in cells."},
+                            {"id": "D", "text": "It happens only in animals."},
+                        ],
+                    },
+                ],
+            }
+        )
+        self.assertTrue(any(item["question_number"] == 1 for item in payload["question_health"]))
+        self.assertTrue(any(item["status"] in {"revise", "watch"} for item in payload["question_health"]))
+        self.assertTrue(any("question" in item["title"].lower() or "distractor" in item["title"].lower() for item in payload["fix_first"]))
 
 
 class QuizQualityRouteTest(unittest.TestCase):

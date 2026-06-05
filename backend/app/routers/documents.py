@@ -265,6 +265,7 @@ async def get_material_intelligence(
         document_id=document.id,
         document_title=document.title,
         summary=payload["summary"],
+        layered_summaries=payload["layered_summaries"],
         revision_bullets=payload.get("revision_bullets", []),
         glossary=payload.get("glossary", []),
         flashcards=payload.get("flashcards", []),
@@ -272,6 +273,12 @@ async def get_material_intelligence(
         prerequisite_warning=payload.get("prerequisite_warning"),
         concepts=payload.get("concepts", []),
         key_pages=payload.get("key_pages", []),
+        concept_map=payload.get("concept_map", []),
+        misconception_traps=payload.get("misconception_traps", []),
+        viva_questions=payload.get("viva_questions", []),
+        study_path=payload.get("study_path", []),
+        confidence=payload.get("confidence"),
+        confidence_reason=payload.get("confidence_reason"),
     )
 
 

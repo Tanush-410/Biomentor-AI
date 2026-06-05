@@ -59,6 +59,55 @@ The project includes:
 - AI-assisted browser-side proctoring warnings and auto-debar after repeated violations
 - circular progress indicators across major student and educator pages
 
+## Recent AI Platform Upgrades
+
+BioMentor AI now exposes its intelligence as explicit product workspaces instead of subtle helper text.
+
+### Upgraded AI Workspaces
+- `Material Intelligence Studio`
+  - layered summaries
+  - concept maps
+  - misconception traps
+  - viva questions
+  - study paths
+- `AI Mission Control`
+  - stronger dashboard-level study and intervention surfacing
+- `AI Reasoning Mode`
+  - clearer Learning Chat source grounding and quick-check support
+- `Classroom AI Board`
+  - class focus signals
+  - reteach recommendations
+  - student focus groups
+- `AI Teaching Room`
+  - upgraded meeting assistant surfacing inside live sessions
+- `Assessment Intelligence Studio`
+  - stronger quiz review, release-risk analysis, and remediation guidance
+- `Copilot Response Center`
+  - educator reply drafting and intervention guidance
+- `Progress Strategy Board`
+  - more visible study-coaching and checkpoint planning
+
+### AI Systems Upgraded
+- `AI Material Intelligence`
+  - now behaves like a study engine rather than a simple summary card
+- `AI Study Coach`
+  - now produces study modes, daily goals, weekly plans, checkpoint goals, and recovery paths
+- `AI Classroom Intelligence`
+  - now distinguishes class-wide patterns, student focus groups, and reteach recommendations
+- `AI Meeting Assistant`
+  - now produces stronger teacher moves, concept signals, follow-up assets, and student-safe recaps
+- `AI Educator Copilot`
+  - now drafts sharper educator actions and intervention guidance
+- `AI Quiz Quality Layer`
+  - now gives assessment focus, release risk, question health, fix-first priorities, and remediation plans
+- `AI Proctor Review`
+  - now gives case posture, evidence strength, review priority, debar guidance, and follow-up actions
+
+### UI + Formatting Improvements
+- AI surfaces were reworked so they format cleanly inside sidebars and narrow classroom rails
+- the upgraded AI cards now wrap and stack correctly instead of collapsing into unreadable vertical text
+- the main classroom and quiz-maker layouts were widened and rebalanced so AI panels feel intentional, not squeezed
+
 ## AI Features Map
 
 These AI systems are part of the project and are implemented inside the `backend` and `frontend` folders, not as separate top-level root files.

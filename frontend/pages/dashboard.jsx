@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { AlertTriangle, BarChart3, BookOpen, Brain, FileText, MessageSquare, School2, Sparkles, Users } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import AISpotlightBanner from '../components/AISpotlightBanner'
 import CircularProgress from '../components/CircularProgress'
 import { CopilotPriorityCard, EducatorCopilotPanel } from '../components/EducatorCopilotPanel'
 import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
@@ -229,6 +230,16 @@ export default function Dashboard() {
       >
         {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
 
+        <AISpotlightBanner
+          eyebrow="Educator AI Surface"
+          title="AI Mission Control"
+          description="Run the educator day from one AI-first command layer: intervention priorities, meeting follow-through, and class response decisions are surfaced before you dig through dashboards."
+          highlights={['Intervention priorities', 'Meeting follow-ups', 'Classroom risk signals']}
+          primaryAction={{ label: 'Open Educator Copilot', href: '#educator-copilot' }}
+          secondaryAction={{ label: 'Jump to Communication Hub', href: '/communication-hub#copilot-response-center' }}
+          status="This is the place where BioMentor decides what needs your attention now, what can wait, and what should turn into a class-wide response."
+        />
+
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#332217,#5f4028_52%,#8a5a36)] p-8 text-white shadow-2xl shadow-stone-200">
             <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#d5b08b]/12 blur-3xl" />
@@ -291,32 +302,44 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-6">
-            <EducatorCopilotPanel
-              title="Daily intervention priorities"
-              summary={educatorCopilot?.summary || 'The copilot is watching complaints, low-mastery students, and meeting follow-ups so you can act quickly.'}
-              actionLabel="Open Communication Hub"
-              actionHref="/communication-hub"
-            >
-              {(educatorCopilot?.priorities || []).length === 0 ? (
-                <div className="surface-subtle p-4 text-sm text-slate-600">
-                  No urgent copilot actions yet. New quiz results, complaints, and meeting recaps will surface here automatically.
-                </div>
-              ) : (
-                (educatorCopilot?.priorities || []).slice(0, 3).map((item) => (
-                  <CopilotPriorityCard key={item.id} item={item} data-confidence-reason={item.confidence_reason || ''} />
-                ))
-              )}
-              {(educatorCopilot?.meeting_follow_ups || []).length > 0 && (
-                <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Meeting follow-ups</p>
-                  <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                    {educatorCopilot.meeting_follow_ups.slice(0, 3).map((item, index) => (
-                      <p key={`${item}-${index}`}>• {item}</p>
-                    ))}
+            <div id="educator-copilot">
+              <EducatorCopilotPanel
+                title="Educator Command Center"
+                summary={educatorCopilot?.summary || 'The copilot is watching complaints, low-mastery students, and meeting follow-ups so you can act quickly.'}
+                actionLabel="Open Communication Hub"
+                actionHref="/communication-hub"
+              >
+                {(educatorCopilot?.priorities || []).length === 0 ? (
+                  <div className="surface-subtle p-4 text-sm text-slate-600">
+                    No urgent copilot actions yet. New quiz results, complaints, and meeting recaps will surface here automatically.
                   </div>
-                </div>
-              )}
-            </EducatorCopilotPanel>
+                ) : (
+                  (educatorCopilot?.priorities || []).slice(0, 3).map((item) => (
+                    <CopilotPriorityCard key={item.id} item={item} data-confidence-reason={item.confidence_reason || ''} />
+                  ))
+                )}
+                {(educatorCopilot?.meeting_follow_ups || []).length > 0 && (
+                  <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Meeting follow-ups</p>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                      {educatorCopilot.meeting_follow_ups.slice(0, 3).map((item, index) => (
+                        <p key={`${item}-${index}`}>• {item}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(educatorCopilot?.intervention_plan || []).length > 0 && (
+                  <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Intervention plan</p>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+                      {educatorCopilot.intervention_plan.slice(0, 3).map((item, index) => (
+                        <p key={`${item}-${index}`}>• {item}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </EducatorCopilotPanel>
+            </div>
 
             <div className="card p-6">
               <h3 className="text-xl font-bold text-slate-900">Live Collaboration</h3>
@@ -509,38 +532,62 @@ export default function Dashboard() {
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
 
-      <StudyCoachPanel
-        summary={studyCoach?.rationale || 'The coach uses your live quiz history and uploaded material to tell you what to do next.'}
-        confidenceReason={studyCoach?.confidence_reason}
-        actionLabel="Open Progress"
-        actionHref="/progress"
-      >
-        {studyCoach ? (
-          <>
-            <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Next best move</p>
-              <p className="mt-3 text-lg font-bold text-slate-950">{studyCoach.next_action}</p>
-            </div>
-            <StudyCoachActionList actions={studyCoach.short_plan} />
-            {(studyCoach.weak_focus_areas || []).length > 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Weak focus areas</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {studyCoach.weak_focus_areas.map((area) => (
-                    <span key={area} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
-                      {area}
-                    </span>
-                  ))}
-                </div>
+      <AISpotlightBanner
+        eyebrow="Student AI Surface"
+        title="AI Mission Control"
+        description="Your study flow now has a visible AI command layer: the coach decides what to practice next, the material engine explains what matters, and the chat switches into reasoning mode when your questions get harder."
+        highlights={['Adaptive study coach', 'Material intelligence', 'Reasoning chat']}
+        primaryAction={{ label: 'Open Study Coach', href: '#study-coach' }}
+        secondaryAction={{ label: 'Review Material Intelligence', href: '/documents#material-intelligence-studio' }}
+        status="This page is now the center of your AI-guided study loop: decide what to review, why it matters, and which move gets the biggest gain next."
+      />
+
+      <div id="study-coach">
+        <StudyCoachPanel
+          title="Study Coach Command"
+          summary={studyCoach?.rationale || 'The coach uses your live quiz history and uploaded material to tell you what to do next.'}
+          confidenceReason={studyCoach?.confidence_reason}
+          actionLabel="Open Full Progress Plan"
+          actionHref="/progress"
+          studyMode={studyCoach?.study_mode}
+          modeReason={studyCoach?.mode_reason}
+          dailyGoal={studyCoach?.daily_goal}
+          weeklyPlan={studyCoach?.weekly_plan}
+          recoveryPath={studyCoach?.recovery_path}
+        >
+          {studyCoach ? (
+            <>
+              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Next best move</p>
+                <p className="mt-3 text-lg font-bold text-slate-950">{studyCoach.next_action}</p>
               </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="surface-subtle p-4 text-sm text-slate-600">
-            Complete a quiz or upload material to unlock your guided study flow.
-          </div>
-        )}
-      </StudyCoachPanel>
+              {studyCoach?.daily_goal ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Today’s goal</p>
+                  <p className="mt-3 text-base font-bold text-slate-950">{studyCoach.daily_goal.label}</p>
+                </div>
+              ) : null}
+              <StudyCoachActionList actions={studyCoach.short_plan} />
+              {(studyCoach.weak_focus_areas || []).length > 0 ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Weak focus areas</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {studyCoach.weak_focus_areas.map((area) => (
+                      <span key={area} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="surface-subtle p-4 text-sm text-slate-600">
+              Complete a quiz or upload material to unlock your guided study flow.
+            </div>
+          )}
+        </StudyCoachPanel>
+      </div>
 
       <section className="grid gap-6 lg:grid-cols-3">
         <div className="card p-6 lg:col-span-2">

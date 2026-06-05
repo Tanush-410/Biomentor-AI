@@ -14,6 +14,19 @@ function severityTone(severity) {
   }
 }
 
+function postureTone(posture) {
+  switch (posture) {
+    case 'debarrment_candidate':
+      return 'border-red-200 bg-red-50 text-red-700'
+    case 'review_required':
+      return 'border-amber-200 bg-amber-50 text-amber-800'
+    case 'monitor':
+      return 'border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]'
+    default:
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+  }
+}
+
 function summaryIcon(status) {
   if (status === 'terminated') return <UserX className="h-4 w-4" />
   if (status === 'submitted') return <CheckCircle2 className="h-4 w-4" />
@@ -24,12 +37,12 @@ export default function ProctorReviewPanel({ review, compact = false, title = 'A
   if (!review) return null
 
   return (
-    <div className="card p-6">
+    <div className="card min-w-0 p-6 lg:p-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="section-kicker text-[#8a5a36]">{title}</p>
-          <h3 className="mt-2 text-xl font-bold text-slate-950">{review.quiz_title}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{review.review_summary}</p>
+          <h3 className="mt-2 break-words text-2xl font-bold text-slate-950">{review.quiz_title}</h3>
+          <p className="mt-2 break-words text-sm leading-6 text-slate-600">{review.review_summary}</p>
           {review.confidence_reason ? <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-[#8a5a36]">{review.confidence_reason}</p> : null}
         </div>
         <span className={`role-pill ${severityTone(review.overall_severity)}`}>
@@ -37,16 +50,40 @@ export default function ProctorReviewPanel({ review, compact = false, title = 'A
         </span>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-4">
-        <Metric label="Incidents" value={review.incident_totals?.total_incidents || 0} />
-        <Metric label="Warnings" value={review.incident_totals?.warning_events || 0} />
-        <Metric label="Terminated" value={review.incident_totals?.terminated_attempts || 0} />
-        <Metric label="Submitted" value={review.incident_totals?.submitted_attempts || 0} />
+      <div className="mt-6 grid gap-5">
+        <div className="min-w-0 rounded-3xl border border-[#ead8c6] bg-[#fff8f1] p-5">
+          <p className="section-kicker text-[#8a5a36]">Case posture</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className={`role-pill ${postureTone(review.case_posture)}`}>{review.case_posture.replace(/_/g, ' ')}</span>
+            <span className="role-pill border-slate-200 bg-white text-slate-700">Evidence strength: {review.evidence_strength}</span>
+            <span className="role-pill border-slate-200 bg-white text-slate-700">Review priority: {review.review_priority.replace(/_/g, ' ')}</span>
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-4">
+            <Metric label="Incidents" value={review.incident_totals?.total_incidents || 0} />
+            <Metric label="Warnings" value={review.incident_totals?.warning_events || 0} />
+            <Metric label="Terminated" value={review.incident_totals?.terminated_attempts || 0} />
+            <Metric label="Submitted" value={review.incident_totals?.submitted_attempts || 0} />
+          </div>
+        </div>
+
+        <div className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5">
+          <p className="section-kicker text-[#8a5a36]">Debar review</p>
+          {review.debarrment_guidance ? (
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-950">{review.debarrment_guidance.status}</p>
+              <p className="mt-2 break-words text-sm leading-6 text-slate-600">{review.debarrment_guidance.rationale}</p>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+              No debar review note is required for this case. Keep monitoring and use the follow-up actions below if the same signals repeat.
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className={`mt-6 grid gap-6 ${compact ? 'xl:grid-cols-1' : 'xl:grid-cols-[1.1fr_0.9fr]'}`}>
+      <div className={`mt-6 grid gap-6 ${compact ? '' : '2xl:grid-cols-[1.1fr_0.9fr]'}`}>
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4">
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-[#8a5a36]" />
               <h4 className="text-lg font-bold text-slate-950">Student incident snapshots</h4>
@@ -56,7 +93,7 @@ export default function ProctorReviewPanel({ review, compact = false, title = 'A
                 <p className="text-sm text-slate-600">No proctor incidents have been recorded for this view.</p>
               ) : (
                 review.student_summaries.map((item) => (
-                  <div key={item.student_id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div key={item.student_id} className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
                         {summaryIcon(item.attempt_status)}
@@ -82,7 +119,7 @@ export default function ProctorReviewPanel({ review, compact = false, title = 'A
           </div>
 
           {!compact && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-[#8a5a36]" />
                 <h4 className="text-lg font-bold text-slate-950">Top signals</h4>
@@ -103,25 +140,43 @@ export default function ProctorReviewPanel({ review, compact = false, title = 'A
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4">
+            <h4 className="text-lg font-bold text-slate-950">Follow-up actions</h4>
+            <div className="mt-4 space-y-3">
+              {(review.follow_up_actions || []).length ? (
+                review.follow_up_actions.map((item, index) => (
+                  <div key={`${item.phase}-${index}`} className="min-w-0 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">{item.phase}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">{item.action}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                  No immediate follow-up actions are required for this review.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4">
             <h4 className="text-lg font-bold text-slate-950">Educator recommendations</h4>
             <div className="mt-4 space-y-3">
               {(review.educator_recommendations || []).map((item, index) => (
-                <div key={`${index}-${item}`} className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4 text-sm leading-6 text-slate-700">
+                <div key={`${index}-${item}`} className="min-w-0 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4 text-sm leading-6 text-slate-700">
                   {item}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4">
             <h4 className="text-lg font-bold text-slate-950">Recent timeline</h4>
             <div className="mt-4 space-y-3">
               {(review.timeline || []).length === 0 ? (
                 <p className="text-sm text-slate-600">No timeline events recorded.</p>
               ) : (
                 review.timeline.slice(0, compact ? 4 : 6).map((item) => (
-                  <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div key={item.id} className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold text-slate-900">{item.student_name}</span>
                       <span className={`role-pill ${severityTone(item.severity)}`}>{item.severity}</span>

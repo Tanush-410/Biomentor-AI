@@ -14,6 +14,7 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
     issues: List[Dict] = []
     suggestions: List[Dict] = []
     bloom_distribution: List[Dict] = []
+    question_health: List[Dict] = []
 
     if quiz_mode == "manual":
         manual_questions = payload.get("manual_questions") or []
@@ -22,6 +23,7 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
         )
         issues.extend(_review_manual_questions(manual_questions))
         suggestions.extend(_manual_quiz_suggestions(manual_questions, bloom_distribution))
+        question_health = _build_question_health(manual_questions)
     else:
         bloom_level = payload.get("bloom_level")
         bloom_distribution = _build_bloom_distribution(
@@ -45,6 +47,10 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
         average_relevance=confidence_score,
         has_primary_sources=has_primary_sources,
     )
+    assessment_focus = _infer_assessment_focus(payload, bloom_distribution)
+    release_risk = _infer_release_risk(issues)
+    fix_first = _build_fix_first_actions(issues, question_health)
+    remediation_plan = _build_remediation_plan(payload, issues, bloom_distribution, question_health)
 
     summary = (
         "This quiz is ready to publish with only small polish changes."
@@ -56,9 +62,14 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
         "quality_score": score,
         "readiness": readiness,
         "summary": summary,
+        "assessment_focus": assessment_focus,
+        "release_risk": release_risk,
         "issues": issues,
         "suggestions": suggestions[:5],
         "bloom_distribution": bloom_distribution,
+        "question_health": question_health[:6],
+        "fix_first": fix_first[:3],
+        "remediation_plan": remediation_plan[:4],
         "confidence": confidence_meta["confidence"],
         "confidence_reason": confidence_meta["confidence_reason"],
     }
@@ -263,6 +274,154 @@ def _build_bloom_distribution(levels: List[int]) -> List[Dict]:
             }
         )
     return distribution
+
+
+def _infer_assessment_focus(payload: Dict, bloom_distribution: List[Dict]) -> str:
+    quiz_mode = (payload.get("quiz_mode") or "generated").strip().lower()
+    duration = int(payload.get("duration_minutes") or 0)
+    question_count = len(payload.get("manual_questions") or []) or int(payload.get("num_questions") or 0)
+    proctored = bool(payload.get("proctoring_enabled", True))
+    dominant_bloom = bloom_distribution[-1]["label"] if bloom_distribution else "Mixed"
+
+    if proctored and question_count >= 8:
+        return f"Controlled mastery check with {dominant_bloom.lower()} emphasis."
+    if quiz_mode == "manual" and question_count <= 5 and duration <= 20:
+        return "Instructor-authored checkpoint for targeted classroom diagnosis."
+    if question_count <= 3:
+        return "Quick understanding check that should be paired with follow-up review."
+    return f"Balanced class assessment focused on {dominant_bloom.lower()} thinking."
+
+
+def _infer_release_risk(issues: List[Dict]) -> str:
+    severities = Counter(issue["severity"] for issue in issues)
+    if severities.get("high", 0) >= 2:
+        return "high"
+    if severities.get("high", 0) or severities.get("medium", 0) >= 3:
+        return "medium"
+    return "low"
+
+
+def _build_question_health(questions: List[Dict]) -> List[Dict]:
+    health: List[Dict] = []
+    for index, question in enumerate(questions, start=1):
+        options = [((option.get("text") or "").strip().lower()) for option in question.get("options") or []]
+        explanation = (question.get("explanation") or "").strip()
+        prompt = (question.get("prompt") or "").strip()
+        duplicate_options = len(options) != len(set(options))
+        short_options = any(len(option.split()) < 2 for option in options if option)
+        short_prompt = len(prompt.split()) < 5
+        if duplicate_options:
+            health.append(
+                {
+                    "question_number": index,
+                    "status": "revise",
+                    "title": f"Question {index} needs stronger distractors",
+                    "detail": "At least two options overlap too closely, so students can eliminate choices too easily.",
+                }
+            )
+            continue
+        if short_prompt or short_options or not explanation:
+            detail_parts = []
+            if short_prompt:
+                detail_parts.append("tighten the stem")
+            if short_options:
+                detail_parts.append("make distractors more believable")
+            if not explanation:
+                detail_parts.append("add an explanation for review feedback")
+            health.append(
+                {
+                    "question_number": index,
+                    "status": "watch",
+                    "title": f"Question {index} is usable but not strong yet",
+                    "detail": " and ".join(detail_parts).capitalize() + ".",
+                }
+            )
+            continue
+        health.append(
+            {
+                "question_number": index,
+                "status": "strong",
+                "title": f"Question {index} is release-ready",
+                "detail": "The stem, answer options, and explanation are specific enough for a solid classroom checkpoint.",
+            }
+        )
+    return health
+
+
+def _build_fix_first_actions(issues: List[Dict], question_health: List[Dict]) -> List[Dict]:
+    actions: List[Dict] = []
+    high_issue = next((issue for issue in issues if issue["severity"] == "high"), None)
+    if high_issue:
+        actions.append(
+            {
+                "title": high_issue["title"],
+                "detail": high_issue["detail"],
+                "impact": "This is the biggest risk to fair scoring if you publish now.",
+            }
+        )
+    watch_question = next((item for item in question_health if item["status"] in {"revise", "watch"}), None)
+    if watch_question:
+        actions.append(
+            {
+                "title": watch_question["title"],
+                "detail": watch_question["detail"],
+                "impact": "Fixing this question first will improve both quiz reliability and post-quiz remediation.",
+            }
+        )
+    if any(issue["title"] == "No closing time is set" for issue in issues):
+        actions.append(
+            {
+                "title": "Set a closing window",
+                "detail": "Add an end time so the quiz behaves like a supervised classroom checkpoint instead of an open practice item.",
+                "impact": "This keeps pacing, proctoring, and student expectations aligned.",
+            }
+        )
+    if not actions:
+        actions.append(
+            {
+                "title": "Proceed with a release check",
+                "detail": "The draft looks healthy. Run one last human read-through for language clarity before publishing.",
+                "impact": "This preserves the current quiz quality without adding unnecessary delay.",
+            }
+        )
+    return actions
+
+
+def _build_remediation_plan(
+    payload: Dict,
+    issues: List[Dict],
+    bloom_distribution: List[Dict],
+    question_health: List[Dict],
+) -> List[Dict]:
+    steps: List[Dict] = []
+    if any(item["status"] == "revise" for item in question_health):
+        steps.append(
+            {
+                "phase": "Before release",
+                "action": "Repair the weakest question first, then rerun the AI review so the answer-key and distractor signals settle.",
+            }
+        )
+    if len(bloom_distribution) == 1:
+        steps.append(
+            {
+                "phase": "After grading",
+                "action": "Pair results with one short follow-up item at a different Bloom level so you can tell recall gaps from reasoning gaps.",
+            }
+        )
+    if any(issue["title"] == "No closing time is set" for issue in issues):
+        steps.append(
+            {
+                "phase": "Classroom rollout",
+                "action": "Publish the quiz with a clear start and end window, then remind students when the monitored attempt will close.",
+            }
+        )
+    steps.append(
+        {
+            "phase": "Remediation",
+            "action": "Use the missed-question patterns to assign one reinforcement task and one reflection prompt after the quiz closes.",
+        }
+    )
+    return steps
 
 
 def _score_quality(issues: List[Dict]) -> int:

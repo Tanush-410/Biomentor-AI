@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { BarChart3, BrainCircuit, Target, TrendingUp } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import AISpotlightBanner from '../components/AISpotlightBanner'
 import CircularProgress from '../components/CircularProgress'
 import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
@@ -123,6 +124,16 @@ export default function ProgressPage() {
           </div>
         )}
 
+        <AISpotlightBanner
+          eyebrow="Progress AI Surface"
+          title="Progress Strategy Board"
+          description="Your progress page now behaves like an AI planning board: it explains what the scores mean, which Bloom levels need recovery first, and what sequence gives you the strongest next improvement."
+          highlights={['Bloom mastery strategy', 'Checkpoint guidance', 'Practice order']}
+          primaryAction={{ label: 'Open Progress Coach', href: '#progress-coach' }}
+          secondaryAction={{ label: 'Jump to Bloom Mastery', href: '#bloom-mastery' }}
+          status="Use this board before starting the next quiz so you practice with intent instead of repeating the same weak cycle."
+        />
+
         <section className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
           <SummaryCard icon={<BrainCircuit className="w-5 h-5" />} label="Quizzes Completed" value={progress?.totalQuizzes || 0} />
           <SummaryCard icon={<Target className="w-5 h-5" />} label="Average Score" value={`${Math.round(progress?.averageScore || 0)}%`} />
@@ -131,7 +142,7 @@ export default function ProgressPage() {
         </section>
 
         <section className="grid lg:grid-cols-[1.3fr_1fr] gap-6">
-          <div className="card p-6">
+          <div id="bloom-mastery" className="card p-6">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Bloom’s Taxonomy Mastery</h2>
             <p className="text-slate-600 mb-6">Performance grouped by cognitive level instead of hardcoded topic placeholders.</p>
 
@@ -169,41 +180,53 @@ export default function ProgressPage() {
           </div>
 
           <div className="space-y-6">
-            <StudyCoachPanel
-              title="Practice guidance"
-              summary={coachProgress?.summary || 'The coach interprets your weakest Bloom levels so you know what to practice next.'}
-              confidenceReason={coachProgress?.confidence_reason}
-              actionLabel="Open Learning Chat"
-              actionHref="/learning-chat"
-            >
-              {coachProgress ? (
-                <>
-                  {(coachProgress.practice_order || []).length > 0 ? (
-                    <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Recommended practice order</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {coachProgress.practice_order.map((item) => (
-                          <span key={item} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
-                            {item}
-                          </span>
-                        ))}
+            <div id="progress-coach">
+              <StudyCoachPanel
+                title="Practice guidance"
+                summary={coachProgress?.summary || 'The coach interprets your weakest Bloom levels so you know what to practice next.'}
+                confidenceReason={coachProgress?.confidence_reason}
+                actionLabel="Open Learning Chat"
+                actionHref="/learning-chat"
+                studyMode={coachProgress?.study_mode}
+                modeReason={coachProgress?.mode_reason}
+                dailyGoal={coachProgress?.checkpoint_goal}
+              >
+                {coachProgress ? (
+                  <>
+                    {coachProgress?.checkpoint_goal ? (
+                      <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Checkpoint goal</p>
+                        <p className="mt-3 text-base font-bold text-slate-950">{coachProgress.checkpoint_goal.label}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">{coachProgress.checkpoint_goal.reason}</p>
                       </div>
-                    </div>
-                  ) : null}
-                  <StudyCoachActionList
-                    actions={(coachProgress.recommendations || []).map((item) => ({
-                      label: item,
-                      reason: 'This order is based on your lowest-mastery Bloom levels.',
-                      target_url: '/start-quiz'
-                    }))}
-                  />
-                </>
-              ) : (
-                <div className="surface-subtle p-4 text-sm text-slate-600">
-                  Your coach will start interpreting your progress once quiz results are available.
-                </div>
-              )}
-            </StudyCoachPanel>
+                    ) : null}
+                    {(coachProgress.practice_order || []).length > 0 ? (
+                      <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Recommended practice order</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {coachProgress.practice_order.map((item) => (
+                            <span key={item} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    <StudyCoachActionList
+                      actions={(coachProgress.recommendations || []).map((item) => ({
+                        label: item,
+                        reason: 'This order is based on your lowest-mastery Bloom levels.',
+                        target_url: '/start-quiz'
+                      }))}
+                    />
+                  </>
+                ) : (
+                  <div className="surface-subtle p-4 text-sm text-slate-600">
+                    Your coach will start interpreting your progress once quiz results are available.
+                  </div>
+                )}
+              </StudyCoachPanel>
+            </div>
 
             <div className="card p-6">
               <h2 className="text-2xl font-bold text-slate-900 mb-4">Recommendations</h2>

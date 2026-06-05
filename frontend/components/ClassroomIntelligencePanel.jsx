@@ -15,37 +15,81 @@ function FocusTopics({ topics }) {
   )
 }
 
-function ActionCard({ action }) {
+function ActionCard({ action, ctaLabel = 'Open' }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h4 className="text-lg font-bold text-slate-950">{action.label}</h4>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{action.reason}</p>
-        </div>
-        {action.target_url ? (
-          <Link href={action.target_url} className="btn btn-outline shrink-0">
-            Open
+    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
+      <h4 className="break-words text-base font-bold text-slate-950">{action.label}</h4>
+      <p className="mt-2 break-words text-sm leading-6 text-slate-600">{action.reason}</p>
+      {action.target_url ? (
+        <div className="mt-4">
+          <Link href={action.target_url} className="btn btn-outline w-full sm:w-auto">
+            {ctaLabel}
           </Link>
-        ) : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function FocusGroupCard({ group }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h4 className="min-w-0 break-words text-base font-bold text-slate-950">{group.label}</h4>
+        <span className="rounded-full bg-[#f5ebdf] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">
+          {group.learner_count} learners
+        </span>
+      </div>
+      <p className="mt-2 break-words text-sm leading-6 text-slate-600">{group.reason}</p>
+    </div>
+  )
+}
+
+function BriefCard({ brief }) {
+  if (!brief) return null
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-5">
+      <p className="section-kicker text-[#8a5a36]">Teacher brief</p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Now</p>
+          <p className="mt-2 break-words text-sm leading-6 text-slate-700">{brief.now}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Next</p>
+          <p className="mt-2 break-words text-sm leading-6 text-slate-700">{brief.next}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Later</p>
+          <p className="mt-2 break-words text-sm leading-6 text-slate-700">{brief.later}</p>
+        </div>
       </div>
     </div>
   )
 }
 
-function TeacherSignalCard({ signal }) {
+function ReteachRecommendationCard({ item }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
+      <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">{item.topic}</p>
+      <p className="mt-2 break-words text-sm leading-6 text-slate-600">{item.reason}</p>
+      <p className="mt-3 break-words text-sm font-semibold leading-6 text-slate-900">{item.recommended_move}</p>
+    </div>
+  )
+}
+
+function SignalCard({ signal }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
-          {signal.severity} signal
-        </span>
+        <span className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">{signal.severity} signal</span>
       </div>
-      <h4 className="mt-3 text-lg font-bold text-slate-950">{signal.title}</h4>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{signal.detail}</p>
+      <h4 className="mt-3 break-words text-base font-bold text-slate-950">{signal.title}</h4>
+      <p className="mt-2 break-words text-sm leading-6 text-slate-600">{signal.detail}</p>
       {signal.target_url ? (
         <div className="mt-4">
-          <Link href={signal.target_url} className="btn btn-outline">
+          <Link href={signal.target_url} className="btn btn-outline w-full sm:w-auto">
             Review
           </Link>
         </div>
@@ -54,94 +98,156 @@ function TeacherSignalCard({ signal }) {
   )
 }
 
+function TextBulletSection({ title, items }) {
+  if (!items?.length) return null
+
+  return (
+    <div className="min-w-0 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-5">
+      <p className="section-kicker text-[#8a5a36]">{title}</p>
+      <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+        {items.map((item, index) => (
+          <li key={`${item}-${index}`} className="break-words">• {item}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function FocusReasonCard({ title, heading, reason }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5">
+      <p className="section-kicker text-[#8a5a36]">{title}</p>
+      <h4 className="mt-2 break-words text-xl font-bold text-slate-950">{heading}</h4>
+      <p className="mt-2 break-words text-sm leading-6 text-slate-600">{reason}</p>
+    </div>
+  )
+}
+
 export default function ClassroomIntelligencePanel({ intelligence, role = 'student', variant = 'stream' }) {
   const teacherView = intelligence?.teacher_view
   const studentView = intelligence?.student_view
   const isTeacher = role === 'educator' || role === 'admin'
-  const eyebrow = isTeacher ? 'AI Classroom Intelligence' : 'Class Focus Coach'
-  const title = isTeacher ? 'What this classroom needs next.' : 'What to focus on in this classroom.'
   const summary = isTeacher ? teacherView?.overview_summary : studentView?.overview_summary
   const confidenceReason = isTeacher ? teacherView?.confidence_reason : studentView?.confidence_reason
 
   if (!summary) return null
 
+  const eyebrow = isTeacher ? 'AI Classroom Intelligence' : 'AI Classroom Intelligence'
+  const title = isTeacher ? 'Classroom Command Center' : 'Student Focus Board'
+  const subtitle = isTeacher
+    ? 'See what the class is struggling with, who needs attention, and what to reteach next.'
+    : 'See the class focus, your personal weak point, and the best next study moves before the next checkpoint.'
+
   return (
-    <div className="card p-6">
+    <div className="card min-w-0 p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-3xl">
+        <div className="max-w-4xl min-w-0">
           <p className="section-kicker text-[#8a5a36]">{eyebrow}</p>
-          <h3 className="mt-2 text-2xl font-bold text-slate-950">{title}</h3>
-          <p className="mt-3 text-sm leading-7 text-slate-600">{summary}</p>
-          {confidenceReason ? <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-[#8a5a36]">{confidenceReason}</p> : null}
+          <h3 className="mt-2 break-words text-3xl font-bold text-slate-950">{title}</h3>
+          <p className="mt-3 break-words text-sm leading-7 text-slate-600">{subtitle}</p>
+          <p className="mt-4 break-words text-sm leading-7 text-slate-700">{summary}</p>
+          {confidenceReason ? (
+            <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-[#8a5a36]">{confidenceReason}</p>
+          ) : null}
         </div>
         <FocusTopics topics={(isTeacher ? teacherView?.focus_topics : studentView?.focus_topics) || []} />
       </div>
 
       {isTeacher ? (
-        <div className={`mt-6 grid gap-6 ${variant === 'classwork' ? 'xl:grid-cols-[minmax(0,1fr)_320px]' : 'xl:grid-cols-[minmax(0,1fr)_340px]'}`}>
-          <div className="space-y-4">
+        <div className={`mt-6 grid gap-6 ${variant === 'classwork' ? '2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]' : ''}`}>
+          <div className="space-y-6">
+            <BriefCard brief={teacherView?.teacher_brief} />
+
+            <div>
+              <p className="section-kicker text-[#8a5a36]">Class patterns</p>
+              <TextBulletSection title="Signal summary" items={teacherView?.class_pattern_summary || []} />
+            </div>
+
+            <div>
+              <p className="section-kicker text-[#8a5a36]">Reteach recommendations</p>
+              <div className="mt-3 grid gap-3">
+                {(teacherView?.reteach_recommendations || []).map((item, index) => (
+                  <ReteachRecommendationCard key={`${item.topic}-${index}`} item={item} />
+                ))}
+              </div>
+            </div>
+
             <div>
               <p className="section-kicker text-[#8a5a36]">Recommended next steps</p>
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 grid gap-3">
                 {(teacherView?.recommended_actions || []).map((action, index) => (
                   <ActionCard key={`${action.label}-${index}`} action={action} />
                 ))}
               </div>
             </div>
-            {teacherView?.meeting_follow_up?.length ? (
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-5">
-                <p className="section-kicker text-[#8a5a36]">Meeting follow-up</p>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                  {teacherView.meeting_follow_up.map((item, index) => (
-                    <li key={`${item}-${index}`}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+
+            <TextBulletSection title="Meeting follow-up" items={teacherView?.meeting_follow_up || []} />
           </div>
-          <div className="space-y-3">
-            <p className="section-kicker text-[#8a5a36]">Attention signals</p>
-            {(teacherView?.attention_signals || []).length ? (
-              teacherView.attention_signals.map((signal, index) => (
-                <TeacherSignalCard key={`${signal.title}-${index}`} signal={signal} />
-              ))
-            ) : (
-              <div className="surface-subtle p-4 text-sm text-slate-600">No urgent classroom signals right now.</div>
-            )}
+
+          <div className="space-y-6">
+            <div>
+              <p className="section-kicker text-[#8a5a36]">Student focus groups</p>
+              <div className="mt-3 grid gap-3">
+                {(teacherView?.student_focus_groups || []).length ? (
+                  teacherView.student_focus_groups.map((group, index) => (
+                    <FocusGroupCard key={`${group.label}-${index}`} group={group} />
+                  ))
+                ) : (
+                  <div className="surface-subtle min-w-0 p-4 text-sm text-slate-600">No learner groups need a special reteach track right now.</div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="section-kicker text-[#8a5a36]">Attention signals</p>
+              <div className="mt-3 grid gap-3">
+                {(teacherView?.attention_signals || []).length ? (
+                  teacherView.attention_signals.map((signal, index) => (
+                    <SignalCard key={`${signal.title}-${index}`} signal={signal} />
+                  ))
+                ) : (
+                  <div className="surface-subtle min-w-0 p-4 text-sm text-slate-600">No urgent classroom signals right now.</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       ) : (
-        <div className={`mt-6 grid gap-6 ${variant === 'classwork' ? 'xl:grid-cols-[minmax(0,1fr)_280px]' : 'xl:grid-cols-[minmax(0,1fr)_300px]'}`}>
-          <div className="space-y-4">
+        <div className={`mt-6 grid gap-6 ${variant === 'classwork' ? '2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]' : ''}`}>
+          <div className="space-y-6">
             <div>
-              <p className="section-kicker text-[#8a5a36]">Next best moves</p>
-              <div className="mt-3 space-y-3">
-                {(studentView?.next_steps || []).map((action, index) => (
-                  <ActionCard key={`${action.label}-${index}`} action={action} />
+              <p className="section-kicker text-[#8a5a36]">Study targets</p>
+              <div className="mt-3 grid gap-3">
+                {(studentView?.study_targets || []).map((action, index) => (
+                  <ActionCard key={`${action.label}-${index}`} action={action} ctaLabel="Open" />
                 ))}
               </div>
             </div>
-            {studentView?.key_takeaways?.length ? (
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-5">
-                <p className="section-kicker text-[#8a5a36]">Recent class takeaways</p>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                  {studentView.key_takeaways.map((item, index) => (
-                    <li key={`${item}-${index}`}>• {item}</li>
-                  ))}
-                </ul>
+
+            <div>
+              <p className="section-kicker text-[#8a5a36]">Next best moves</p>
+              <div className="mt-3 grid gap-3">
+                {(studentView?.next_steps || []).map((action, index) => (
+                  <ActionCard key={`${action.label}-${index}`} action={action} ctaLabel="Go" />
+                ))}
               </div>
-            ) : null}
-          </div>
-          <div className="space-y-4">
-            <div className="surface-subtle p-5">
-              <p className="section-kicker text-[#8a5a36]">Personal focus</p>
-              <h4 className="mt-2 text-xl font-bold text-slate-950">
-                {studentView?.personalized_focus || 'Stay aligned with the class focus'}
-              </h4>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Use this focus before your next classroom quiz or chat follow-up.
-              </p>
             </div>
+
+            <TextBulletSection title="Recent class takeaways" items={studentView?.key_takeaways || []} />
+            <TextBulletSection title="Ask next" items={studentView?.ask_next || []} />
+          </div>
+
+          <div className="space-y-6">
+            <FocusReasonCard
+              title="Class focus"
+              heading={(studentView?.focus_topics || [])[0] || 'Stay aligned with the current class focus'}
+              reason={studentView?.class_focus_reason || 'Use the latest classroom signals to keep your revision aligned with what the class is doing right now.'}
+            />
+            <FocusReasonCard
+              title="Personal focus"
+              heading={studentView?.personalized_focus || 'Stay aligned with the class focus'}
+              reason={studentView?.personal_focus_reason || 'Your personal next step is to reinforce the same topic the class is currently emphasizing.'}
+            />
           </div>
         </div>
       )}

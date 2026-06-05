@@ -4,6 +4,7 @@ import { CalendarDays, Pin, Video } from 'lucide-react'
 import { useRouter } from 'next/router'
 
 import ClassroomIntelligencePanel from '../../../components/ClassroomIntelligencePanel'
+import AISpotlightBanner from '../../../components/AISpotlightBanner'
 import ClassroomShell from '../../../components/ClassroomShell'
 import ClassroomStreamComposer from '../../../components/ClassroomStreamComposer'
 import { useAuth } from '../../../context/AuthContext'
@@ -76,8 +77,21 @@ export default function ClassroomStreamPage() {
 
   return (
     <ClassroomShell classroom={classroom} activeTab="stream" isLoading={loading} error={error}>
-      <section className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <AISpotlightBanner
+        eyebrow="Classroom AI Surface"
+        title="Classroom AI Board"
+        description="This classroom now has a visible AI layer that explains what the whole group is struggling with, what students should focus on next, and which signals deserve a teacher move before the class falls behind."
+        highlights={['Class focus signals', 'Reteach recommendations', 'Student focus moves']}
+        primaryAction={{ label: 'Open AI Board', href: '#classroom-intelligence' }}
+        secondaryAction={{ label: 'Jump to Classwork', href: `/classrooms/${classroomId}/classwork` }}
+        status="Use this board before posting, reteaching, or assigning work so class decisions come from live learning signals instead of guesswork."
+      />
+
+      <section className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <div className="space-y-6">
+          <div id="classroom-intelligence">
+            <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="stream" />
+          </div>
           <div className="card p-6">
             <p className="section-kicker text-[#8a5a36]">About this stream</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Public classroom updates live here.</h3>
@@ -90,7 +104,6 @@ export default function ClassroomStreamPage() {
         </div>
 
         <div className="space-y-6">
-          <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="stream" />
           {canPost && <ClassroomStreamComposer onSubmit={handleCreatePost} isSubmitting={submitting} />}
 
           {posts.length === 0 ? (

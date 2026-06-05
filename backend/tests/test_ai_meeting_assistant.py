@@ -45,6 +45,13 @@ class MeetingAssistantServiceTest(unittest.TestCase):
         self.assertIn("action_items", snapshot)
         self.assertIn("unresolved_doubts", snapshot)
         self.assertIn("follow_up_suggestions", snapshot)
+        self.assertIn("concept_signals", snapshot)
+        self.assertIn("teacher_moves", snapshot)
+        self.assertIn("student_risk_flags", snapshot)
+        self.assertIn("follow_up_assets", snapshot)
+        self.assertTrue(snapshot["concept_signals"]["items"])
+        self.assertTrue(snapshot["teacher_moves"])
+        self.assertTrue(snapshot["follow_up_assets"])
         self.assertEqual(snapshot["confidence"], "medium")
         self.assertTrue(snapshot["confidence_reason"])
 
@@ -77,6 +84,9 @@ class MeetingAssistantServiceTest(unittest.TestCase):
 
         self.assertEqual(payload["summary"], "Students compared mitosis and meiosis clearly.")
         self.assertIn("Share the comparison chart.", payload["action_items"])
+        self.assertIn("study_recap", payload)
+        self.assertIn("unresolved_questions", payload)
+        self.assertIn("next_class_moves", payload)
         self.assertIn("confidence", payload)
         self.assertIn("confidence_reason", payload)
         self.assertTrue(generator.called)

@@ -188,6 +188,8 @@ def build_dashboard_copilot_payload(
                 "severity": complaint["priority"],
                 "category": "complaint",
                 "target_url": "/communication-hub",
+                "why_now": "An open student complaint is already blocking trust or learning flow for this class.",
+                "recommended_window": "today" if complaint["priority"] == "high" else "next class",
                 "confidence_reason": "A live student complaint with explicit classroom context supports this priority.",
             }
         )
@@ -205,6 +207,8 @@ def build_dashboard_copilot_payload(
                 "severity": student["risk"],
                 "category": "student",
                 "target_url": f"/educator/student/{student['student_id']}",
+                "why_now": f"{student['student_name']} is already below the class stability threshold, so delay will make the intervention more expensive later.",
+                "recommended_window": "today" if student["risk"] == "high" else "this week",
                 "confidence_reason": "Recent quiz performance and Bloom gap signals support this intervention recommendation.",
             }
         )
@@ -224,6 +228,8 @@ def build_dashboard_copilot_payload(
                     "severity": "medium",
                     "category": "meeting",
                     "target_url": f"/classrooms/{meeting['classroom_id']}/live",
+                    "why_now": "The classroom meeting already surfaced a concrete next move while the discussion is still fresh.",
+                    "recommended_window": "next class",
                     "confidence_reason": "This recommendation is backed by a recent meeting recap and follow-up suggestion.",
                 }
             )
@@ -233,6 +239,15 @@ def build_dashboard_copilot_payload(
 
     priorities.sort(key=lambda item: (SEVERITY_ORDER.get(item["severity"], 9), item["title"]))
     priorities = priorities[:8]
+    intervention_plan = []
+    if any(item["category"] == "complaint" for item in priorities):
+        intervention_plan.append("Resolve the highest-risk open complaint before the next major class activity.")
+    if any(item["category"] == "student" for item in priorities):
+        intervention_plan.append("Target the lowest-scoring learner with one reinforcement step and one follow-up check.")
+    if any(item["category"] == "meeting" for item in priorities):
+        intervention_plan.append("Carry the latest meeting follow-up into stream, classwork, or the next class opening.")
+    if not intervention_plan:
+        intervention_plan.append("Wait for new classroom signals, then rerun the copilot for the next intervention cycle.")
     summary = (
         f"{len([item for item in priorities if item['severity'] == 'high'])} urgent item(s), "
         f"{len([item for item in priorities if item['category'] == 'student'])} student support task(s), "
@@ -245,6 +260,7 @@ def build_dashboard_copilot_payload(
         "priorities": priorities,
         "meeting_follow_ups": meeting_follow_ups[:6],
         "suggested_announcements": suggested_announcements[:4],
+        "intervention_plan": intervention_plan[:4],
         "summary": summary,
     }
 
@@ -285,6 +301,16 @@ def build_communication_copilot_payload(messages: List[Dict], complaints: List[D
                 ),
                 "recommended_next_step": next_step,
                 "target_audience": "student",
+                "draft_reason": (
+                    "The complaint language suggests a class-wide resource issue, so the educator should reply privately first and then clarify publicly."
+                    if handling_mode == "private_then_classwide"
+                    else "The complaint looks learner-specific, so a direct supportive reply is the cleanest first move."
+                ),
+                "escalation_signal": (
+                    "repeatable_class_issue"
+                    if handling_mode == "private_then_classwide"
+                    else "private_support_only"
+                ),
                 "confidence_reason": "The complaint content and priority provide enough context for a draft response.",
             }
         )
@@ -310,6 +336,16 @@ def build_communication_copilot_payload(messages: List[Dict], complaints: List[D
                     else "Reply privately, then monitor whether the same doubt appears again."
                 ),
                 "target_audience": "student" if handling_mode == "private_reply" else "classroom",
+                "draft_reason": (
+                    "The audience and subject suggest this should become a classroom clarification, not only a private reply."
+                    if handling_mode == "classroom_follow_up"
+                    else "The message looks narrow enough that a private educator reply should resolve it first."
+                ),
+                "escalation_signal": (
+                    "monitor_for_repeat"
+                    if handling_mode == "private_reply"
+                    else "repeatable_class_issue"
+                ),
                 "confidence_reason": "The recent message already identifies the subject, audience, and next response style.",
             }
         )
@@ -344,6 +380,7 @@ def build_class_insights_copilot_payload(topic_trends: List[Dict]) -> Dict:
                 "explanation": f"Students are showing uneven understanding in {trend['topic']}, with average mastery at {round(trend['mastery'])}%.",
                 "why_it_matters": f"Low performance here can block progress for {trend['students_measured']} measured learners.",
                 "recommended_action": f"Run a focused review on {trend['topic']} and follow it with a short recap quiz.",
+                "teaching_move": f"Re-teach {trend['topic']} with one worked comparison, then run a short retrieval check before moving on.",
                 "confidence_reason": "This topic appears repeatedly in classroom mastery trends.",
             }
         )
@@ -354,6 +391,11 @@ def build_class_insights_copilot_payload(topic_trends: List[Dict]) -> Dict:
                 "rationale": f"{trend['topic']} is the clearest shared weakness across {trend['students_measured']} students.",
                 "suggested_format": "15-minute reteach plus 3-question quick check",
                 "next_step": f"Share a concise recap resource, then schedule a group review on {trend['topic']}.",
+                "review_sequence": [
+                    f"Revisit the base concept behind {trend['topic']}",
+                    f"Show one worked {trend['topic']} example",
+                    "Run one short retrieval check before students leave the review",
+                ],
                 "confidence_reason": "Multiple learner signals place this topic among the weakest recent class areas.",
             }
         )
