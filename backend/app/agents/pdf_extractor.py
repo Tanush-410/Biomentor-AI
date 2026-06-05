@@ -2,7 +2,7 @@
 import io
 from typing import List, Optional, Tuple
 
-import PyPDF2
+from pypdf import PdfReader
 
 class PDFExtractor:
     """Extract text and metadata from PDF files."""
@@ -11,7 +11,7 @@ class PDFExtractor:
     def extract_pages(file_content: bytes, max_pages: Optional[int] = None) -> Tuple[List[dict], int]:
         """Extract per-page text payloads from a PDF file."""
         try:
-            pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_content))
+            pdf_reader = PdfReader(io.BytesIO(file_content))
             page_count = len(pdf_reader.pages)
             pages_to_process = min(page_count, max_pages) if max_pages else page_count
             page_payloads = []
