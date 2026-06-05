@@ -1,7 +1,6 @@
 """Main FastAPI application."""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from app.core import settings
 from app.database import get_database_backend, init_db
 from app.routers import auth_router, classrooms_router, collaboration_router, documents_router, educator_router, quiz_router, qa_router
@@ -22,17 +21,9 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
-# CORS middleware
-cors_origins = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

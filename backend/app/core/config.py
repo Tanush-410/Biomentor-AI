@@ -1,4 +1,5 @@
 """Application configuration management."""
+import json
 from pathlib import Path
 from typing import List, Optional
 
@@ -51,11 +52,16 @@ class Settings(BaseSettings):
     # API Settings
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    cors_origins: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
     
     # Environment
     environment: str = "development"
-    debug: bool = True
+    debug: bool = False
 
     @field_validator("debug", mode="before")
     @classmethod
@@ -71,6 +77,26 @@ class Settings(BaseSettings):
         if text in {"0", "false", "no", "off", "release", "production"}:
             return False
         return True
+
+    @field_validator("cors_origins", "trusted_search_domains", mode="before")
+    @classmethod
+    def parse_list_fields(cls, value):
+        """Accept JSON arrays or comma-separated strings from deployment dashboards."""
+        if value is None:
+            return value
+        if isinstance(value, list):
+            return value
+        text = str(value).strip()
+        if not text:
+            return []
+        if text.startswith("["):
+            try:
+                parsed = json.loads(text)
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if str(item).strip()]
+            except json.JSONDecodeError:
+                pass
+        return [item.strip() for item in text.split(",") if item.strip()]
     
     class Config:
         case_sensitive = False

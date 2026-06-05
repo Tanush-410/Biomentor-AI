@@ -308,6 +308,76 @@ If the backend connects correctly, `/health` will show:
 }
 ```
 
+## Production Deployment: Vercel + Railway
+
+BioMentor AI should be deployed with:
+- `Vercel` for the `frontend`
+- `Railway` for the `backend`
+- `Supabase/Postgres` for production relational data
+- `Qdrant` for vector retrieval
+
+This split is important because the classroom meeting system uses FastAPI WebSockets for signaling. The backend should stay on Railway instead of being deployed as Vercel Functions.
+
+### 1. Deploy the backend to Railway
+
+Create a Railway service from the repo and set the service root to `backend`.
+
+Railway can use the included [backend/Dockerfile](/Users/tanush.s.vashisht/Desktop/Tanush/work/backend/Dockerfile:1), which now binds `0.0.0.0:$PORT` correctly for production.
+
+Set these Railway variables:
+
+```env
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.your-project.supabase.co:5432/postgres
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+QDRANT_URL=https://your-qdrant-endpoint
+QDRANT_API_KEY=your_qdrant_api_key
+GROQ_API_KEY=your_groq_api_key
+SECRET_KEY=replace-this-with-a-long-random-secret
+ENVIRONMENT=production
+DEBUG=false
+CORS_ORIGINS=["https://your-frontend.vercel.app","https://your-custom-domain.com"]
+TRUSTED_SEARCH_DOMAINS=["khanacademy.org","britannica.com","nih.gov","nasa.gov",".edu/"]
+WEB_FALLBACK_TOP_K=4
+TURN_URL=turn:your-turn-host:3478?transport=udp
+TURN_USERNAME=your_turn_username
+TURN_CREDENTIAL=your_turn_password
+```
+
+After deploy, confirm:
+- `https://your-railway-backend.up.railway.app/health`
+- the response should include `"database_backend": "postgresql"`
+
+### 2. Deploy the frontend to Vercel
+
+Import the same repo into Vercel and set the project root to `frontend`.
+
+Set these Vercel environment variables:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-railway-backend.up.railway.app
+NEXT_PUBLIC_TURN_URL=turn:your-turn-host:3478?transport=udp
+NEXT_PUBLIC_TURN_USERNAME=your_turn_username
+NEXT_PUBLIC_TURN_CREDENTIAL=your_turn_password
+```
+
+After deploy, test:
+- login
+- classroom join by invite code
+- Learning Chat
+- built-in live meeting schedule and join
+- educator quiz publish
+- student proctored quiz start
+
+### 3. Production notes
+
+- Do **not** rely on SQLite in production.
+- Do **not** leave `DEBUG=true`.
+- Set a strong `SECRET_KEY`.
+- Use a real TURN server for reliable classroom calls. STUN-only is not enough for many real-world networks.
+- CORS is now environment-driven through `CORS_ORIGINS`, so Railway should allow your Vercel domain once it is added there.
+
 ## Running with Qdrant
 
 Set in `backend/.env`:
