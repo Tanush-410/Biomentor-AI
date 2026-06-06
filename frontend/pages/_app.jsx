@@ -11,6 +11,8 @@ import '@fontsource/cormorant-garamond/700.css'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import '../styles/globals.css'
 
+const LEGACY_CACHE_PREFIXES = ['biomentor-']
+
 function AppContent({ Component, pageProps }) {
   const router = useRouter()
   const { token, loading } = useAuth()
@@ -46,33 +48,38 @@ function AppContent({ Component, pageProps }) {
 }
 
 export default function App(props) {
-  // Register Service Worker for offline support
+  // Production deploys were serving stale JS/API responses from a custom service worker.
+  // We rely on IndexedDB for offline document support for now, so always remove the worker.
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      if (process.env.NODE_ENV !== 'production') {
-        navigator.serviceWorker.getRegistrations()
-          .then((registrations) => {
-            registrations.forEach((registration) => registration.unregister())
-          })
-          .catch((error) => {
-            console.log('Service Worker cleanup failed:', error)
-          })
-        return
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const teardownLegacyOfflineCaches = async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations()
+          await Promise.all(registrations.map((registration) => registration.unregister()))
+        } catch (error) {
+          console.log('Service Worker cleanup failed:', error)
+        }
       }
 
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log('Service Worker registered successfully:', registration)
-        })
-        .catch(error => {
-          console.log('Service Worker registration failed:', error)
-        })
-
-      // Listen for updates
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('Service Worker controller changed')
-      })
+      if ('caches' in window) {
+        try {
+          const cacheNames = await window.caches.keys()
+          await Promise.all(
+            cacheNames
+              .filter((name) => LEGACY_CACHE_PREFIXES.some((prefix) => name.startsWith(prefix)))
+              .map((name) => window.caches.delete(name))
+          )
+        } catch (error) {
+          console.log('Legacy cache cleanup failed:', error)
+        }
+      }
     }
+
+    teardownLegacyOfflineCaches()
   }, [])
 
   return (
