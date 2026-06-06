@@ -19,6 +19,31 @@ const BLOOM_LABELS = {
   6: 'Create'
 }
 
+function normalizeList(value) {
+  return Array.isArray(value) ? value : []
+}
+
+function normalizeEducatorDashboardPayload(payload, messages) {
+  return {
+    ...(payload || {}),
+    alerts: normalizeList(payload?.alerts),
+    classrooms: normalizeList(payload?.classrooms),
+    complaints: normalizeList(payload?.complaints),
+    live_sessions: normalizeList(payload?.live_sessions),
+    messages: normalizeList(messages),
+  }
+}
+
+function normalizeEducatorCopilotPayload(payload) {
+  if (!payload) return null
+  return {
+    ...payload,
+    priorities: normalizeList(payload?.priorities),
+    meeting_follow_ups: normalizeList(payload?.meeting_follow_ups),
+    intervention_plan: normalizeList(payload?.intervention_plan),
+  }
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const { token, user, loading: authLoading } = useAuth()
@@ -48,9 +73,19 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isEducator || !token) return undefined
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    if (!apiUrl) return undefined
+
     const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const apiBase = process.env.NEXT_PUBLIC_API_URL.replace(/^http/, wsProtocol)
-    const ws = new WebSocket(`${apiBase}/api/educator/notifications/ws?token=${encodeURIComponent(token)}`)
+    const apiBase = apiUrl.replace(/^http/, wsProtocol)
+    let ws
+
+    try {
+      ws = new WebSocket(`${apiBase}/api/educator/notifications/ws?token=${encodeURIComponent(token)}`)
+    } catch (wsSetupError) {
+      console.error('Educator notification socket setup error', wsSetupError)
+      return undefined
+    }
 
     ws.onmessage = (event) => {
       try {
@@ -61,7 +96,7 @@ export default function Dashboard() {
             if (!current) return current
             return {
               ...current,
-              complaints: [payload.complaint, ...(current.complaints || [])].slice(0, 8),
+              complaints: [payload.complaint, ...normalizeList(current.complaints)].slice(0, 8),
               alerts: [
                 {
                   student_id: payload.complaint.student_id,
@@ -71,7 +106,7 @@ export default function Dashboard() {
                   type: 'complaint',
                   complaint_id: payload.complaint.id
                 },
-                ...(current.alerts || [])
+                ...normalizeList(current.alerts)
               ].slice(0, 10)
             }
           })
@@ -82,7 +117,7 @@ export default function Dashboard() {
             if (!current) return current
             return {
               ...current,
-              messages: [payload.message, ...(current.messages || [])].slice(0, 12),
+              messages: [payload.message, ...normalizeList(current.messages)].slice(0, 12),
             }
           })
         }
@@ -101,7 +136,7 @@ export default function Dashboard() {
                   type: 'quiz_violation',
                   quiz_id: payload.violation.quiz_id
                 },
-                ...(current.alerts || [])
+                ...normalizeList(current.alerts)
               ].slice(0, 10)
             }
           })
@@ -201,8 +236,8 @@ export default function Dashboard() {
       const dashboard = await dashboardResponse.json()
       const messages = messagesResponse.ok ? await messagesResponse.json() : { messages: [] }
       const copilot = copilotResponse.ok ? await copilotResponse.json() : null
-      setEducatorData({ ...dashboard, messages: messages.messages || [] })
-      setEducatorCopilot(copilot)
+      setEducatorData(normalizeEducatorDashboardPayload(dashboard, messages.messages))
+      setEducatorCopilot(normalizeEducatorCopilotPayload(copilot))
     } catch (err) {
       console.error('Educator dashboard load error:', err)
       setError(err.message || 'Unable to connect to the server.')
@@ -210,6 +245,15 @@ export default function Dashboard() {
       setLoading(false)
     }
   }
+
+  const educatorAlerts = normalizeList(educatorData?.alerts)
+  const educatorLiveSessions = normalizeList(educatorData?.live_sessions)
+  const educatorClassrooms = normalizeList(educatorData?.classrooms)
+  const educatorMessages = normalizeList(educatorData?.messages)
+  const educatorComplaints = normalizeList(educatorData?.complaints)
+  const copilotPriorities = normalizeList(educatorCopilot?.priorities)
+  const copilotMeetingFollowUps = normalizeList(educatorCopilot?.meeting_follow_ups)
+  const copilotInterventionPlan = normalizeList(educatorCopilot?.intervention_plan)
 
   if (isEducator) {
     return (
@@ -280,12 +324,12 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="space-y-4">
-              {(educatorData?.alerts || []).length === 0 ? (
+              {educatorAlerts.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-slate-600">
                   No active alerts yet. Once students complete quizzes, this panel will flag shared gaps and mastery concerns.
                 </div>
               ) : (
-                educatorData.alerts.map((alert) => (
+                educatorAlerts.map((alert) => (
                   <div key={alert.student_id} className="rounded-2xl border border-slate-200 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
@@ -309,30 +353,30 @@ export default function Dashboard() {
                 actionLabel="Open Communication Hub"
                 actionHref="/communication-hub"
               >
-                {(educatorCopilot?.priorities || []).length === 0 ? (
+                {copilotPriorities.length === 0 ? (
                   <div className="surface-subtle p-4 text-sm text-slate-600">
                     No urgent copilot actions yet. New quiz results, complaints, and meeting recaps will surface here automatically.
                   </div>
                 ) : (
-                  (educatorCopilot?.priorities || []).slice(0, 3).map((item) => (
+                  copilotPriorities.slice(0, 3).map((item) => (
                     <CopilotPriorityCard key={item.id} item={item} data-confidence-reason={item.confidence_reason || ''} />
                   ))
                 )}
-                {(educatorCopilot?.meeting_follow_ups || []).length > 0 && (
+                {copilotMeetingFollowUps.length > 0 && (
                   <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Meeting follow-ups</p>
                     <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                      {educatorCopilot.meeting_follow_ups.slice(0, 3).map((item, index) => (
+                      {copilotMeetingFollowUps.slice(0, 3).map((item, index) => (
                         <p key={`${item}-${index}`}>• {item}</p>
                       ))}
                     </div>
                   </div>
                 )}
-                {(educatorCopilot?.intervention_plan || []).length > 0 && (
+                {copilotInterventionPlan.length > 0 && (
                   <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Intervention plan</p>
                     <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-                      {educatorCopilot.intervention_plan.slice(0, 3).map((item, index) => (
+                      {copilotInterventionPlan.slice(0, 3).map((item, index) => (
                         <p key={`${item}-${index}`}>• {item}</p>
                       ))}
                     </div>
@@ -344,7 +388,7 @@ export default function Dashboard() {
             <div className="card p-6">
               <h3 className="text-xl font-bold text-slate-900">Live Collaboration</h3>
               <div className="mt-4 space-y-3">
-                {(educatorData?.live_sessions || []).slice(0, 4).map((session) => (
+                {educatorLiveSessions.slice(0, 4).map((session) => (
                   <div key={session.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-semibold text-slate-900">{session.title}</p>
                     <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{session.status}</p>
@@ -370,10 +414,10 @@ export default function Dashboard() {
           <div className="card p-6">
             <h3 className="text-xl font-bold text-slate-900">Classroom Snapshot</h3>
             <div className="mt-4 space-y-4">
-              {(educatorData?.classrooms || []).length === 0 ? (
+              {educatorClassrooms.length === 0 ? (
                 <p className="text-slate-600">Create your first classroom to start inviting students.</p>
               ) : (
-                educatorData.classrooms.map((room) => (
+                educatorClassrooms.map((room) => (
                   <div key={room.id} className="rounded-2xl border border-slate-200 p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
@@ -394,10 +438,10 @@ export default function Dashboard() {
           <div className="card p-6">
             <h3 className="text-xl font-bold text-slate-900">Recent Communications</h3>
             <div className="mt-4 space-y-4">
-              {(educatorData?.messages || []).length === 0 ? (
+              {educatorMessages.length === 0 ? (
                 <p className="text-slate-600">No messages yet. Send your first class update from the Communication Hub.</p>
               ) : (
-                educatorData.messages.map((message) => (
+                educatorMessages.map((message) => (
                   <div key={message.id} className="rounded-2xl border border-slate-200 p-4">
                     <p className="text-sm font-semibold text-slate-900">{message.subject}</p>
                     <p className="mt-2 text-sm text-slate-600">{message.content}</p>
@@ -414,10 +458,10 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold text-slate-900">Student Complaints Inbox</h3>
             <p className="mt-2 text-sm text-slate-600">Difficulty reports raised by students appear here as soon as they submit them.</p>
             <div className="mt-5 space-y-4">
-              {((liveNotifications.length > 0 ? liveNotifications : educatorData?.complaints) || []).length === 0 ? (
+              {(liveNotifications.length > 0 ? liveNotifications : educatorComplaints).length === 0 ? (
                 <p className="text-slate-600">No complaints raised yet.</p>
               ) : (
-                (liveNotifications.length > 0 ? liveNotifications : educatorData?.complaints || []).map((complaint) => (
+                (liveNotifications.length > 0 ? liveNotifications : educatorComplaints).map((complaint) => (
                   <div key={complaint.id} className="rounded-2xl border border-slate-200 p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
