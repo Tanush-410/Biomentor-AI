@@ -10,7 +10,33 @@ import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 import { getOfflineDocument } from '../lib/offlineDocuments'
 
-const documentsApi = (path = '') => `/api/backend/documents${path}`
+const normalizeApiBase = (baseUrl = '') => baseUrl.replace(/\/+$/, '')
+const directDocumentsApi = (path = '') =>
+  process.env.NEXT_PUBLIC_API_URL ? `${normalizeApiBase(process.env.NEXT_PUBLIC_API_URL)}/api/documents${path}` : null
+const proxiedDocumentsApi = (path = '') => `/api/backend/documents${path}`
+
+const fetchDocumentEndpoint = async (path, options = {}) => {
+  const attempted = new Set()
+  const candidates = [directDocumentsApi(path), proxiedDocumentsApi(path)].filter(
+    (candidate) => candidate && !attempted.has(candidate) && attempted.add(candidate)
+  )
+
+  let lastError = null
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, options)
+      if (response.status >= 500) {
+        lastError = new Error(`Upstream request failed with status ${response.status}`)
+        continue
+      }
+      return response
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError || new Error('Unable to reach the materials service.')
+}
 
 export default function DocumentsPage() {
   const router = useRouter()
@@ -46,7 +72,7 @@ export default function DocumentsPage() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch(documentsApi('/'), {
+      const response = await fetchDocumentEndpoint('/', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -99,7 +125,7 @@ export default function DocumentsPage() {
       return
     }
     try {
-      const response = await fetch(documentsApi(`/${targetDoc.id}/material-intelligence`), {
+      const response = await fetchDocumentEndpoint(`/${targetDoc.id}/material-intelligence`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
@@ -128,7 +154,7 @@ export default function DocumentsPage() {
     }
 
     try {
-      const response = await fetch(documentsApi('/upload'), {
+      const response = await fetchDocumentEndpoint('/upload', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -154,7 +180,7 @@ export default function DocumentsPage() {
     if (!window.confirm('Delete this material? This will remove the uploaded file from the app.')) return
 
     try {
-      const response = await fetch(documentsApi(`/${docId}`), {
+      const response = await fetchDocumentEndpoint(`/${docId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })

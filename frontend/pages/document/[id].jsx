@@ -9,7 +9,33 @@ import MaterialIntelligencePanel from '../../components/MaterialIntelligencePane
 import { useAuth } from '../../context/AuthContext'
 import { deleteOfflineDocument, getOfflineDocument, saveOfflineDocument } from '../../lib/offlineDocuments'
 
-const documentsApi = (path = '') => `/api/backend/documents${path}`
+const normalizeApiBase = (baseUrl = '') => baseUrl.replace(/\/+$/, '')
+const directDocumentsApi = (path = '') =>
+  process.env.NEXT_PUBLIC_API_URL ? `${normalizeApiBase(process.env.NEXT_PUBLIC_API_URL)}/api/documents${path}` : null
+const proxiedDocumentsApi = (path = '') => `/api/backend/documents${path}`
+
+const fetchDocumentEndpoint = async (path, options = {}) => {
+  const attempted = new Set()
+  const candidates = [directDocumentsApi(path), proxiedDocumentsApi(path)].filter(
+    (candidate) => candidate && !attempted.has(candidate) && attempted.add(candidate)
+  )
+
+  let lastError = null
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url, options)
+      if (response.status >= 500) {
+        lastError = new Error(`Upstream request failed with status ${response.status}`)
+        continue
+      }
+      return response
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError || new Error('Unable to reach the materials service.')
+}
 
 export default function StudyDocumentPage() {
   const router = useRouter()
@@ -82,7 +108,7 @@ export default function StudyDocumentPage() {
     }
 
     try {
-      const response = await fetch(documentsApi(`/${id}`), {
+      const response = await fetchDocumentEndpoint(`/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -123,7 +149,7 @@ export default function StudyDocumentPage() {
 
   const fetchInsights = async (documentId) => {
     try {
-      const response = await fetch(documentsApi(`/${documentId}/insights`), {
+      const response = await fetchDocumentEndpoint(`/${documentId}/insights`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -139,7 +165,7 @@ export default function StudyDocumentPage() {
 
   const fetchMaterialIntelligence = async (documentId) => {
     try {
-      const response = await fetch(documentsApi(`/${documentId}/material-intelligence`), {
+      const response = await fetchDocumentEndpoint(`/${documentId}/material-intelligence`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -170,7 +196,7 @@ export default function StudyDocumentPage() {
     }
 
     try {
-      const response = await fetch(documentsApi(`/${metadata.id}/file`), {
+      const response = await fetchDocumentEndpoint(`/${metadata.id}/file`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

@@ -12,11 +12,13 @@ test("backend proxy buffers request bodies before forwarding uploads", () => {
   assert.match(source, /requestHeaders\['content-length'\] = String\(requestBody\.length\)/);
 });
 
-test("documents pages use the same-origin backend proxy for hosted materials", () => {
+test("documents pages prefer the hosted backend directly and keep the proxy as a fallback", () => {
   const documentsSource = read("pages/documents.jsx");
   const viewerSource = read("pages/document/[id].jsx");
-  assert.match(documentsSource, /const documentsApi = \(path = ''\) => `\/api\/backend\/documents\$\{path\}`/);
-  assert.match(documentsSource, /fetch\(documentsApi\('\/upload'\)/);
-  assert.match(viewerSource, /const documentsApi = \(path = ''\) => `\/api\/backend\/documents\$\{path\}`/);
-  assert.match(viewerSource, /fetch\(documentsApi\(`\/\$\{metadata\.id\}\/file`\)/);
+  assert.match(documentsSource, /const directDocumentsApi = \(path = ''\) =>/);
+  assert.match(documentsSource, /const proxiedDocumentsApi = \(path = ''\) => `\/api\/backend\/documents\$\{path\}`/);
+  assert.match(documentsSource, /const fetchDocumentEndpoint = async \(path, options = \{\}\) =>/);
+  assert.match(viewerSource, /const directDocumentsApi = \(path = ''\) =>/);
+  assert.match(viewerSource, /const proxiedDocumentsApi = \(path = ''\) => `\/api\/backend\/documents\$\{path\}`/);
+  assert.match(viewerSource, /const fetchDocumentEndpoint = async \(path, options = \{\}\) =>/);
 });
