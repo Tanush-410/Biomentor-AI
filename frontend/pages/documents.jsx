@@ -10,6 +10,8 @@ import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 import { getOfflineDocument } from '../lib/offlineDocuments'
 
+const documentsApi = (path = '') => `/api/backend/documents${path}`
+
 export default function DocumentsPage() {
   const router = useRouter()
   const { token, loading: authLoading } = useAuth()
@@ -44,7 +46,7 @@ export default function DocumentsPage() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/`, {
+      const response = await fetch(documentsApi('/'), {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -97,7 +99,7 @@ export default function DocumentsPage() {
       return
     }
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${targetDoc.id}/material-intelligence`, {
+      const response = await fetch(documentsApi(`/${targetDoc.id}/material-intelligence`), {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (response.ok) {
@@ -126,7 +128,7 @@ export default function DocumentsPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/upload`, {
+      const response = await fetch(documentsApi('/upload'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -152,7 +154,7 @@ export default function DocumentsPage() {
     if (!window.confirm('Delete this material? This will remove the uploaded file from the app.')) return
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${docId}`, {
+      const response = await fetch(documentsApi(`/${docId}`), {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })

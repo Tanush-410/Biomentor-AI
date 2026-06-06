@@ -9,6 +9,8 @@ import MaterialIntelligencePanel from '../../components/MaterialIntelligencePane
 import { useAuth } from '../../context/AuthContext'
 import { deleteOfflineDocument, getOfflineDocument, saveOfflineDocument } from '../../lib/offlineDocuments'
 
+const documentsApi = (path = '') => `/api/backend/documents${path}`
+
 export default function StudyDocumentPage() {
   const router = useRouter()
   const { id, page: pageQuery } = router.query
@@ -80,7 +82,7 @@ export default function StudyDocumentPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${id}`, {
+      const response = await fetch(documentsApi(`/${id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -121,7 +123,7 @@ export default function StudyDocumentPage() {
 
   const fetchInsights = async (documentId) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${documentId}/insights`, {
+      const response = await fetch(documentsApi(`/${documentId}/insights`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -137,7 +139,7 @@ export default function StudyDocumentPage() {
 
   const fetchMaterialIntelligence = async (documentId) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${documentId}/material-intelligence`, {
+      const response = await fetch(documentsApi(`/${documentId}/material-intelligence`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -168,7 +170,7 @@ export default function StudyDocumentPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/${metadata.id}/file`, {
+      const response = await fetch(documentsApi(`/${metadata.id}/file`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
