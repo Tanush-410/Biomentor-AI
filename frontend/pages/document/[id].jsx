@@ -175,7 +175,9 @@ export default function StudyDocumentPage() {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to load file (${response.status})`)
+        const payload = await response.json().catch(() => ({}))
+        const detail = payload?.detail || `Failed to load file (${response.status})`
+        throw new Error(detail)
       }
 
       const blob = await response.blob()
@@ -196,7 +198,7 @@ export default function StudyDocumentPage() {
         setIsOfflineReady(true)
         setFileError('Showing your saved offline copy because the live PDF could not be loaded.')
       } else {
-        setFileError('Unable to load the PDF file yet.')
+        setFileError(err?.message || 'Unable to load the PDF file yet.')
       }
     } finally {
       setFileLoading(false)

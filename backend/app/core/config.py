@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_key: str
     supabase_service_key: str
+    supabase_documents_bucket: str = "documents"
     
     # Groq API
     groq_api_key: str

@@ -1,17 +1,28 @@
 """Documents router for PDF upload and management."""
 import mimetypes
 import os
+import tempfile
 import uuid
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.agents.pdf_extractor import PDFExtractor
 from app.core.security import enforce_rate_limit, parse_page_selection, sanitize_filename, validate_upload
 from app.database import get_db
-from app.database.models import Document, DocumentChunk
+from app.database.models import (
+    Classroom,
+    ClassroomAnnouncement,
+    ClassroomAssignment,
+    ClassroomEnrollment,
+    ClassroomMaterial,
+    ClassroomQuiz,
+    Document,
+    DocumentChunk,
+)
 from app.routers.auth import get_current_user
 from app.schemas import DocumentResponse, MaterialIntelligenceResponse
 from app.services.document_context import (
@@ -20,17 +31,66 @@ from app.services.document_context import (
     get_document_context,
     index_document_chunks,
 )
+from app.services.document_storage import delete_document_file, load_document_bytes, persist_document_file
 from app.services.material_intelligence import build_material_intelligence
 from app.services.vector_store import delete_document_vectors
 
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 # Keep uploads practical for exam prep and prevent huge local files.
 MAX_FILE_SIZE = 100 * 1024 * 1024
+
+
+def get_accessible_document_for_user(db: Session, current_user, document_id: str) -> Optional[Document]:
+    """Return a document when the user owns it or can access it through a classroom."""
+    if getattr(current_user, "role", None) == "admin":
+        return db.query(Document).filter(Document.id == document_id).first()
+
+    document = db.query(Document).filter(
+        Document.id == document_id,
+        Document.user_id == current_user.id,
+    ).first()
+    if document:
+        return document
+
+    if current_user.role == "educator":
+        classroom_rows = (
+            db.query(Classroom.id)
+            .filter(Classroom.educator_id == current_user.id)
+            .all()
+        )
+    else:
+        classroom_rows = (
+            db.query(ClassroomEnrollment.classroom_id)
+            .filter(
+                ClassroomEnrollment.student_id == current_user.id,
+                ClassroomEnrollment.status == "active",
+            )
+            .all()
+        )
+
+    classroom_ids = [row[0] for row in classroom_rows]
+    if not classroom_ids:
+        return None
+
+    return (
+        db.query(Document)
+        .outerjoin(ClassroomMaterial, ClassroomMaterial.document_id == Document.id)
+        .outerjoin(ClassroomAssignment, ClassroomAssignment.document_id == Document.id)
+        .outerjoin(ClassroomAnnouncement, ClassroomAnnouncement.linked_document_id == Document.id)
+        .outerjoin(ClassroomQuiz, ClassroomQuiz.document_id == Document.id)
+        .filter(
+            Document.id == document_id,
+            or_(
+                ClassroomMaterial.classroom_id.in_(classroom_ids),
+                ClassroomAssignment.classroom_id.in_(classroom_ids),
+                ClassroomAnnouncement.classroom_id.in_(classroom_ids),
+                ClassroomQuiz.classroom_id.in_(classroom_ids),
+            ),
+        )
+        .first()
+    )
 
 
 @router.post("/upload", response_model=DocumentResponse)
@@ -62,12 +122,13 @@ async def upload_document(
     if storage_mode not in {"full", "text_only"}:
         raise HTTPException(status_code=400, detail="storage_mode must be either 'full' or 'text_only'")
     
-    # Stream file to disk to avoid large in-memory uploads.
+    # Stream file to a temp location first so hosted environments can process it safely.
     file_size = 0
     chunk_size = 1024 * 1024  # 1MB chunks
     file_id = str(uuid.uuid4())
-    saved_filename = f"{file_id}{file_extension}"
-    file_path = os.path.join(UPLOAD_DIR, saved_filename)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+        temp_upload_path = temp_file.name
+    file_path = temp_upload_path
 
     try:
         with open(file_path, "wb") as saved_file:
@@ -85,12 +146,12 @@ async def upload_document(
 
                 saved_file.write(chunk)
     except HTTPException:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        if os.path.exists(temp_upload_path):
+            os.remove(temp_upload_path)
         raise
     except Exception as e:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        if os.path.exists(temp_upload_path):
+            os.remove(temp_upload_path)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error reading file: {str(e)}"
@@ -126,21 +187,40 @@ async def upload_document(
         page_count = 1
 
     doc_title = title or os.path.splitext(safe_file_name)[0]
+    persisted_source_path = temp_upload_path
+    persisted_file_name = safe_file_name
+    text_only_path = None
 
     if storage_mode == "text_only":
-        text_only_path = os.path.join(UPLOAD_DIR, f"{file_id}.txt")
-        with open(text_only_path, "w", encoding="utf-8") as extracted_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as extracted_file:
             extracted_file.write(extracted_text or "")
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        file_path = text_only_path
-        safe_file_name = f"{doc_title}.txt"
-        file_size = os.path.getsize(file_path)
+            text_only_path = extracted_file.name
+        persisted_source_path = text_only_path
+        persisted_file_name = f"{doc_title}.txt"
+        file_size = os.path.getsize(text_only_path)
+
+    try:
+        file_path = persist_document_file(
+            persisted_source_path,
+            owner_user_id=user_id,
+            document_id=file_id,
+            file_name=persisted_file_name,
+            content_type=file.content_type if storage_mode == "full" else "text/plain; charset=utf-8",
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unable to persist the uploaded file: {exc}",
+        ) from exc
+    finally:
+        for cleanup_path in {temp_upload_path, text_only_path}:
+            if cleanup_path and os.path.exists(cleanup_path):
+                os.remove(cleanup_path)
 
     db_document = Document(
         user_id=user_id,
         title=doc_title,
-        file_name=safe_file_name,
+        file_name=persisted_file_name,
         file_path=file_path,
         file_size=file_size,
         pages=page_count,
@@ -215,10 +295,7 @@ async def get_document_insights(
 ):
     """Return lightweight page and concept insights for the study viewer."""
     user_id = current_user.id if hasattr(current_user, "id") else current_user
-    document = db.query(Document).filter(
-        Document.id == document_id,
-        Document.user_id == user_id
-    ).first()
+    document = get_accessible_document_for_user(db, current_user, document_id)
 
     if not document:
         raise HTTPException(
@@ -245,10 +322,7 @@ async def get_material_intelligence(
 ):
     """Return a richer AI study layer for one uploaded document."""
     user_id = current_user.id if hasattr(current_user, "id") else current_user
-    document = db.query(Document).filter(
-        Document.id == document_id,
-        Document.user_id == user_id
-    ).first()
+    document = get_accessible_document_for_user(db, current_user, document_id)
 
     if not document:
         raise HTTPException(
@@ -291,10 +365,7 @@ async def get_document_file(
     """Stream the original uploaded file for in-browser viewing or offline caching."""
     user_id = current_user.id if hasattr(current_user, 'id') else current_user
 
-    document = db.query(Document).filter(
-        Document.id == document_id,
-        Document.user_id == user_id
-    ).first()
+    document = get_accessible_document_for_user(db, current_user, document_id)
 
     if not document:
         raise HTTPException(
@@ -302,22 +373,29 @@ async def get_document_file(
             detail="Document not found"
         )
 
-    if not os.path.exists(document.file_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document file is missing"
+    headers = {"Content-Disposition": f'inline; filename="{document.file_name}"'}
+    if os.path.exists(document.file_path):
+        media_type, _ = mimetypes.guess_type(document.file_name)
+        return FileResponse(
+            document.file_path,
+            media_type=media_type or "application/octet-stream",
+            filename=document.file_name,
+            headers=headers
         )
 
-    media_type, _ = mimetypes.guess_type(document.file_name)
-    headers = {
-        "Content-Disposition": f'inline; filename="{document.file_name}"'
-    }
-    return FileResponse(
-        document.file_path,
-        media_type=media_type or "application/octet-stream",
-        filename=document.file_name,
-        headers=headers
-    )
+    try:
+        payload, media_type = load_document_bytes(document.file_path, document.file_name)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document file is missing. Re-upload this material to restore the original file."
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Unable to load the stored file: {exc}",
+        ) from exc
+    return Response(content=payload, media_type=media_type, headers=headers)
 
 
 @router.delete("/{document_id}")
@@ -343,8 +421,7 @@ async def delete_document(
         )
     
     # Delete file
-    if os.path.exists(document.file_path):
-        os.remove(document.file_path)
+    delete_document_file(document.file_path)
 
     db.query(DocumentChunk).filter(DocumentChunk.document_id == document.id).delete(synchronize_session=False)
     try:
