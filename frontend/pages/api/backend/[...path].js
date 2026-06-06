@@ -46,6 +46,14 @@ function copyRequestHeaders(req) {
   return headers
 }
 
+async function readRequestBody(req) {
+  const chunks = []
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  return chunks.length ? Buffer.concat(chunks) : undefined
+}
+
 export default async function handler(req, res) {
   const pathSegments = Array.isArray(req.query.path) ? req.query.path : [req.query.path].filter(Boolean)
   if (!pathSegments.length) {
@@ -61,14 +69,18 @@ export default async function handler(req, res) {
   const upstreamUrl = buildTargetUrl(pathSegments, { ...req.query, path: undefined })
   const requestHeaders = copyRequestHeaders(req)
   const hasBody = !['GET', 'HEAD'].includes(req.method)
+  const requestBody = hasBody ? await readRequestBody(req) : undefined
+
+  if (requestBody) {
+    requestHeaders['content-length'] = String(requestBody.length)
+  }
 
   let upstreamResponse
   try {
     upstreamResponse = await fetch(upstreamUrl, {
       method: req.method,
       headers: requestHeaders,
-      body: hasBody ? req : undefined,
-      duplex: hasBody ? 'half' : undefined,
+      body: requestBody,
     })
   } catch (error) {
     res.status(502).json({
