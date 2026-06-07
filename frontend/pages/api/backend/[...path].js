@@ -19,7 +19,9 @@ export const config = {
 
 function buildTargetUrl(pathSegments, query) {
   const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '')
-  const target = new URL(`${baseUrl}/api/${pathSegments.join('/')}`)
+  const normalizedPath = pathSegments.join('/')
+  const needsTrailingSlash = pathSegments.length === 1 && pathSegments[0] === 'documents'
+  const target = new URL(`${baseUrl}/api/${normalizedPath}${needsTrailingSlash ? '/' : ''}`)
 
   Object.entries(query || {}).forEach(([key, value]) => {
     if (value == null) {

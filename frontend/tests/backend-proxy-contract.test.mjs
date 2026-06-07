@@ -12,6 +12,12 @@ test("backend proxy buffers request bodies before forwarding uploads", () => {
   assert.match(source, /requestHeaders\['content-length'\] = String\(requestBody\.length\)/);
 });
 
+test("backend proxy preserves the trailing slash for the documents root endpoint", () => {
+  const source = read("pages/api/backend/[...path].js");
+  assert.match(source, /const needsTrailingSlash = pathSegments\.length === 1 && pathSegments\[0\] === 'documents'/);
+  assert.match(source, /normalizedPath}\$\{needsTrailingSlash \? '\/' : ''}/);
+});
+
 test("documents pages prefer the hosted backend directly and keep the proxy as a fallback", () => {
   const documentsSource = read("pages/documents.jsx");
   const viewerSource = read("pages/document/[id].jsx");
