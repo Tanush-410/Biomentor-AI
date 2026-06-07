@@ -25,6 +25,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
 
   const signalingRef = useRef(null)
   const peerConnectionsRef = useRef(new Map())
+  const pendingIceCandidatesRef = useRef(new Map())
   const remoteStreamsRef = useRef(new Map())
   const localStreamRef = useRef(null)
 
@@ -32,6 +33,23 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
     if (!enabled || !meetingId || !token || !user?.id) return undefined
 
     let disposed = false
+
+    const queueIceCandidate = (targetUserId, candidatePayload) => {
+      const current = pendingIceCandidatesRef.current.get(targetUserId) || []
+      current.push(candidatePayload)
+      pendingIceCandidatesRef.current.set(targetUserId, current)
+    }
+
+    const flushPendingIceCandidates = async (targetUserId, peer) => {
+      if (!peer?.remoteDescription) return
+      const pendingCandidates = pendingIceCandidatesRef.current.get(targetUserId) || []
+      if (!pendingCandidates.length) return
+
+      for (const candidatePayload of pendingCandidates) {
+        await peer.addIceCandidate(new RTCIceCandidate(candidatePayload))
+      }
+      pendingIceCandidatesRef.current.delete(targetUserId)
+    }
 
     const createPeerConnection = (targetUserId) => {
       if (peerConnectionsRef.current.has(targetUserId)) {
@@ -117,6 +135,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
         const sourceUserId = message.from_user_id
         const peer = createPeerConnection(sourceUserId)
         await peer.setRemoteDescription(new RTCSessionDescription(message.payload))
+        await flushPendingIceCandidates(sourceUserId, peer)
         const answer = await peer.createAnswer()
         await peer.setLocalDescription(answer)
         signalingRef.current?.send({
@@ -131,6 +150,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
         const sourceUserId = message.from_user_id
         const peer = createPeerConnection(sourceUserId)
         await peer.setRemoteDescription(new RTCSessionDescription(message.payload))
+        await flushPendingIceCandidates(sourceUserId, peer)
         return
       }
 
@@ -138,7 +158,11 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
         const sourceUserId = message.from_user_id
         const peer = createPeerConnection(sourceUserId)
         if (message.payload) {
-          await peer.addIceCandidate(new RTCIceCandidate(message.payload))
+          if (peer.remoteDescription) {
+            await peer.addIceCandidate(new RTCIceCandidate(message.payload))
+          } else {
+            queueIceCandidate(sourceUserId, message.payload)
+          }
         }
         return
       }
@@ -200,6 +224,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
       localStreamRef.current?.getTracks().forEach((track) => track.stop())
       peerConnectionsRef.current.forEach((peer) => peer.close())
       peerConnectionsRef.current.clear()
+      pendingIceCandidatesRef.current.clear()
       remoteStreamsRef.current.clear()
     }
   }, [enabled, meetingId, token, user?.id, user?.full_name])

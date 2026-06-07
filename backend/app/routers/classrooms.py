@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import secrets
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
@@ -75,6 +75,7 @@ from app.services.meeting_assistant import (
     persist_meeting_event,
     persist_meeting_transcript,
     refresh_teacher_assistant_snapshot,
+    transcribe_meeting_audio_blob,
 )
 from app.services.proctor_review import (
     build_proctor_review_payload,
@@ -1293,6 +1294,37 @@ async def create_meeting_transcript(
     )
     refresh_teacher_assistant_snapshot(db, meeting)
     return {"status": "ok", "transcript_id": transcript.id}
+
+
+@router.post("/{classroom_id}/meetings/{meeting_id}/transcriptions/audio")
+async def create_meeting_audio_transcript(
+    classroom_id: str,
+    meeting_id: str,
+    audio: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Transcribe room audio and persist the resulting snippet for the meeting assistant."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    meeting = get_classroom_meeting(db, classroom.id, meeting_id)
+    audio_bytes = await audio.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audio upload was empty.")
+
+    transcript_text = transcribe_meeting_audio_blob(audio_bytes, filename=audio.filename or "meeting-audio.webm")
+    if not transcript_text:
+        return {"status": "skipped", "transcript_created": False}
+
+    transcript = persist_meeting_transcript(
+        db,
+        meeting=meeting,
+        current_user=current_user,
+        speaker_role="meeting_audio",
+        speaker_name="Meeting Audio",
+        content=transcript_text,
+    )
+    refresh_teacher_assistant_snapshot(db, meeting)
+    return {"status": "ok", "transcript_created": True, "transcript_id": transcript.id}
 
 
 @router.post("/{classroom_id}/meetings/{meeting_id}/events")

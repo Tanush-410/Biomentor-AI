@@ -178,6 +178,25 @@ export function postMeetingTranscript(token, classroomId, meetingId, payload) {
   })
 }
 
+export async function postMeetingAudioTranscript(token, classroomId, meetingId, audioBlob) {
+  const formData = new FormData()
+  formData.append('audio', audioBlob, `meeting-${meetingId}.webm`)
+
+  const response = await fetch(`${API_BASE}/api/classrooms/${classroomId}/meetings/${meetingId}/transcriptions/audio`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  })
+
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(payload.detail || payload.message || 'Request failed')
+  }
+  return payload
+}
+
 export function postMeetingEvent(token, classroomId, meetingId, payload) {
   return classroomRequest(`/api/classrooms/${classroomId}/meetings/${meetingId}/events`, token, {
     method: 'POST',

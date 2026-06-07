@@ -5,7 +5,8 @@ import { AlertCircle, Camera, Mic, PhoneOff, Video } from 'lucide-react'
 import MeetingAssistantPanel from './MeetingAssistantPanel'
 import AISpotlightBanner from './AISpotlightBanner'
 import { useWebRTCMeeting } from '../hooks/useWebRTCMeeting'
-import { getMeetingAssistantSnapshot, postMeetingEvent, postMeetingTranscript } from '../lib/classroomApi'
+import { getMeetingAssistantSnapshot, postMeetingAudioTranscript, postMeetingEvent, postMeetingTranscript } from '../lib/classroomApi'
+import { createMeetingAudioTranscriber } from '../lib/meetingAudioTranscriber'
 import { createMeetingTranscriptClient } from '../lib/meetingTranscriptClient'
 
 function VideoTile({ title, stream, muted = false }) {
@@ -14,6 +15,7 @@ function VideoTile({ title, stream, muted = false }) {
   useEffect(() => {
     if (ref.current) {
       ref.current.srcObject = stream || null
+      ref.current.play?.().catch(() => {})
     }
   }, [stream])
 
@@ -53,6 +55,7 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
   const [assistantLoading, setAssistantLoading] = useState(false)
   const [assistantError, setAssistantError] = useState('')
   const transcriptClientRef = useRef(null)
+  const audioTranscriberRef = useRef(null)
   const refreshTimeoutRef = useRef(null)
 
   const participantNames = new Map(
@@ -89,6 +92,20 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
     [classroomId, meeting?.id, refreshAssistantSnapshot, token, user?.full_name, user?.role]
   )
 
+  const audioTranscriber = useMemo(
+    () =>
+      createMeetingAudioTranscriber({
+        onChunk: async (blob) => {
+          if (!meeting?.id || !token || !blob?.size) return
+          const payload = await postMeetingAudioTranscript(token, classroomId, meeting.id, blob)
+          if (payload?.transcript_created) {
+            await refreshAssistantSnapshot()
+          }
+        }
+      }),
+    [classroomId, meeting?.id, refreshAssistantSnapshot, token]
+  )
+
   useEffect(() => {
     if (!isTeacher || !meeting?.id) return undefined
     refreshAssistantSnapshot()
@@ -101,14 +118,28 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
       transcriptClientRef.current.start()
     }
 
+    if (audioTranscriber.isSupported) {
+      audioTranscriberRef.current = audioTranscriber
+      audioTranscriberRef.current.start([localStream, ...remoteParticipants.map((participant) => participant.stream)]).catch(() => {})
+    }
+
     return () => {
       if (refreshTimeoutRef.current) {
         window.clearInterval(refreshTimeoutRef.current)
       }
       transcriptClientRef.current?.stop?.()
       transcriptClientRef.current = null
+      audioTranscriberRef.current?.stop?.()
+      audioTranscriberRef.current = null
     }
-  }, [isTeacher, meeting?.id, refreshAssistantSnapshot, transcriptClient])
+  }, [audioTranscriber, isTeacher, localStream, meeting?.id, refreshAssistantSnapshot, remoteParticipants, transcriptClient])
+
+  useEffect(() => {
+    if (!audioTranscriberRef.current) return
+    audioTranscriberRef.current
+      .updateStreams([localStream, ...remoteParticipants.map((participant) => participant.stream)])
+      .catch(() => {})
+  }, [localStream, remoteParticipants])
 
   const handleTeacherEnd = async () => {
     endMeeting()
@@ -210,7 +241,7 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
           <MeetingAssistantPanel
             snapshot={assistantSnapshot}
             isLoading={assistantLoading}
-            transcriptSupported={transcriptClient.isSupported}
+            transcriptSupported={transcriptClient.isSupported || audioTranscriber.isSupported}
           />
         ) : null}
       </div>

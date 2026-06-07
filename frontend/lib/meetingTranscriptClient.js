@@ -5,9 +5,21 @@ export function createMeetingTranscriptClient({ onSnippet }) {
       : null
 
   let recognition = null
+  let shouldRestart = false
+  let manuallyStopped = false
+
+  function scheduleRestart() {
+    window.setTimeout(() => {
+      if (shouldRestart && !recognition) {
+        start()
+      }
+    }, 800)
+  }
 
   function start() {
     if (!SpeechRecognition || recognition) return
+    shouldRestart = true
+    manuallyStopped = false
 
     recognition = new SpeechRecognition()
     recognition.continuous = true
@@ -22,11 +34,16 @@ export function createMeetingTranscriptClient({ onSnippet }) {
     recognition.onerror = () => {}
     recognition.onend = () => {
       recognition = null
+      if (!manuallyStopped) {
+        scheduleRestart()
+      }
     }
     recognition.start()
   }
 
   function stop() {
+    shouldRestart = false
+    manuallyStopped = true
     recognition?.stop?.()
     recognition = null
   }

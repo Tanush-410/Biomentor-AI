@@ -110,11 +110,15 @@ class MeetingAssistantRouteTest(unittest.TestCase):
         recap_response = client.get(
             "/api/classrooms/example-classroom/meetings/example-meeting/recap",
         )
+        audio_transcript_response = client.post(
+            "/api/classrooms/example-classroom/meetings/example-meeting/transcriptions/audio",
+        )
 
         self.assertNotEqual(transcript_response.status_code, 404)
         self.assertNotEqual(event_response.status_code, 404)
         self.assertNotEqual(snapshot_response.status_code, 404)
         self.assertNotEqual(recap_response.status_code, 404)
+        self.assertNotEqual(audio_transcript_response.status_code, 404)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,36 @@ def _groq_available() -> bool:
     key = (settings.groq_api_key or "").strip()
     return bool(key and not key.lower().startswith("your_"))
 
+
+def transcribe_meeting_audio_blob(audio_bytes: bytes, filename: str = "meeting-audio.webm") -> str | None:
+    """Transcribe a captured meeting-audio chunk using Groq speech-to-text when available."""
+    if not _groq_available() or not audio_bytes:
+        return None
+
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/audio/transcriptions",
+            headers={
+                "Authorization": f"Bearer {settings.groq_api_key}",
+            },
+            data={
+                "model": "whisper-large-v3-turbo",
+                "response_format": "verbose_json",
+                "language": "en",
+                "prompt": "This is a classroom meeting transcript. Focus on educational terminology and concise spoken content.",
+            },
+            files={
+                "file": (filename, audio_bytes, "audio/webm"),
+            },
+            timeout=40,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        transcript = (payload.get("text") or "").strip()
+        return transcript or None
+    except Exception:
+        return None
+
 def build_teacher_assistant_snapshot(
     transcript_items: list[dict],
     meeting_events: list[dict],
