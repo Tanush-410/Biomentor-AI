@@ -21,14 +21,25 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create FastAPI app
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Initializing database...")
+    init_db()
+    logger.info("Database initialized successfully!")
+    yield
+
+
 app = FastAPI(
     title="Smart Learning Assistant",
     description="AI-powered learning platform for exam preparation",
     version="0.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -40,15 +51,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# Initialize database
-@app.on_event("startup")
-async def startup():
-    """Initialize on startup."""
-    logger.info("Initializing database...")
-    init_db()
-    logger.info("Database initialized successfully!")
 
 
 # Health check

@@ -12,6 +12,7 @@ const HOP_BY_HOP_HEADERS = new Set([
 ])
 
 const DEFAULT_HOSTED_BACKEND_ORIGIN = 'https://biomentor-ai.onrender.com'
+const DEFAULT_LOCAL_BACKEND_ORIGIN = 'http://localhost:8000'
 
 export const config = {
   api: {
@@ -20,7 +21,11 @@ export const config = {
 }
 
 function buildTargetUrl(pathSegments, query) {
-  const baseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_HOSTED_BACKEND_ORIGIN).replace(/\/+$/, '')
+  const baseUrl = (
+    process.env.API_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === 'production' ? DEFAULT_HOSTED_BACKEND_ORIGIN : DEFAULT_LOCAL_BACKEND_ORIGIN)
+  ).replace(/\/+$/, '')
   const normalizedPath = pathSegments.join('/')
   const needsTrailingSlash = pathSegments.length === 1 && pathSegments[0] === 'documents'
   const target = new URL(`${baseUrl}/api/${normalizedPath}${needsTrailingSlash ? '/' : ''}`)

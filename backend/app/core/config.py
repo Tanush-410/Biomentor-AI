@@ -19,16 +19,16 @@ class Settings(BaseSettings):
     database_url: Optional[str] = None
     
     # Supabase
-    supabase_url: str
-    supabase_key: str
-    supabase_service_key: str
+    supabase_url: str = ""
+    supabase_key: str = ""
+    supabase_service_key: str = ""
     supabase_documents_bucket: str = "documents"
     
     # Groq API
-    groq_api_key: str
+    groq_api_key: str = ""
     
     # JWT
-    secret_key: str
+    secret_key: str = "changeme"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
@@ -71,13 +71,13 @@ class Settings(BaseSettings):
         if isinstance(value, bool):
             return value
         if value is None:
-            return True
+            return False
         text = str(value).strip().lower()
         if text in {"1", "true", "yes", "on", "debug", "development"}:
             return True
         if text in {"0", "false", "no", "off", "release", "production"}:
             return False
-        return True
+        return False
 
     @field_validator("cors_origins", "trusted_search_domains", mode="before")
     @classmethod

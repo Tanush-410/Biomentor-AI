@@ -1,4 +1,5 @@
 const DEFAULT_HOSTED_BACKEND_ORIGIN = 'https://biomentor-ai.onrender.com'
+const DEFAULT_LOCAL_BACKEND_ORIGIN = 'http://localhost:8000'
 
 const normalizeApiBase = (baseUrl = '') => String(baseUrl || '').replace(/\/+$/, '')
 
@@ -21,7 +22,7 @@ function configuredBackendOrigin() {
   if (configured) {
     return configured
   }
-  return isHostedFrontend() ? DEFAULT_HOSTED_BACKEND_ORIGIN : ''
+  return isHostedFrontend() ? DEFAULT_HOSTED_BACKEND_ORIGIN : DEFAULT_LOCAL_BACKEND_ORIGIN
 }
 
 export function backendOrigin() {
@@ -34,7 +35,8 @@ export function directBackendApi(path = '') {
 }
 
 export function proxiedBackendApi(path = '') {
-  return `/api/backend${path}`
+  const normalizedPath = String(path || '').replace(/^\/api/, '')
+  return `/api/backend${normalizedPath}`
 }
 
 export function buildBackendCandidates(path = '', { preferProxy = isHostedFrontend() } = {}) {
