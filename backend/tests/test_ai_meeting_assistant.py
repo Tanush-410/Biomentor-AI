@@ -17,6 +17,7 @@ from app.database.models import (  # noqa: E402
     ClassroomMeetingEvent,
     ClassroomMeetingTranscript,
 )
+from app.services.meeting_assistant import build_meeting_transcription_prompt  # noqa: E402
 from app.services.meeting_assistant import build_teacher_assistant_snapshot  # noqa: E402
 from app.services.meeting_assistant import build_teacher_summary_payload  # noqa: E402
 
@@ -90,6 +91,20 @@ class MeetingAssistantServiceTest(unittest.TestCase):
         self.assertIn("confidence", payload)
         self.assertIn("confidence_reason", payload)
         self.assertTrue(generator.called)
+
+    def test_transcription_prompt_includes_meeting_context(self):
+        prompt = build_meeting_transcription_prompt(
+            meeting_title="Cell Division Review",
+            recent_transcript_lines=[
+                "Revise mitosis checkpoints.",
+                "Students are unsure about metaphase.",
+            ],
+        )
+
+        self.assertIn("Cell Division Review", prompt)
+        self.assertIn("mitosis checkpoints", prompt)
+        self.assertIn("metaphase", prompt)
+        self.assertIn("Ignore filler words", prompt)
 
 
 class MeetingAssistantRouteTest(unittest.TestCase):

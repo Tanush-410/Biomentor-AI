@@ -1,4 +1,5 @@
 """Documents router for PDF upload and management."""
+from datetime import datetime
 import mimetypes
 import os
 import tempfile
@@ -40,6 +41,66 @@ router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 # Keep uploads practical for exam prep and prevent huge local files.
 MAX_FILE_SIZE = 100 * 1024 * 1024
+
+
+def list_accessible_documents_for_user(db: Session, current_user) -> List[Document]:
+    """Return the document library visible to a user across personal and classroom access."""
+    if getattr(current_user, "role", None) == "admin":
+        return (
+            db.query(Document)
+            .order_by(Document.uploaded_at.desc(), Document.created_at.desc())
+            .all()
+        )
+
+    visible_by_id: dict[str, Document] = {}
+    own_documents = (
+        db.query(Document)
+        .filter(Document.user_id == current_user.id)
+        .order_by(Document.uploaded_at.desc(), Document.created_at.desc())
+        .all()
+    )
+    for document in own_documents:
+        visible_by_id[document.id] = document
+
+    if current_user.role == "educator":
+        classroom_rows = db.query(Classroom.id).filter(Classroom.educator_id == current_user.id).all()
+    else:
+        classroom_rows = (
+            db.query(ClassroomEnrollment.classroom_id)
+            .filter(
+                ClassroomEnrollment.student_id == current_user.id,
+                ClassroomEnrollment.status == "active",
+            )
+            .all()
+        )
+
+    classroom_ids = [row[0] for row in classroom_rows]
+    if classroom_ids:
+        classroom_documents = (
+            db.query(Document)
+            .outerjoin(ClassroomMaterial, ClassroomMaterial.document_id == Document.id)
+            .outerjoin(ClassroomAssignment, ClassroomAssignment.document_id == Document.id)
+            .outerjoin(ClassroomAnnouncement, ClassroomAnnouncement.linked_document_id == Document.id)
+            .outerjoin(ClassroomQuiz, ClassroomQuiz.document_id == Document.id)
+            .filter(
+                or_(
+                    ClassroomMaterial.classroom_id.in_(classroom_ids),
+                    ClassroomAssignment.classroom_id.in_(classroom_ids),
+                    ClassroomAnnouncement.classroom_id.in_(classroom_ids),
+                    ClassroomQuiz.classroom_id.in_(classroom_ids),
+                )
+            )
+            .order_by(Document.uploaded_at.desc(), Document.created_at.desc())
+            .all()
+        )
+        for document in classroom_documents:
+            visible_by_id[document.id] = document
+
+    return sorted(
+        visible_by_id.values(),
+        key=lambda document: document.uploaded_at or document.created_at or datetime.min,
+        reverse=True,
+    )
 
 
 def get_accessible_document_for_user(db: Session, current_user, document_id: str) -> Optional[Document]:
@@ -259,9 +320,7 @@ async def list_documents(
     db: Session = Depends(get_db)
 ):
     """Get all documents for current user."""
-    user_id = current_user.id
-    documents = db.query(Document).filter(Document.user_id == user_id).all()
-    return documents
+    return list_accessible_documents_for_user(db, current_user)
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
@@ -271,13 +330,8 @@ async def get_document(
     db: Session = Depends(get_db)
 ):
     """Get specific document."""
-    user_id = current_user.id if hasattr(current_user, 'id') else current_user
-    
-    document = db.query(Document).filter(
-        Document.id == document_id,
-        Document.user_id == user_id
-    ).first()
-    
+    document = get_accessible_document_for_user(db, current_user, document_id)
+
     if not document:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -294,7 +348,6 @@ async def get_document_insights(
     db: Session = Depends(get_db)
 ):
     """Return lightweight page and concept insights for the study viewer."""
-    user_id = current_user.id if hasattr(current_user, "id") else current_user
     document = get_accessible_document_for_user(db, current_user, document_id)
 
     if not document:
@@ -303,7 +356,7 @@ async def get_document_insights(
             detail="Document not found"
         )
 
-    contexts = get_document_context(db, user_id=user_id, document_ids=[document_id], top_k=24)
+    contexts = get_document_context(db, user_id=document.user_id, document_ids=[document_id], top_k=24)
     insights = build_document_insights(contexts)
     return {
         "document_id": document.id,
@@ -321,7 +374,6 @@ async def get_material_intelligence(
     db: Session = Depends(get_db)
 ):
     """Return a richer AI study layer for one uploaded document."""
-    user_id = current_user.id if hasattr(current_user, "id") else current_user
     document = get_accessible_document_for_user(db, current_user, document_id)
 
     if not document:
@@ -330,7 +382,7 @@ async def get_material_intelligence(
             detail="Document not found"
         )
 
-    contexts = get_document_context(db, user_id=user_id, document_ids=[document_id], top_k=24)
+    contexts = get_document_context(db, user_id=document.user_id, document_ids=[document_id], top_k=24)
     payload = build_material_intelligence(
         {"id": document.id, "title": document.title, "file_name": document.file_name},
         contexts,

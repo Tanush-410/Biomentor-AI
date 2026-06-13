@@ -6,6 +6,7 @@ import MeetingAssistantPanel from './MeetingAssistantPanel'
 import AISpotlightBanner from './AISpotlightBanner'
 import { useWebRTCMeeting } from '../hooks/useWebRTCMeeting'
 import { getMeetingAssistantSnapshot, postMeetingAudioTranscript, postMeetingEvent, postMeetingTranscript } from '../lib/classroomApi'
+import { isHostedFrontend } from '../lib/backendApi'
 import { createMeetingAudioTranscriber } from '../lib/meetingAudioTranscriber'
 import { createMeetingTranscriptClient } from '../lib/meetingTranscriptClient'
 
@@ -13,11 +14,22 @@ function VideoTile({ title, stream, muted = false }) {
   const ref = useRef(null)
 
   useEffect(() => {
-    if (ref.current) {
-      ref.current.srcObject = stream || null
-      ref.current.play?.().catch(() => {})
-    }
-  }, [stream])
+    if (!ref.current) return
+    ref.current.muted = muted
+    ref.current.srcObject = stream || null
+    ref.current
+      .play?.()
+      .catch(async () => {
+        if (!ref.current || muted) return
+        ref.current.muted = true
+        try {
+          await ref.current.play?.()
+          ref.current.muted = false
+        } catch (_error) {
+          // Leave the tile visible even if autoplay policy blocks the first remote-audio attempt.
+        }
+      })
+  }, [muted, stream])
 
   return (
     <div className="surface-quiet overflow-hidden rounded-[28px] border border-[rgba(138,90,54,0.18)]">
@@ -57,6 +69,15 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
   const transcriptClientRef = useRef(null)
   const audioTranscriberRef = useRef(null)
   const refreshTimeoutRef = useRef(null)
+  const turnRelayConfigured = Boolean(
+    process.env.NEXT_PUBLIC_TURN_URL
+      && process.env.NEXT_PUBLIC_TURN_USERNAME
+      && process.env.NEXT_PUBLIC_TURN_CREDENTIAL
+  )
+  const relayAdvisory =
+    isHostedFrontend() && !turnRelayConfigured
+      ? 'TURN relay is not configured for hosted classrooms yet, so remote audio/video can fail on stricter networks. Add TURN relay credentials for production-grade meeting reliability.'
+      : ''
 
   const participantNames = new Map(
     (participants || []).map((participant) => [participant.user_id, participant.full_name || participant.user_id])
@@ -113,26 +134,32 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
       refreshAssistantSnapshot()
     }, 12000)
 
-    if (transcriptClient.isSupported) {
-      transcriptClientRef.current = transcriptClient
-      transcriptClientRef.current.start()
+    return () => {
+      if (refreshTimeoutRef.current) {
+        window.clearInterval(refreshTimeoutRef.current)
+      }
     }
+  }, [isTeacher, meeting?.id, refreshAssistantSnapshot])
+
+  useEffect(() => {
+    if (!isTeacher || !meeting?.id) return undefined
 
     if (audioTranscriber.isSupported) {
       audioTranscriberRef.current = audioTranscriber
       audioTranscriberRef.current.start([localStream, ...remoteParticipants.map((participant) => participant.stream)]).catch(() => {})
     }
+    if (transcriptClient.isSupported) {
+      transcriptClientRef.current = transcriptClient
+      transcriptClientRef.current.start()
+    }
 
     return () => {
-      if (refreshTimeoutRef.current) {
-        window.clearInterval(refreshTimeoutRef.current)
-      }
       transcriptClientRef.current?.stop?.()
       transcriptClientRef.current = null
       audioTranscriberRef.current?.stop?.()
       audioTranscriberRef.current = null
     }
-  }, [audioTranscriber, isTeacher, localStream, meeting?.id, refreshAssistantSnapshot, remoteParticipants, transcriptClient])
+  }, [audioTranscriber, isTeacher, localStream, meeting?.id, transcriptClient])
 
   useEffect(() => {
     if (!audioTranscriberRef.current) return
@@ -160,6 +187,7 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
   return (
     <div className="space-y-6">
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div> : null}
+      {relayAdvisory ? <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{relayAdvisory}</div> : null}
       {assistantError ? <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{assistantError}</div> : null}
 
       <AISpotlightBanner

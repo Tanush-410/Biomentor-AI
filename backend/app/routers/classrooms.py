@@ -1,11 +1,15 @@
 """Shared classroom hub routes for student and educator flows."""
 from __future__ import annotations
 
+import base64
+import binascii
 from datetime import datetime, timezone
+import os
 import secrets
-from typing import Optional
+import tempfile
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
@@ -15,9 +19,19 @@ from app.database.models import (
     Classroom,
     ClassroomAnnouncement,
     ClassroomAssignment,
+    ClassroomCertification,
+    ClassroomCertificationEnrollment,
+    ClassroomCertificationStep,
+    ClassroomCertificationStepProgress,
     ClassroomEnrollment,
     ClassroomLiveMeeting,
     ClassroomMeetingAISummary,
+    ClassroomMeetingTranscript,
+    ClassroomExam,
+    ClassroomExamAttempt,
+    ClassroomExamBlock,
+    ClassroomExamQuestion,
+    ClassroomExamResponse,
     ClassroomQuiz,
     ClassroomQuizAttempt,
     ClassroomQuizViolation,
@@ -29,15 +43,33 @@ from app.database.models import (
     GeneratedQuestion,
     LiveSession,
     Notification,
+    AssessmentAnticheatCase,
+    AssessmentAnticheatEvidence,
+    CertificationProofSubmission,
+    IssuedCertificate,
     QuizAnswer,
     QuizSession,
     User,
+    new_id,
 )
 from app.routers.auth import get_current_user, require_roles
 from app.schemas import (
     ClassroomAnnouncementCreate,
     ClassroomAssignmentCreate,
+    ClassroomCertificationCreate,
+    ClassroomCertificationDraftCreate,
+    ClassroomCertificationOverrideStepCreate,
+    ClassroomCertificationProofCreate,
+    ClassroomCertificationStepCompleteCreate,
+    ClassroomCertificationUpdate,
     ClassroomEnrollmentJoin,
+    ClassroomExamAttemptSubmit,
+    ClassroomExamCreate,
+    ClassroomExamDraftCreate,
+    ClassroomExamHeartbeatCreate,
+    ClassroomExamTeacherReviewSubmit,
+    ClassroomExamViolationCreate,
+    ClassroomExamWarningCreate,
     ClassroomIntelligenceResponse,
     ClassroomQuizHeartbeatCreate,
     ClassroomMeetingCreate,
@@ -57,7 +89,20 @@ from app.schemas import (
     ClassroomQuizViolationCreate,
     LiveSessionCreate,
 )
+from app.services.anticheat_bot import build_anticheat_case_payload
 from app.agents.question_generator import QuestionGenerator
+from app.services.certification import (
+    build_certificates_dashboard,
+    build_certification_roster,
+    create_certification_draft_payload,
+    ensure_certification_enrollments,
+    get_or_create_enrollment,
+    get_or_create_step_progress,
+    issue_certificate,
+    normalize_certification_steps,
+    refresh_certification_enrollment,
+    serialize_certification,
+)
 from app.services.classroom_intelligence import (
     build_student_classroom_intelligence,
     build_teacher_classroom_intelligence,
@@ -68,6 +113,11 @@ from app.services.classroom_quiz_authoring import (
     normalize_manual_questions,
 )
 from app.services.document_context import build_context_window
+from app.services.document_storage import load_document_bytes, persist_document_file
+from app.services.exam_authoring import normalize_exam_blocks, normalize_exam_questions
+from app.services.exam_drafting import build_exam_draft_payload
+from app.services.exam_grading import grade_exam_attempt
+from app.services.exam_review import build_exam_review_attempt_payload
 from app.services.meeting_assistant import (
     finalize_meeting_assistant_outputs,
     get_student_recap,
@@ -421,6 +471,12 @@ async def get_classwork(
         .order_by(ClassroomQuiz.available_from.is_(None), ClassroomQuiz.available_from.asc(), ClassroomQuiz.created_at.desc())
         .all()
     )
+    certifications = (
+        db.query(ClassroomCertification)
+        .filter(ClassroomCertification.classroom_id == classroom.id)
+        .order_by(ClassroomCertification.created_at.desc())
+        .all()
+    )
     return {
         "classroom": {"id": classroom.id, "name": classroom.name},
         "materials": [
@@ -457,6 +513,11 @@ async def get_classwork(
         "quizzes": [
             serialize_classroom_quiz(quiz, document, user, current_user, db)
             for quiz, user, document in quizzes
+        ],
+        "certifications": [
+            serialize_certification(db, certification, current_user)
+            for certification in certifications
+            if certification.status == "published" or current_user.role in {"educator", "admin"}
         ],
     }
 
@@ -532,6 +593,399 @@ async def create_assignment(
         f"/classrooms/{classroom.id}/classwork",
     )
     return {"message": "Assignment created.", "assignment_id": assignment.id}
+
+
+@router.get("/{classroom_id}/certifications")
+async def list_classroom_certifications(
+    classroom_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List certifications published inside a classroom."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    rows = (
+        db.query(ClassroomCertification)
+        .filter(ClassroomCertification.classroom_id == classroom.id)
+        .order_by(ClassroomCertification.created_at.desc())
+        .all()
+    )
+    if current_user.role == "student":
+        rows = [row for row in rows if row.status == "published"]
+    return {
+        "classroom": {"id": classroom.id, "name": classroom.name},
+        "certifications": [serialize_certification(db, certification, current_user) for certification in rows],
+    }
+
+
+@router.post("/{classroom_id}/certifications")
+async def create_classroom_certification(
+    classroom_id: str,
+    payload: ClassroomCertificationCreate,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Create a classroom certification track."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    course_mode = (payload.course_mode or "biomentor_track").strip().lower()
+    if course_mode not in {"biomentor_track", "external_course"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Certification mode must be biomentor_track or external_course.")
+
+    try:
+        normalized_steps = normalize_certification_steps(
+            [step.model_dump() if hasattr(step, "model_dump") else step.dict() for step in payload.steps]
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+
+    certification = ClassroomCertification(
+        classroom_id=classroom.id,
+        educator_id=current_user.id,
+        title=payload.title,
+        description=payload.description,
+        course_mode=course_mode,
+        provider_name=payload.provider_name,
+        external_url=payload.external_url,
+        issuer_name=payload.issuer_name,
+        certificate_subtitle=payload.certificate_subtitle,
+        completion_message=payload.completion_message,
+        manual_issue_only=payload.manual_issue_only,
+        requires_teacher_approval=payload.requires_teacher_approval,
+        certificate_template=payload.certificate_template or {},
+        ai_notes=payload.ai_notes or {},
+        status="draft",
+    )
+    db.add(certification)
+    db.commit()
+    db.refresh(certification)
+
+    for index, step in enumerate(normalized_steps):
+        db.add(
+            ClassroomCertificationStep(
+                certification_id=certification.id,
+                step_type=step["step_type"],
+                title=step["title"],
+                description=step["description"],
+                linked_resource_id=step["linked_resource_id"],
+                linked_resource_type=step["linked_resource_type"],
+                sort_order=step.get("sort_order", index),
+                required=step["required"],
+                minimum_score=step["minimum_score"],
+                step_metadata=step["metadata"],
+            )
+        )
+    db.commit()
+
+    return {
+        "message": "Certification saved as draft.",
+        "certification": serialize_certification(db, certification, current_user),
+    }
+
+
+@router.post("/{classroom_id}/certifications/draft")
+async def draft_classroom_certification(
+    classroom_id: str,
+    payload: ClassroomCertificationDraftCreate,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Suggest a certification structure from selected classroom materials."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    materials = []
+    if payload.linked_material_ids:
+        materials = [
+            {
+                "id": document.id,
+                "title": document.title,
+                "file_name": document.file_name,
+            }
+            for document in db.query(Document).filter(Document.id.in_(payload.linked_material_ids)).all()
+        ]
+    draft = create_certification_draft_payload(
+        title=payload.title,
+        materials=materials,
+        course_mode=payload.course_mode,
+        target_outcome=payload.target_outcome,
+    )
+    return {
+        "classroom": {"id": classroom.id, "name": classroom.name},
+        "draft": draft,
+    }
+
+
+@router.get("/{classroom_id}/certifications/{certification_id}")
+async def get_classroom_certification(
+    classroom_id: str,
+    certification_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get one classroom certification."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    if current_user.role == "student" and certification.status != "published":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certification not found")
+    return {
+        "classroom": {"id": classroom.id, "name": classroom.name},
+        "certification": serialize_certification(db, certification, current_user),
+    }
+
+
+@router.put("/{classroom_id}/certifications/{certification_id}")
+async def update_classroom_certification(
+    classroom_id: str,
+    certification_id: str,
+    payload: ClassroomCertificationUpdate,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Update a classroom certification draft."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+
+    if payload.title is not None:
+        certification.title = payload.title
+    if payload.description is not None:
+        certification.description = payload.description
+    if payload.provider_name is not None:
+        certification.provider_name = payload.provider_name
+    if payload.external_url is not None:
+        certification.external_url = payload.external_url
+    if payload.issuer_name is not None:
+        certification.issuer_name = payload.issuer_name
+    if payload.certificate_subtitle is not None:
+        certification.certificate_subtitle = payload.certificate_subtitle
+    if payload.completion_message is not None:
+        certification.completion_message = payload.completion_message
+    if payload.manual_issue_only is not None:
+        certification.manual_issue_only = payload.manual_issue_only
+    if payload.requires_teacher_approval is not None:
+        certification.requires_teacher_approval = payload.requires_teacher_approval
+    if payload.certificate_template is not None:
+        certification.certificate_template = payload.certificate_template
+    if payload.ai_notes is not None:
+        certification.ai_notes = payload.ai_notes
+
+    db.add(certification)
+    if payload.steps is not None:
+        try:
+            normalized_steps = normalize_certification_steps(
+                [step.model_dump() if hasattr(step, "model_dump") else step.dict() for step in payload.steps]
+            )
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+        db.query(ClassroomCertificationStep).filter(ClassroomCertificationStep.certification_id == certification.id).delete()
+        for index, step in enumerate(normalized_steps):
+            db.add(
+                ClassroomCertificationStep(
+                    certification_id=certification.id,
+                    step_type=step["step_type"],
+                    title=step["title"],
+                    description=step["description"],
+                    linked_resource_id=step["linked_resource_id"],
+                    linked_resource_type=step["linked_resource_type"],
+                    sort_order=step.get("sort_order", index),
+                    required=step["required"],
+                    minimum_score=step["minimum_score"],
+                    step_metadata=step["metadata"],
+                )
+            )
+    db.commit()
+    db.refresh(certification)
+    return {"message": "Certification updated.", "certification": serialize_certification(db, certification, current_user)}
+
+
+@router.post("/{classroom_id}/certifications/{certification_id}/publish")
+async def publish_classroom_certification(
+    classroom_id: str,
+    certification_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Publish a classroom certification and seed student progress rows."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    certification.status = "published"
+    db.add(certification)
+    db.commit()
+    db.refresh(certification)
+    ensure_certification_enrollments(db, certification)
+    student_ids = [student.id for _, student in list_classroom_students(db, classroom.id)]
+    create_notifications(
+        db,
+        student_ids,
+        classroom.id,
+        "classroom_certification_published",
+        certification.title,
+        certification.description or "A new certification track is now available in classwork.",
+        f"/classrooms/{classroom.id}/certification/{certification.id}",
+    )
+    return {"message": "Certification published.", "certification": serialize_certification(db, certification, current_user)}
+
+
+@router.get("/{classroom_id}/certifications/{certification_id}/roster")
+async def get_classroom_certification_roster(
+    classroom_id: str,
+    certification_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return educator roster and issue readiness for a certification."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    return {
+        "certification": serialize_certification(db, certification, current_user),
+        "roster": build_certification_roster(db, certification),
+    }
+
+
+@router.get("/{classroom_id}/certifications/{certification_id}/me")
+async def get_my_classroom_certification_progress(
+    classroom_id: str,
+    certification_id: str,
+    current_user: User = Depends(require_roles("student", "educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return role-aware certification progress data."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    if current_user.role == "student" and certification.status != "published":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certification not found")
+    return {
+        "classroom": {"id": classroom.id, "name": classroom.name},
+        "certification": serialize_certification(db, certification, current_user),
+    }
+
+
+@router.post("/{classroom_id}/certifications/{certification_id}/steps/{step_id}/complete")
+async def complete_classroom_certification_step(
+    classroom_id: str,
+    certification_id: str,
+    step_id: str,
+    payload: ClassroomCertificationStepCompleteCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Mark a manual certification step as completed or pending review."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    if certification.status != "published":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Certification is not published.")
+    step = get_classroom_certification_step_row(db, certification.id, step_id)
+    enrollment = get_or_create_enrollment(db, certification, current_user.id)
+    progress = get_or_create_step_progress(db, enrollment, step)
+    if step.step_type in {"quiz", "exam"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This step is completed automatically from assessment results.")
+
+    if step.step_type == "external_link" and certification.requires_teacher_approval:
+        progress.status = "pending_review"
+    else:
+        progress.status = "completed"
+        progress.completed_at = datetime.utcnow()
+    progress.completion_source = "student_proof" if payload.note or payload.proof_url else "auto"
+    progress.evidence_payload = {
+        **(progress.evidence_payload or {}),
+        "note": payload.note,
+        "proof_url": payload.proof_url,
+    }
+    if progress.status == "completed" and progress.completed_at is None:
+        progress.completed_at = datetime.utcnow()
+    db.add(progress)
+    db.commit()
+    refresh_certification_enrollment(db, certification, current_user.id)
+    return {"message": "Certification step updated."}
+
+
+@router.post("/{classroom_id}/certifications/{certification_id}/proof")
+async def submit_classroom_certification_proof(
+    classroom_id: str,
+    certification_id: str,
+    payload: ClassroomCertificationProofCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Submit proof for an external-course certification step."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    step = get_classroom_certification_step_row(db, certification.id, payload.step_id)
+    enrollment = get_or_create_enrollment(db, certification, current_user.id)
+    progress = get_or_create_step_progress(db, enrollment, step)
+    proof = CertificationProofSubmission(
+        enrollment_id=enrollment.id,
+        student_id=current_user.id,
+        step_id=step.id,
+        proof_type=payload.proof_type,
+        proof_url=payload.proof_url,
+        text_note=payload.text_note,
+        review_status="submitted",
+    )
+    db.add(proof)
+    db.flush()
+    progress.status = "pending_review"
+    progress.completion_source = "student_proof"
+    progress.evidence_payload = {
+        **(progress.evidence_payload or {}),
+        "proof_type": payload.proof_type,
+        "proof_url": payload.proof_url,
+        "text_note": payload.text_note,
+        "proof_submission_id": proof.id,
+    }
+    db.add(progress)
+    db.commit()
+    refresh_certification_enrollment(db, certification, current_user.id)
+    return {"message": "Proof submitted for teacher review."}
+
+
+@router.post("/{classroom_id}/certifications/{certification_id}/override-step")
+async def override_classroom_certification_step(
+    classroom_id: str,
+    certification_id: str,
+    payload: ClassroomCertificationOverrideStepCreate,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Teacher override for a certification milestone."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    step = get_classroom_certification_step_row(db, certification.id, payload.step_id)
+    enrollment = get_or_create_enrollment(db, certification, payload.student_id)
+    progress = get_or_create_step_progress(db, enrollment, step)
+    progress.status = payload.status
+    progress.score_achieved = payload.score_achieved
+    progress.completion_source = "teacher_override"
+    progress.completed_at = datetime.utcnow() if payload.status == "completed" else None
+    progress.evidence_payload = {
+        **(progress.evidence_payload or {}),
+        "teacher_note": payload.note,
+        "overridden_by": current_user.id,
+    }
+    db.add(progress)
+    db.commit()
+    refresh_certification_enrollment(db, certification, payload.student_id)
+    return {"message": "Certification step updated."}
+
+
+@router.post("/{classroom_id}/certifications/{certification_id}/issue/{student_id}")
+async def issue_classroom_certificate(
+    classroom_id: str,
+    certification_id: str,
+    student_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Issue a certificate to a student."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    certification = get_classroom_certification_row(db, classroom.id, certification_id)
+    student = db.query(User).filter(User.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+    try:
+        certificate = issue_certificate(db, certification, classroom, student, current_user)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+    return {
+        "message": "Certificate issued.",
+        "certificate": serialize_issued_certificate(certificate),
+    }
 
 
 @router.get("/{classroom_id}/quizzes")
@@ -1028,6 +1482,668 @@ async def report_quiz_violation(
     }
 
 
+@router.get("/{classroom_id}/exams")
+async def list_classroom_exams(
+    classroom_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List educator-authored classroom exams."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    rows = (
+        db.query(ClassroomExam)
+        .filter(ClassroomExam.classroom_id == classroom.id)
+        .order_by(ClassroomExam.available_from.is_(None), ClassroomExam.available_from.asc(), ClassroomExam.created_at.desc())
+        .all()
+    )
+    return {"exams": [serialize_classroom_exam(exam, current_user, db) for exam in rows]}
+
+
+@router.post("/{classroom_id}/exams")
+async def create_classroom_exam(
+    classroom_id: str,
+    payload: ClassroomExamCreate,
+    current_user: User = Depends(require_roles("educator")),
+    db: Session = Depends(get_db),
+):
+    """Create a scheduled classroom exam with manual or AI-authored blocks and questions."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = ClassroomExam(
+        classroom_id=classroom.id,
+        educator_id=current_user.id,
+        title=payload.title.strip(),
+        description=payload.description,
+        instructions=payload.instructions,
+        exam_mode=payload.exam_mode,
+        authoring_mode=payload.authoring_mode,
+        generation_scope=payload.generation_scope,
+        total_marks=payload.total_marks,
+        duration_minutes=payload.duration_minutes,
+        available_from=payload.available_from,
+        available_until=payload.available_until,
+        publish_to_stream=payload.publish_to_stream,
+        proctoring_enabled=payload.proctoring_enabled,
+        allow_late_entries=payload.allow_late_entries,
+        linked_material_ids=payload.linked_material_ids,
+        grading_notes=payload.grading_notes,
+        anticheat_policy=payload.anticheat_policy,
+        status="scheduled",
+    )
+    db.add(exam)
+    db.flush()
+
+    normalized_blocks = normalize_exam_blocks([block.model_dump() for block in payload.blocks])
+    for block in normalized_blocks:
+        db.add(
+            ClassroomExamBlock(
+                exam_id=exam.id,
+                block_type=block["block_type"],
+                title=block["title"],
+                content=block["content"],
+                sort_order=block["sort_order"],
+                block_metadata=block["metadata"],
+            )
+        )
+
+    normalized_questions = normalize_exam_questions([question.model_dump() for question in payload.questions])
+    for question in normalized_questions:
+        db.add(ClassroomExamQuestion(exam_id=exam.id, **question))
+
+    db.add(
+        ClassroomAssignment(
+            classroom_id=classroom.id,
+            educator_id=current_user.id,
+            title=payload.title.strip(),
+            description=payload.description,
+            assignment_type="exam",
+            classroom_exam_id=exam.id,
+            exam_reference=exam.id,
+            due_at=payload.available_until,
+        )
+    )
+    if payload.publish_to_stream:
+        db.add(
+            ClassroomAnnouncement(
+                classroom_id=classroom.id,
+                author_id=current_user.id,
+                title=payload.title.strip(),
+                content="A new classroom exam has been scheduled.",
+                post_type="exam",
+            )
+        )
+
+    db.commit()
+    db.refresh(exam)
+    return {"exam": serialize_classroom_exam(exam, current_user, db)}
+
+
+@router.post("/{classroom_id}/exams/draft")
+async def generate_classroom_exam_draft(
+    classroom_id: str,
+    payload: ClassroomExamDraftCreate,
+    current_user: User = Depends(require_roles("educator")),
+    db: Session = Depends(get_db),
+):
+    """Generate an AI-assisted classroom exam draft from linked classroom material."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    if payload.generation_scope == "selected_materials":
+        source_document_ids = payload.linked_material_ids
+    else:
+        source_document_ids = [
+            row.document_id
+            for row in db.query(ClassroomMaterial).filter(ClassroomMaterial.classroom_id == classroom.id).all()
+        ]
+
+    source_contexts = get_source_contexts_for_document_ids(
+        db,
+        document_ids=source_document_ids,
+        top_k=max(payload.num_questions * 5, 12),
+    )
+    if not source_contexts:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="No usable classroom materials were found for this AI exam draft.",
+        )
+
+    draft = build_exam_draft_payload(
+        title=payload.title or f"{classroom.name} AI exam draft",
+        instructions=payload.instructions,
+        exam_mode=payload.exam_mode,
+        num_questions=max(2, min(payload.num_questions, 12)),
+        linked_material_ids=source_document_ids,
+        source_contexts=source_contexts,
+    )
+    return {"draft": draft}
+
+
+@router.get("/{classroom_id}/exams/{exam_id}")
+async def get_classroom_exam_detail(
+    classroom_id: str,
+    exam_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return one classroom exam and the current user's latest attempt."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    return {"exam": serialize_classroom_exam(exam, current_user, db, include_attempt=True)}
+
+
+@router.get("/{classroom_id}/exams/{exam_id}/review")
+async def get_classroom_exam_review_workspace(
+    classroom_id: str,
+    exam_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return teacher-facing grading review data for submitted exam attempts."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    questions = (
+        db.query(ClassroomExamQuestion)
+        .filter(ClassroomExamQuestion.exam_id == exam.id)
+        .order_by(ClassroomExamQuestion.position.asc(), ClassroomExamQuestion.created_at.asc())
+        .all()
+    )
+    attempt_rows = (
+        db.query(ClassroomExamAttempt, User)
+        .join(User, User.id == ClassroomExamAttempt.student_id)
+        .filter(
+            ClassroomExamAttempt.classroom_exam_id == exam.id,
+            ClassroomExamAttempt.status == "submitted",
+        )
+        .order_by(ClassroomExamAttempt.teacher_review_required.desc(), ClassroomExamAttempt.submitted_at.desc())
+        .all()
+    )
+    return {
+        "exam": serialize_classroom_exam(exam, current_user, db, include_attempt=False),
+        "attempts": [
+            serialize_exam_review_attempt(
+                exam=exam,
+                attempt=attempt,
+                student=student,
+                questions=questions,
+                responses=load_exam_responses_for_attempt(db, attempt.id),
+            )
+            for attempt, student in attempt_rows
+        ],
+    }
+
+
+@router.get("/{classroom_id}/exams/{exam_id}/review/{attempt_id}")
+async def get_classroom_exam_review_attempt(
+    classroom_id: str,
+    exam_id: str,
+    attempt_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return one submitted exam attempt for teacher grading review."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt, student = get_exam_attempt_for_review(db, exam.id, attempt_id)
+    questions = (
+        db.query(ClassroomExamQuestion)
+        .filter(ClassroomExamQuestion.exam_id == exam.id)
+        .order_by(ClassroomExamQuestion.position.asc(), ClassroomExamQuestion.created_at.asc())
+        .all()
+    )
+    return {
+        "exam": serialize_classroom_exam(exam, current_user, db, include_attempt=False),
+        "attempt": serialize_exam_review_attempt(
+            exam=exam,
+            attempt=attempt,
+            student=student,
+            questions=questions,
+            responses=load_exam_responses_for_attempt(db, attempt.id),
+        ),
+    }
+
+
+@router.post("/{classroom_id}/exams/{exam_id}/review/{attempt_id}")
+async def finalize_classroom_exam_review_attempt(
+    classroom_id: str,
+    exam_id: str,
+    attempt_id: str,
+    payload: ClassroomExamTeacherReviewSubmit,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Finalize teacher grading overrides for one submitted exam attempt."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt, student = get_exam_attempt_for_review(db, exam.id, attempt_id)
+    questions = (
+        db.query(ClassroomExamQuestion)
+        .filter(ClassroomExamQuestion.exam_id == exam.id)
+        .order_by(ClassroomExamQuestion.position.asc(), ClassroomExamQuestion.created_at.asc())
+        .all()
+    )
+    question_by_id = {question.id: question for question in questions}
+    responses = load_exam_responses_for_attempt(db, attempt.id)
+    response_by_id = {response.id: response for response in responses}
+
+    for update in payload.responses:
+        response = response_by_id.get(update.response_id)
+        if not response:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam response not found for teacher review.")
+        question = question_by_id.get(response.question_id)
+        max_marks = float(question.marks) if question else float(update.teacher_score)
+        response.teacher_score = max(0.0, min(float(update.teacher_score), max_marks))
+        response.teacher_feedback = update.teacher_feedback
+        response.review_status = update.review_status or "teacher_finalized"
+
+    descriptive_total = 0.0
+    for response in responses:
+        question = question_by_id.get(response.question_id)
+        if not question or question.question_type == "mcq":
+            continue
+        descriptive_total += float(response.teacher_score if response.teacher_score is not None else response.ai_score or 0.0)
+
+    grading_summary = attempt.grading_summary or {}
+    grading_summary["overall_feedback"] = payload.overall_feedback
+    grading_summary["teacher_review_completed_at"] = serialize_utc_datetime(datetime.utcnow())
+    grading_summary["teacher_review_completed_by"] = current_user.id
+    attempt.descriptive_score = round(descriptive_total, 2)
+    attempt.score = round(float(attempt.objective_score or 0.0) + descriptive_total, 2)
+    attempt.teacher_review_required = False
+    attempt.grading_summary = grading_summary
+    db.commit()
+    db.refresh(attempt)
+
+    return {
+        "message": "Teacher grading review saved.",
+        "attempt": serialize_exam_review_attempt(
+            exam=exam,
+            attempt=attempt,
+            student=student,
+            questions=questions,
+            responses=load_exam_responses_for_attempt(db, attempt.id),
+        ),
+    }
+
+
+@router.post("/{classroom_id}/exams/{exam_id}/start")
+async def start_classroom_exam(
+    classroom_id: str,
+    exam_id: str,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Start a classroom exam attempt for a student."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt = get_latest_exam_attempt(db, exam.id, current_user.id)
+    if attempt and attempt.status in {"in_progress", "submitted", "terminated"}:
+        return {"attempt": serialize_exam_attempt(attempt), "exam": serialize_classroom_exam(exam, current_user, db)}
+
+    attempt = ClassroomExamAttempt(
+        classroom_exam_id=exam.id,
+        classroom_id=classroom.id,
+        student_id=current_user.id,
+        status="in_progress",
+        started_at=datetime.utcnow(),
+        last_heartbeat_at=datetime.utcnow(),
+    )
+    db.add(attempt)
+    db.commit()
+    db.refresh(attempt)
+    return {"attempt": serialize_exam_attempt(attempt), "exam": serialize_classroom_exam(exam, current_user, db)}
+
+
+@router.post("/{classroom_id}/exams/{exam_id}/heartbeat")
+async def heartbeat_classroom_exam(
+    classroom_id: str,
+    exam_id: str,
+    payload: ClassroomExamHeartbeatCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Keep an active classroom exam attempt alive while proctoring runs."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt = get_exam_attempt_for_student(db, exam.id, payload.attempt_id, current_user.id)
+    if attempt.status != "in_progress":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This classroom exam attempt is not active.")
+    attempt.last_heartbeat_at = datetime.utcnow()
+    db.commit()
+    db.refresh(attempt)
+    return {"message": "Heartbeat recorded.", "attempt": serialize_exam_attempt(attempt)}
+
+
+@router.post("/{classroom_id}/exams/{exam_id}/warning")
+async def report_exam_warning(
+    classroom_id: str,
+    exam_id: str,
+    payload: ClassroomExamWarningCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Record a major anti-cheat warning for a classroom exam."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt = get_exam_attempt_for_student(db, exam.id, payload.attempt_id, current_user.id)
+    if attempt.status != "in_progress":
+        return {"message": "Attempt already closed.", "attempt": serialize_exam_attempt(attempt)}
+
+    warning_count = (attempt.violation_count or 0) + 1
+    should_terminate = warning_count >= 3
+    attempt.violation_count = warning_count
+    if should_terminate:
+        attempt.status = "terminated"
+        attempt.termination_reason = "ai_proctoring_debarred"
+        attempt.teacher_review_required = True
+        attempt.ended_at = datetime.utcnow()
+
+    case = upsert_anticheat_case(
+        db=db,
+        classroom_id=classroom.id,
+        assessment_type="exam",
+        assessment_id=exam.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        final_case_reason=attempt.termination_reason if should_terminate else None,
+        warning_count=warning_count,
+        status="teacher_review_required" if should_terminate else "monitoring",
+        teacher_review_required=should_terminate,
+    )
+    create_anticheat_evidence(
+        db=db,
+        case=case,
+        classroom_id=classroom.id,
+        assessment_type="exam",
+        assessment_id=exam.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        violation_type=payload.warning_type,
+        action_taken="terminated" if should_terminate else "warning",
+        details=payload.details or {},
+    )
+
+    db.commit()
+    db.refresh(attempt)
+    return {
+        "message": "Exam terminated after repeated AI proctoring warnings." if should_terminate else "AI proctoring warning recorded.",
+        "attempt": serialize_exam_attempt(attempt),
+        "warning_count": warning_count,
+        "terminated": should_terminate,
+    }
+
+
+@router.post("/{classroom_id}/exams/{exam_id}/submit")
+async def submit_classroom_exam(
+    classroom_id: str,
+    exam_id: str,
+    payload: ClassroomExamAttemptSubmit,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Submit a classroom exam attempt and run mixed AI grading."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt = get_exam_attempt_for_student(db, exam.id, payload.attempt_id, current_user.id)
+    if attempt.status != "in_progress":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This classroom exam attempt is not active.")
+
+    db.query(ClassroomExamResponse).filter(ClassroomExamResponse.attempt_id == attempt.id).delete()
+    response_rows: list[ClassroomExamResponse] = []
+    for response in payload.responses:
+        row = ClassroomExamResponse(
+            attempt_id=attempt.id,
+            question_id=response.question_id,
+            typed_answer=response.typed_answer,
+            uploaded_image_urls=response.uploaded_image_urls,
+            selected_option_ids=response.selected_option_ids,
+            response_metadata=response.metadata,
+            review_status="pending_ai",
+        )
+        db.add(row)
+        response_rows.append(row)
+    db.flush()
+
+    questions = (
+        db.query(ClassroomExamQuestion)
+        .filter(ClassroomExamQuestion.exam_id == exam.id)
+        .order_by(ClassroomExamQuestion.position.asc(), ClassroomExamQuestion.created_at.asc())
+        .all()
+    )
+    grade_summary = grade_exam_attempt(
+        exam={"id": exam.id, "title": exam.title},
+        questions=[
+            {
+                "id": question.id,
+                "question_type": question.question_type,
+                "marks": question.marks,
+                "grading_keywords": question.grading_keywords or [],
+                "response_mode": question.response_mode,
+                "answer_key": question.answer_key,
+            }
+            for question in questions
+        ],
+        responses=[response.model_dump() for response in payload.responses],
+    )
+    grading_breakdown = {
+        item.get("question_id"): item
+        for item in (grade_summary.get("question_breakdown") or [])
+        if item.get("question_id")
+    }
+    for response_row in response_rows:
+        breakdown = grading_breakdown.get(response_row.question_id, {})
+        response_row.ai_score = float(breakdown.get("score") or 0.0)
+        response_row.ai_feedback = ", ".join(breakdown.get("grading_keywords") or []) or None
+        response_row.review_status = "pending_teacher_review" if breakdown.get("teacher_review_required") else "ai_graded"
+    attempt.objective_score = grade_summary["objective_score"]
+    attempt.descriptive_score = grade_summary["descriptive_score"]
+    attempt.score = grade_summary["total_score"]
+    attempt.teacher_review_required = grade_summary["teacher_review_required"] or attempt.status == "terminated"
+    attempt.grading_summary = grade_summary
+    attempt.status = "submitted"
+    attempt.submitted_at = datetime.utcnow()
+    attempt.ended_at = datetime.utcnow()
+    db.commit()
+    db.refresh(attempt)
+
+    return {
+        "message": "Classroom exam submitted.",
+        "attempt": serialize_exam_attempt(attempt),
+        "grading": grade_summary,
+    }
+
+
+@router.post("/{classroom_id}/exams/{exam_id}/violation")
+async def report_exam_violation(
+    classroom_id: str,
+    exam_id: str,
+    payload: ClassroomExamViolationCreate,
+    current_user: User = Depends(require_roles("student")),
+    db: Session = Depends(get_db),
+):
+    """Terminate a classroom exam attempt for a critical anti-cheat violation."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    exam = get_classroom_exam_row(db, classroom.id, exam_id)
+    attempt = get_exam_attempt_for_student(db, exam.id, payload.attempt_id, current_user.id)
+    if attempt.status != "in_progress":
+        return {"message": "Attempt already closed.", "attempt": serialize_exam_attempt(attempt)}
+
+    attempt.status = "terminated"
+    attempt.violation_count = (attempt.violation_count or 0) + 1
+    attempt.termination_reason = payload.violation_type
+    attempt.teacher_review_required = True
+    attempt.ended_at = datetime.utcnow()
+    case = upsert_anticheat_case(
+        db=db,
+        classroom_id=classroom.id,
+        assessment_type="exam",
+        assessment_id=exam.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        final_case_reason=payload.violation_type,
+        warning_count=attempt.violation_count,
+        status="teacher_review_required",
+        teacher_review_required=True,
+    )
+    create_anticheat_evidence(
+        db=db,
+        case=case,
+        classroom_id=classroom.id,
+        assessment_type="exam",
+        assessment_id=exam.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        violation_type=payload.violation_type,
+        action_taken="terminated",
+        details=payload.details or {},
+    )
+    db.commit()
+    db.refresh(attempt)
+    return {
+        "message": "Exam terminated due to a proctoring violation.",
+        "attempt": serialize_exam_attempt(attempt),
+    }
+
+
+@router.get("/{classroom_id}/anticheat-bot")
+async def get_anticheat_bot_cases(
+    classroom_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return final teacher-review anti-cheat cases with the latest evidence snapshots."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    cases = (
+        db.query(AssessmentAnticheatCase, User)
+        .join(User, User.id == AssessmentAnticheatCase.student_id)
+        .filter(
+            AssessmentAnticheatCase.classroom_id == classroom.id,
+            AssessmentAnticheatCase.status.in_(("teacher_review_required", "reopened", "debarred")),
+        )
+        .order_by(AssessmentAnticheatCase.created_at.desc())
+        .all()
+    )
+    payload = [serialize_anticheat_case(case, student, load_anticheat_evidence_rows(db, case.id)) for case, student in cases]
+    return {"cases": payload}
+
+
+@router.get("/{classroom_id}/anticheat-bot/{case_id}")
+async def get_anticheat_bot_case_detail(
+    classroom_id: str,
+    case_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Return one anti-cheat review case for a classroom teacher."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    case, student = get_anticheat_case_row(db, classroom.id, case_id)
+    return {"case": serialize_anticheat_case(case, student, load_anticheat_evidence_rows(db, case.id))}
+
+
+@router.get("/{classroom_id}/anticheat-bot/{case_id}/evidence/{evidence_id}/image")
+async def get_anticheat_bot_evidence_image(
+    classroom_id: str,
+    case_id: str,
+    evidence_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Stream one stored anti-cheat evidence image to an educator."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    case, _student = get_anticheat_case_row(db, classroom.id, case_id)
+    evidence = (
+        db.query(AssessmentAnticheatEvidence)
+        .filter(
+            AssessmentAnticheatEvidence.id == evidence_id,
+            AssessmentAnticheatEvidence.case_id == case.id,
+            AssessmentAnticheatEvidence.classroom_id == classroom.id,
+        )
+        .first()
+    )
+    if not evidence or not evidence.image_url:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence image not found")
+
+    try:
+        payload, media_type = load_document_bytes(evidence.image_url, f"anticheat-{evidence.id}.jpg")
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence image is missing") from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Unable to load the stored evidence image: {exc}",
+        ) from exc
+    return Response(content=payload, media_type=media_type)
+
+
+@router.post("/{classroom_id}/anticheat-bot/{case_id}/uphold")
+async def uphold_anticheat_bot_case(
+    classroom_id: str,
+    case_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Confirm that an anti-cheat auto-end should stand."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    case, student = get_anticheat_case_row(db, classroom.id, case_id)
+    update_anticheat_case_resolution(
+        db=db,
+        case=case,
+        reviewer_id=current_user.id,
+        status_value="debarred",
+        teacher_review_required=False,
+    )
+    db.commit()
+    return {
+        "message": "Anti-cheat case upheld.",
+        "case": serialize_anticheat_case(case, student, load_anticheat_evidence_rows(db, case.id)),
+    }
+
+
+@router.post("/{classroom_id}/anticheat-bot/{case_id}/excuse")
+async def excuse_anticheat_bot_case(
+    classroom_id: str,
+    case_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Mark an anti-cheat case as excused after teacher review."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    case, student = get_anticheat_case_row(db, classroom.id, case_id)
+    update_anticheat_case_resolution(
+        db=db,
+        case=case,
+        reviewer_id=current_user.id,
+        status_value="excused",
+        teacher_review_required=False,
+    )
+    db.commit()
+    return {
+        "message": "Anti-cheat case excused.",
+        "case": serialize_anticheat_case(case, student, load_anticheat_evidence_rows(db, case.id)),
+    }
+
+
+@router.post("/{classroom_id}/anticheat-bot/{case_id}/reopen")
+async def reopen_anticheat_bot_case(
+    classroom_id: str,
+    case_id: str,
+    current_user: User = Depends(require_roles("educator", "admin")),
+    db: Session = Depends(get_db),
+):
+    """Reopen a previously resolved anti-cheat case for more teacher review."""
+    classroom = get_accessible_classroom(db, classroom_id, current_user)
+    case, student = get_anticheat_case_row(db, classroom.id, case_id)
+    update_anticheat_case_resolution(
+        db=db,
+        case=case,
+        reviewer_id=current_user.id,
+        status_value="reopened",
+        teacher_review_required=True,
+    )
+    db.commit()
+    return {
+        "message": "Anti-cheat case reopened for teacher review.",
+        "case": serialize_anticheat_case(case, student, load_anticheat_evidence_rows(db, case.id)),
+    }
+
+
 @router.get("/{classroom_id}/people")
 async def get_people(
     classroom_id: str,
@@ -1284,14 +2400,17 @@ async def create_meeting_transcript(
     """Persist a transcript snippet from an authenticated meeting participant."""
     classroom = get_accessible_classroom(db, classroom_id, current_user)
     meeting = get_classroom_meeting(db, classroom.id, meeting_id)
-    transcript = persist_meeting_transcript(
-        db,
-        meeting=meeting,
-        current_user=current_user,
-        speaker_role=payload.speaker_role,
-        speaker_name=payload.speaker_name,
-        content=payload.content,
-    )
+    try:
+        transcript = persist_meeting_transcript(
+            db,
+            meeting=meeting,
+            current_user=current_user,
+            speaker_role=payload.speaker_role,
+            speaker_name=payload.speaker_name,
+            content=payload.content,
+        )
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Transcript snippet is too short.")
     refresh_teacher_assistant_snapshot(db, meeting)
     return {"status": "ok", "transcript_id": transcript.id}
 
@@ -1311,18 +2430,36 @@ async def create_meeting_audio_transcript(
     if not audio_bytes:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Audio upload was empty.")
 
-    transcript_text = transcribe_meeting_audio_blob(audio_bytes, filename=audio.filename or "meeting-audio.webm")
+    recent_transcript_lines = [
+        item.content
+        for item in db.query(ClassroomMeetingTranscript)
+        .filter(ClassroomMeetingTranscript.meeting_id == meeting.id)
+        .order_by(ClassroomMeetingTranscript.created_at.desc())
+        .limit(4)
+        .all()
+    ]
+
+    transcript_text = transcribe_meeting_audio_blob(
+        audio_bytes,
+        filename=audio.filename or "meeting-audio.webm",
+        content_type=audio.content_type,
+        meeting_title=meeting.title,
+        recent_transcript_lines=list(reversed(recent_transcript_lines)),
+    )
     if not transcript_text:
         return {"status": "skipped", "transcript_created": False}
 
-    transcript = persist_meeting_transcript(
-        db,
-        meeting=meeting,
-        current_user=current_user,
-        speaker_role="meeting_audio",
-        speaker_name="Meeting Audio",
-        content=transcript_text,
-    )
+    try:
+        transcript = persist_meeting_transcript(
+            db,
+            meeting=meeting,
+            current_user=current_user,
+            speaker_role="meeting_audio",
+            speaker_name="Meeting Audio",
+            content=transcript_text,
+        )
+    except ValueError:
+        return {"status": "skipped", "transcript_created": False}
     refresh_teacher_assistant_snapshot(db, meeting)
     return {"status": "ok", "transcript_created": True, "transcript_id": transcript.id}
 
@@ -1868,6 +3005,434 @@ def serialize_classroom_quiz(
     }
 
 
+def get_classroom_exam_row(db: Session, classroom_id: str, exam_id: str) -> ClassroomExam:
+    exam = (
+        db.query(ClassroomExam)
+        .filter(ClassroomExam.id == exam_id, ClassroomExam.classroom_id == classroom_id)
+        .first()
+    )
+    if not exam:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Classroom exam not found")
+    return exam
+
+
+def get_latest_exam_attempt(db: Session, exam_id: str, student_id: str) -> ClassroomExamAttempt | None:
+    return (
+        db.query(ClassroomExamAttempt)
+        .filter(
+            ClassroomExamAttempt.classroom_exam_id == exam_id,
+            ClassroomExamAttempt.student_id == student_id,
+        )
+        .order_by(ClassroomExamAttempt.created_at.desc())
+        .first()
+    )
+
+
+def get_exam_attempt_for_student(db: Session, exam_id: str, attempt_id: str, student_id: str) -> ClassroomExamAttempt:
+    attempt = (
+        db.query(ClassroomExamAttempt)
+        .filter(
+            ClassroomExamAttempt.id == attempt_id,
+            ClassroomExamAttempt.classroom_exam_id == exam_id,
+            ClassroomExamAttempt.student_id == student_id,
+        )
+        .first()
+    )
+    if not attempt:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam attempt not found")
+    return attempt
+
+
+def serialize_exam_attempt(attempt: ClassroomExamAttempt | None) -> dict | None:
+    if not attempt:
+        return None
+    return {
+        "id": attempt.id,
+        "status": attempt.status,
+        "objective_score": attempt.objective_score,
+        "descriptive_score": attempt.descriptive_score,
+        "score": attempt.score,
+        "started_at": serialize_utc_datetime(attempt.started_at),
+        "submitted_at": serialize_utc_datetime(attempt.submitted_at),
+        "ended_at": serialize_utc_datetime(attempt.ended_at),
+        "violation_count": attempt.violation_count,
+        "termination_reason": attempt.termination_reason,
+        "teacher_review_required": attempt.teacher_review_required,
+    }
+
+
+def serialize_classroom_exam(
+    exam: ClassroomExam,
+    viewer: User,
+    db: Session,
+    include_attempt: bool = False,
+) -> dict:
+    attempt = get_latest_exam_attempt(db, exam.id, viewer.id) if viewer.role == "student" else None
+    blocks = (
+        db.query(ClassroomExamBlock)
+        .filter(ClassroomExamBlock.exam_id == exam.id)
+        .order_by(ClassroomExamBlock.sort_order.asc(), ClassroomExamBlock.created_at.asc())
+        .all()
+    )
+    questions = (
+        db.query(ClassroomExamQuestion)
+        .filter(ClassroomExamQuestion.exam_id == exam.id)
+        .order_by(ClassroomExamQuestion.position.asc(), ClassroomExamQuestion.created_at.asc())
+        .all()
+    )
+    return {
+        "id": exam.id,
+        "classroom_id": exam.classroom_id,
+        "title": exam.title,
+        "description": exam.description,
+        "instructions": exam.instructions,
+        "exam_mode": exam.exam_mode,
+        "authoring_mode": exam.authoring_mode,
+        "generation_scope": exam.generation_scope,
+        "total_marks": exam.total_marks,
+        "duration_minutes": exam.duration_minutes,
+        "available_from": serialize_utc_datetime(exam.available_from),
+        "available_until": serialize_utc_datetime(exam.available_until),
+        "publish_to_stream": exam.publish_to_stream,
+        "proctoring_enabled": exam.proctoring_enabled,
+        "allow_late_entries": exam.allow_late_entries,
+        "status": exam.status,
+        "linked_material_ids": exam.linked_material_ids or [],
+        "grading_notes": exam.grading_notes or {},
+        "anticheat_policy": exam.anticheat_policy or {},
+        "blocks": [
+            {
+                "id": block.id,
+                "block_type": block.block_type,
+                "title": block.title,
+                "content": block.content or {},
+                "sort_order": block.sort_order,
+                "metadata": block.block_metadata or {},
+            }
+            for block in blocks
+        ],
+        "questions": [
+            {
+                "id": question.id,
+                "prompt": question.prompt,
+                "question_type": question.question_type,
+                "response_mode": question.response_mode,
+                "marks": question.marks,
+                "options": question.options or [],
+                "answer_key": question.answer_key if viewer.role == "educator" else None,
+                "grading_keywords": question.grading_keywords or [],
+                "fixed_response_box": question.fixed_response_box,
+                "response_config": question.response_config or {},
+                "position": question.position,
+            }
+            for question in questions
+        ],
+        "attempt": serialize_exam_attempt(attempt) if include_attempt else None,
+        "created_at": serialize_utc_datetime(exam.created_at),
+    }
+
+
+def get_anticheat_case_row(db: Session, classroom_id: str, case_id: str) -> tuple[AssessmentAnticheatCase, User]:
+    row = (
+        db.query(AssessmentAnticheatCase, User)
+        .join(User, User.id == AssessmentAnticheatCase.student_id)
+        .filter(
+            AssessmentAnticheatCase.id == case_id,
+            AssessmentAnticheatCase.classroom_id == classroom_id,
+        )
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Anti-cheat case not found")
+    return row
+
+
+def load_anticheat_evidence_rows(db: Session, case_id: str) -> list[dict]:
+    evidence_rows = (
+        db.query(AssessmentAnticheatEvidence)
+        .filter(AssessmentAnticheatEvidence.case_id == case_id)
+        .order_by(AssessmentAnticheatEvidence.captured_at.desc(), AssessmentAnticheatEvidence.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": evidence.id,
+            "image_url": (
+                f"/api/classrooms/{evidence.classroom_id}/anticheat-bot/{case_id}/evidence/{evidence.id}/image"
+                if evidence.image_url
+                else None
+            ),
+            "violation_type": evidence.violation_type,
+            "action_taken": evidence.action_taken,
+            "captured_at": serialize_utc_datetime(evidence.captured_at),
+            "created_at": serialize_utc_datetime(evidence.created_at),
+            "details": evidence.details or {},
+        }
+        for evidence in evidence_rows
+    ]
+
+
+def serialize_anticheat_case(case: AssessmentAnticheatCase, student: User, evidence_rows: list[dict]) -> dict:
+    return build_anticheat_case_payload(
+        {
+            "id": case.id,
+            "assessment_type": case.assessment_type,
+            "assessment_id": case.assessment_id,
+            "attempt_id": case.attempt_id,
+            "student_id": case.student_id,
+            "student_name": student.full_name,
+            "final_case_reason": case.final_case_reason,
+            "status": case.status,
+            "teacher_review_required": case.teacher_review_required,
+            "latest_warning_count": case.latest_warning_count,
+            "created_at": serialize_utc_datetime(case.created_at),
+            "resolved_at": serialize_utc_datetime(case.resolved_at),
+            "reviewer_id": case.reviewer_id,
+        },
+        evidence_rows,
+    )
+
+
+def upsert_anticheat_case(
+    *,
+    db: Session,
+    classroom_id: str,
+    assessment_type: str,
+    assessment_id: str,
+    attempt_id: str,
+    student_id: str,
+    final_case_reason: str | None,
+    warning_count: int,
+    status: str,
+    teacher_review_required: bool,
+) -> AssessmentAnticheatCase:
+    case = (
+        db.query(AssessmentAnticheatCase)
+        .filter(
+            AssessmentAnticheatCase.assessment_type == assessment_type,
+            AssessmentAnticheatCase.assessment_id == assessment_id,
+            AssessmentAnticheatCase.attempt_id == attempt_id,
+            AssessmentAnticheatCase.student_id == student_id,
+        )
+        .first()
+    )
+    if not case:
+        case = AssessmentAnticheatCase(
+            classroom_id=classroom_id,
+            assessment_type=assessment_type,
+            assessment_id=assessment_id,
+            attempt_id=attempt_id,
+            student_id=student_id,
+        )
+        db.add(case)
+        db.flush()
+
+    case.final_case_reason = final_case_reason or case.final_case_reason
+    case.latest_warning_count = warning_count
+    case.status = status
+    case.teacher_review_required = teacher_review_required
+    return case
+
+
+def create_anticheat_evidence(
+    *,
+    db: Session,
+    case: AssessmentAnticheatCase,
+    classroom_id: str,
+    assessment_type: str,
+    assessment_id: str,
+    attempt_id: str,
+    student_id: str,
+    violation_type: str,
+    action_taken: str,
+    details: dict[str, Any],
+) -> AssessmentAnticheatEvidence:
+    evidence_id = new_id()
+    stored_image_path = persist_anticheat_snapshot_image(
+        details=details or {},
+        student_id=student_id,
+        evidence_id=evidence_id,
+    )
+    evidence = AssessmentAnticheatEvidence(
+        id=evidence_id,
+        case_id=case.id,
+        classroom_id=classroom_id,
+        assessment_type=assessment_type,
+        assessment_id=assessment_id,
+        attempt_id=attempt_id,
+        student_id=student_id,
+        violation_type=violation_type,
+        action_taken=action_taken,
+        image_url=stored_image_path,
+        details=details or {},
+        captured_at=datetime.utcnow(),
+    )
+    db.add(evidence)
+    return evidence
+
+
+def persist_anticheat_snapshot_image(*, details: dict[str, Any], student_id: str, evidence_id: str) -> str | None:
+    """Persist one anti-cheat snapshot from a browser data URL when provided."""
+    data_url = (details or {}).get("evidence_image_data_url")
+    if not data_url:
+        return (details or {}).get("evidence_image_url")
+
+    try:
+        content_type, extension, payload = decode_anticheat_data_url(data_url)
+    except ValueError:
+        return (details or {}).get("evidence_image_url")
+
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
+            temp_file.write(payload)
+            temp_path = temp_file.name
+        return persist_document_file(
+            temp_path,
+            owner_user_id=student_id,
+            document_id=evidence_id,
+            file_name=f"anticheat-{evidence_id}{extension}",
+            content_type=content_type,
+        )
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
+def decode_anticheat_data_url(data_url: str) -> tuple[str, str, bytes]:
+    """Decode a browser data URL into content type, extension, and bytes."""
+    if not isinstance(data_url, str) or not data_url.startswith("data:image/"):
+        raise ValueError("Unsupported anti-cheat snapshot payload")
+    try:
+        header, encoded = data_url.split(",", 1)
+    except ValueError as exc:
+        raise ValueError("Malformed anti-cheat snapshot payload") from exc
+    if ";base64" not in header:
+        raise ValueError("Anti-cheat snapshot must be base64 encoded")
+
+    content_type = header[5:].split(";", 1)[0].strip().lower()
+    extension = {
+        "image/jpeg": ".jpg",
+        "image/jpg": ".jpg",
+        "image/png": ".png",
+        "image/webp": ".webp",
+    }.get(content_type, ".jpg")
+    try:
+        payload = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError("Anti-cheat snapshot could not be decoded") from exc
+    if len(payload) > 4 * 1024 * 1024:
+        raise ValueError("Anti-cheat snapshot is too large")
+    return content_type, extension, payload
+
+
+def get_exam_attempt_for_review(db: Session, exam_id: str, attempt_id: str) -> tuple[ClassroomExamAttempt, User]:
+    row = (
+        db.query(ClassroomExamAttempt, User)
+        .join(User, User.id == ClassroomExamAttempt.student_id)
+        .filter(
+            ClassroomExamAttempt.id == attempt_id,
+            ClassroomExamAttempt.classroom_exam_id == exam_id,
+        )
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Exam attempt not found")
+    return row
+
+
+def load_exam_responses_for_attempt(db: Session, attempt_id: str) -> list[ClassroomExamResponse]:
+    return (
+        db.query(ClassroomExamResponse)
+        .filter(ClassroomExamResponse.attempt_id == attempt_id)
+        .order_by(ClassroomExamResponse.created_at.asc())
+        .all()
+    )
+
+
+def serialize_exam_review_attempt(
+    *,
+    exam: ClassroomExam,
+    attempt: ClassroomExamAttempt,
+    student: User,
+    questions: list[ClassroomExamQuestion],
+    responses: list[ClassroomExamResponse],
+) -> dict[str, Any]:
+    return build_exam_review_attempt_payload(
+        exam={
+            "id": exam.id,
+            "title": exam.title,
+            "total_marks": exam.total_marks,
+        },
+        attempt={
+            "id": attempt.id,
+            "status": attempt.status,
+            "objective_score": attempt.objective_score,
+            "descriptive_score": attempt.descriptive_score,
+            "score": attempt.score,
+            "submitted_at": serialize_utc_datetime(attempt.submitted_at),
+            "ended_at": serialize_utc_datetime(attempt.ended_at),
+            "teacher_review_required": attempt.teacher_review_required,
+            "termination_reason": attempt.termination_reason,
+            "grading_summary": attempt.grading_summary or {},
+        },
+        student={
+            "id": student.id,
+            "full_name": student.full_name,
+            "email": student.email,
+        },
+        questions=[
+            {
+                "id": question.id,
+                "prompt": question.prompt,
+                "question_type": question.question_type,
+                "response_mode": question.response_mode,
+                "marks": question.marks,
+                "grading_keywords": question.grading_keywords or [],
+                "answer_key": question.answer_key,
+                "position": question.position,
+            }
+            for question in questions
+        ],
+        responses=[
+            {
+                "id": response.id,
+                "question_id": response.question_id,
+                "typed_answer": response.typed_answer,
+                "uploaded_image_urls": response.uploaded_image_urls or [],
+                "selected_option_ids": response.selected_option_ids or [],
+                "ai_score": response.ai_score,
+                "teacher_score": response.teacher_score,
+                "teacher_feedback": response.teacher_feedback,
+                "review_status": response.review_status,
+                "response_metadata": response.response_metadata or {},
+            }
+            for response in responses
+        ],
+    )
+
+
+def update_anticheat_case_resolution(
+    *,
+    db: Session,
+    case: AssessmentAnticheatCase,
+    reviewer_id: str,
+    status_value: str,
+    teacher_review_required: bool,
+) -> None:
+    case.status = status_value
+    case.teacher_review_required = teacher_review_required
+    case.reviewer_id = None if teacher_review_required else reviewer_id
+    case.resolved_at = None if teacher_review_required else datetime.utcnow()
+    case.updated_at = datetime.utcnow()
+
+    if case.assessment_type == "exam":
+        attempt = db.query(ClassroomExamAttempt).filter(ClassroomExamAttempt.id == case.attempt_id).first()
+        if attempt:
+            attempt.teacher_review_required = teacher_review_required
+            attempt.updated_at = datetime.utcnow()
+
+
 def load_session_questions(db: Session, session_id: str, user_id: str) -> list[dict]:
     rows = (
         db.query(GeneratedQuestion)
@@ -2040,7 +3605,14 @@ def get_classroom_source_contexts(
             row.document_id
             for row in db.query(ClassroomMaterial).filter(ClassroomMaterial.classroom_id == classroom_id).all()
         ]
+    return get_source_contexts_for_document_ids(db, document_ids=document_ids, top_k=top_k)
 
+
+def get_source_contexts_for_document_ids(
+    db: Session,
+    document_ids: list[str],
+    top_k: int,
+) -> list[dict]:
     if not document_ids:
         return []
 
@@ -2079,6 +3651,55 @@ def get_classroom_source_contexts(
         for document in fallback_documents
         if document.content_preview
     ][:top_k]
+
+
+def get_classroom_certification_row(
+    db: Session,
+    classroom_id: str,
+    certification_id: str,
+) -> ClassroomCertification:
+    certification = (
+        db.query(ClassroomCertification)
+        .filter(
+            ClassroomCertification.classroom_id == classroom_id,
+            ClassroomCertification.id == certification_id,
+        )
+        .first()
+    )
+    if not certification:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certification not found")
+    return certification
+
+
+def get_classroom_certification_step_row(
+    db: Session,
+    certification_id: str,
+    step_id: str,
+) -> ClassroomCertificationStep:
+    step = (
+        db.query(ClassroomCertificationStep)
+        .filter(
+            ClassroomCertificationStep.certification_id == certification_id,
+            ClassroomCertificationStep.id == step_id,
+        )
+        .first()
+    )
+    if not step:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certification step not found")
+    return step
+
+
+def serialize_issued_certificate(certificate: IssuedCertificate) -> dict[str, Any]:
+    return {
+        "id": certificate.id,
+        "certification_id": certificate.certification_id,
+        "classroom_id": certificate.classroom_id,
+        "certificate_number": certificate.certificate_number,
+        "student_name": certificate.student_name_snapshot,
+        "course_title": certificate.course_title_snapshot,
+        "issued_at": serialize_utc_datetime(certificate.issued_at),
+        "render_payload": certificate.render_payload or {},
+    }
 
 
 async def notify_educator_of_violation(

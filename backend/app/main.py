@@ -3,7 +3,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core import settings
 from app.database import get_database_backend, init_db
-from app.routers import auth_router, classrooms_router, collaboration_router, documents_router, educator_router, quiz_router, qa_router
+from app.routers import (
+    auth_router,
+    certificates_router,
+    classrooms_router,
+    collaboration_router,
+    documents_router,
+    educator_router,
+    quiz_router,
+    qa_router,
+    sticky_notes_router,
+)
 from app.routers.learning import router as learning_router
 import logging
 
@@ -24,6 +34,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    # Production frontends often come from Vercel preview and production domains.
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +65,7 @@ async def health_check():
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(certificates_router)
 app.include_router(classrooms_router)
 app.include_router(documents_router)
 app.include_router(quiz_router)
@@ -60,6 +73,7 @@ app.include_router(qa_router)
 app.include_router(learning_router)
 app.include_router(educator_router)
 app.include_router(collaboration_router)
+app.include_router(sticky_notes_router)
 
 
 # Root endpoint

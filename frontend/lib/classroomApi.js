@@ -1,7 +1,14 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL
+import { directBackendApi, fetchBackendWithFallback } from './backendApi'
+
+function inferAudioExtension(mimeType = '') {
+  if (mimeType.includes('mp4')) return '.mp4'
+  if (mimeType.includes('ogg')) return '.ogg'
+  if (mimeType.includes('mpeg')) return '.mp3'
+  return '.webm'
+}
 
 async function classroomRequest(path, token, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetchBackendWithFallback(path.replace(/^\/api/, ''), {
     ...options,
     headers: {
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
@@ -58,6 +65,86 @@ export function createClassroomAssignment(token, classroomId, payload) {
   })
 }
 
+export function listClassroomCertifications(token, classroomId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications`, token)
+}
+
+export function getClassroomCertification(token, classroomId, certificationId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}`, token)
+}
+
+export function createClassroomCertification(token, classroomId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function draftClassroomCertification(token, classroomId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/draft`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function updateClassroomCertification(token, classroomId, certificationId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}`, token, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function publishClassroomCertification(token, classroomId, certificationId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/publish`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export function getClassroomCertificationRoster(token, classroomId, certificationId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/roster`, token)
+}
+
+export function getMyClassroomCertification(token, classroomId, certificationId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/me`, token)
+}
+
+export function completeClassroomCertificationStep(token, classroomId, certificationId, stepId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/steps/${stepId}/complete`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function submitClassroomCertificationProof(token, classroomId, certificationId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/proof`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function overrideClassroomCertificationStep(token, classroomId, certificationId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/override-step`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function issueClassroomCertificate(token, classroomId, certificationId, studentId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/certifications/${certificationId}/issue/${studentId}`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export function getMyCertificates(token) {
+  return classroomRequest('/api/certificates/me', token)
+}
+
+export function getCertificate(token, certificateId) {
+  return classroomRequest(`/api/certificates/${certificateId}`, token)
+}
+
 export function listClassroomQuizzes(token, classroomId) {
   return classroomRequest(`/api/classrooms/${classroomId}/quizzes`, token)
 }
@@ -109,6 +196,107 @@ export function heartbeatClassroomQuizAttempt(token, classroomId, quizId, payloa
   return classroomRequest(`/api/classrooms/${classroomId}/quizzes/${quizId}/heartbeat`, token, {
     method: 'POST',
     body: JSON.stringify(payload)
+  })
+}
+
+export function listClassroomExams(token, classroomId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams`, token)
+}
+
+export function getClassroomExam(token, classroomId, examId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}`, token)
+}
+
+export function getClassroomExamReviewWorkspace(token, classroomId, examId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/review`, token)
+}
+
+export function getClassroomExamReviewAttempt(token, classroomId, examId, attemptId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/review/${attemptId}`, token)
+}
+
+export function submitClassroomExamReview(token, classroomId, examId, attemptId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/review/${attemptId}`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function createClassroomExam(token, classroomId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function createClassroomExamDraft(token, classroomId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/draft`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function startClassroomExamAttempt(token, classroomId, examId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/start`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export function submitClassroomExamAttempt(token, classroomId, examId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/submit`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function reportClassroomExamWarning(token, classroomId, examId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/warning`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function reportClassroomExamViolation(token, classroomId, examId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/violation`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function heartbeatClassroomExamAttempt(token, classroomId, examId, payload) {
+  return classroomRequest(`/api/classrooms/${classroomId}/exams/${examId}/heartbeat`, token, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+}
+
+export function getAnticheatBotCases(token, classroomId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/anticheat-bot`, token)
+}
+
+export function getAnticheatBotCaseDetail(token, classroomId, caseId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/anticheat-bot/${caseId}`, token)
+}
+
+export function upholdAnticheatBotCase(token, classroomId, caseId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/anticheat-bot/${caseId}/uphold`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export function excuseAnticheatBotCase(token, classroomId, caseId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/anticheat-bot/${caseId}/excuse`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
+  })
+}
+
+export function reopenAnticheatBotCase(token, classroomId, caseId) {
+  return classroomRequest(`/api/classrooms/${classroomId}/anticheat-bot/${caseId}/reopen`, token, {
+    method: 'POST',
+    body: JSON.stringify({})
   })
 }
 
@@ -180,9 +368,9 @@ export function postMeetingTranscript(token, classroomId, meetingId, payload) {
 
 export async function postMeetingAudioTranscript(token, classroomId, meetingId, audioBlob) {
   const formData = new FormData()
-  formData.append('audio', audioBlob, `meeting-${meetingId}.webm`)
+  formData.append('audio', audioBlob, `meeting-${meetingId}${inferAudioExtension(audioBlob?.type || '')}`)
 
-  const response = await fetch(`${API_BASE}/api/classrooms/${classroomId}/meetings/${meetingId}/transcriptions/audio`, {
+  const response = await fetchBackendWithFallback(`/classrooms/${classroomId}/meetings/${meetingId}/transcriptions/audio`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`
@@ -195,6 +383,10 @@ export async function postMeetingAudioTranscript(token, classroomId, meetingId, 
     throw new Error(payload.detail || payload.message || 'Request failed')
   }
   return payload
+}
+
+export function getConfiguredApiBase() {
+  return (directBackendApi('') || '').replace(/\/api$/, '')
 }
 
 export function postMeetingEvent(token, classroomId, meetingId, payload) {

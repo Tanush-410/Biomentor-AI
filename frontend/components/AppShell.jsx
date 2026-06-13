@@ -20,8 +20,8 @@ import { useAuth } from '../context/AuthContext'
 
 const STUDENT_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, match: ['/dashboard'] },
-  { href: '/classrooms', label: 'Classroom', icon: Users, match: ['/classrooms', '/classrooms/[id]', '/classrooms/[id]/stream', '/classrooms/[id]/classwork', '/classrooms/[id]/people', '/classrooms/[id]/messages', '/classrooms/[id]/live', '/classrooms/[id]/live/[meetingId]', '/classrooms/[id]/live/[meetingId]/room', '/classrooms/[id]/quiz/[quizId]'] },
-  { href: '/documents', label: 'Materials', icon: BookOpen, match: ['/documents', '/document/[id]'] },
+  { href: '/classrooms', label: 'Classroom', icon: Users, match: ['/classrooms', '/classrooms/[id]', '/classrooms/[id]/stream', '/classrooms/[id]/classwork', '/classrooms/[id]/people', '/classrooms/[id]/messages', '/classrooms/[id]/live', '/classrooms/[id]/live/[meetingId]', '/classrooms/[id]/live/[meetingId]/room', '/classrooms/[id]/quiz/[quizId]', '/classrooms/[id]/exam/[examId]', '/classrooms/[id]/certification/[certificationId]'] },
+  { href: '/documents', label: 'Materials', icon: BookOpen, match: ['/documents', '/document/[id]', '/certificate/[certificateId]'] },
   { href: '/learning-chat', label: 'Learning Chat', icon: MessageSquare, match: ['/learning-chat'] },
   { href: '/start-quiz', label: 'Quiz Generator', icon: Brain, match: ['/start-quiz', '/quiz-session'] },
   { href: '/progress', label: 'Progress', icon: BarChart3, match: ['/progress'] },
@@ -30,8 +30,11 @@ const STUDENT_NAV_ITEMS = [
 
 const EDUCATOR_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, match: ['/dashboard'] },
-  { href: '/classrooms', label: 'Classrooms', icon: BookOpen, match: ['/classrooms', '/classrooms/[id]', '/classrooms/[id]/stream', '/classrooms/[id]/classwork', '/classrooms/[id]/people', '/classrooms/[id]/messages', '/classrooms/[id]/live', '/classrooms/[id]/live/[meetingId]', '/classrooms/[id]/live/[meetingId]/room', '/classrooms/[id]/quiz/[quizId]'] },
+  { href: '/classrooms', label: 'Classrooms', icon: BookOpen, match: ['/classrooms', '/classrooms/[id]', '/classrooms/[id]/stream', '/classrooms/[id]/classwork', '/classrooms/[id]/people', '/classrooms/[id]/messages', '/classrooms/[id]/live', '/classrooms/[id]/live/[meetingId]', '/classrooms/[id]/live/[meetingId]/room', '/classrooms/[id]/quiz/[quizId]', '/classrooms/[id]/exam/[examId]', '/classrooms/[id]/certification/[certificationId]'] },
   { href: '/educator/quiz-maker', label: 'Quiz Maker', icon: Brain, match: ['/educator/quiz-maker'] },
+  { href: '/educator/exam-maker', label: 'Exam Maker', icon: FileStack, match: ['/educator/exam-maker'] },
+  { href: '/educator/certification', label: 'Certification', icon: BookOpen, match: ['/educator/certification'] },
+  { href: '/educator/anticheat-bot', label: 'Anticheat Bot', icon: MessageSquare, match: ['/educator/anticheat-bot'] },
   { href: '/check-difficulty', label: 'Bloom Studio', icon: Brain, match: ['/check-difficulty'] },
   { href: '/educator/class-insights', label: 'Class Insights', icon: BarChart3, match: ['/educator/class-insights'] },
   { href: '/communication-hub', label: 'Communication Hub', icon: MessageSquare, match: ['/communication-hub'] },

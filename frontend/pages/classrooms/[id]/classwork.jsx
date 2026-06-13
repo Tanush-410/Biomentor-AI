@@ -12,6 +12,7 @@ import {
   getClassroom,
   getClassroomIntelligence,
   getClasswork,
+  listClassroomExams,
   listDocuments,
   shareClassroomMaterial
 } from '../../../lib/classroomApi'
@@ -23,6 +24,8 @@ export default function ClassroomClassworkPage() {
   const [materials, setMaterials] = useState([])
   const [assignments, setAssignments] = useState([])
   const [quizzes, setQuizzes] = useState([])
+  const [certifications, setCertifications] = useState([])
+  const [exams, setExams] = useState([])
   const [documents, setDocuments] = useState([])
   const [intelligence, setIntelligence] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -58,12 +61,13 @@ export default function ClassroomClassworkPage() {
       const requests = [
         getClassroom(token, requestedId),
         getClasswork(token, requestedId),
-        getClassroomIntelligence(token, requestedId)
+        getClassroomIntelligence(token, requestedId),
+        listClassroomExams(token, requestedId)
       ]
       if (['educator', 'admin'].includes(user?.role)) {
         requests.push(listDocuments(token))
       }
-      const [classroomPayload, classworkPayload, intelligencePayload, documentPayload] = await Promise.all(requests)
+      const [classroomPayload, classworkPayload, intelligencePayload, examPayload, documentPayload] = await Promise.all(requests)
       if (requestSequence.current !== requestId || !shouldApplyClassroomResponse(requestedId, classroomPayload.classroom?.id)) {
         return
       }
@@ -71,6 +75,8 @@ export default function ClassroomClassworkPage() {
       setMaterials(classworkPayload.materials || [])
       setAssignments(classworkPayload.assignments || [])
       setQuizzes(classworkPayload.quizzes || [])
+      setCertifications(classworkPayload.certifications || [])
+      setExams(examPayload.exams || [])
       setIntelligence(intelligencePayload)
       setDocuments(documentPayload || [])
       if ((documentPayload || []).length > 0) {
@@ -250,6 +256,117 @@ export default function ClassroomClassworkPage() {
               )}
             </div>
           </div>
+
+          <div className="card p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="section-kicker text-[#8a5a36]">Certification paths</p>
+                <h4 className="mt-2 text-xl font-bold text-slate-950">Completion tracks and classroom certificates</h4>
+              </div>
+              <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{certifications.length}</div>
+            </div>
+            <div className="mt-5 space-y-4">
+              {certifications.length === 0 ? (
+                <div className="surface-subtle p-4 text-sm text-slate-600">
+                  No certification tracks have been published yet.
+                </div>
+              ) : (
+                certifications.map((certification) => (
+                  <div key={certification.id} className="surface-quiet p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{certification.course_mode === 'external_course' ? 'External + BioMentor' : 'BioMentor track'}</span>
+                      <span className="role-pill border-[#d8c1aa] bg-white text-slate-600">{certification.status}</span>
+                      {certification.viewer_progress?.status ? (
+                        <span className="inline-flex items-center gap-2 text-sm text-slate-600">
+                          {Math.round(certification.viewer_progress.completion_percentage || 0)}% complete
+                        </span>
+                      ) : null}
+                    </div>
+                    <h5 className="mt-4 text-lg font-semibold text-slate-950">{certification.title}</h5>
+                    {certification.description && (
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{certification.description}</p>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
+                      <span>{certification.steps?.length || 0} milestones</span>
+                      {certification.provider_name ? <span>{certification.provider_name}</span> : null}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <Link href={`/classrooms/${classroomId}/certification/${certification.id}`} className="btn btn-outline">
+                        {canManage ? 'Manage certification' : 'Open certification'}
+                      </Link>
+                      {canManage ? (
+                        <Link href="/educator/certification" className="btn btn-outline">
+                          Open Certification Studio
+                        </Link>
+                      ) : null}
+                      {certification.viewer_progress?.issued_certificate_id ? (
+                        <Link href={`/certificate/${certification.viewer_progress.issued_certificate_id}`} className="btn btn-outline">
+                          View certificate
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="card p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="section-kicker text-[#8a5a36]">Published exams</p>
+                <h4 className="mt-2 text-xl font-bold text-slate-950">Mixed-response protected assessments</h4>
+              </div>
+              <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{exams.length}</div>
+            </div>
+            <div className="mt-5 space-y-4">
+              {exams.length === 0 ? (
+                <div className="surface-subtle p-4 text-sm text-slate-600">No classroom exams have been scheduled yet.</div>
+              ) : (
+                exams.map((exam) => (
+                  <div key={exam.id} className="surface-quiet p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{exam.status}</span>
+                      <span className="inline-flex items-center gap-2 text-sm text-slate-600">
+                        <CalendarDays className="h-4 w-4 text-[#8a5a36]" />
+                        {exam.available_from ? new Date(exam.available_from).toLocaleString() : 'Available now'}
+                      </span>
+                      {exam.proctoring_enabled && (
+                        <span className="inline-flex items-center gap-2 text-sm text-slate-600">
+                          <Camera className="h-4 w-4 text-[#8a5a36]" />
+                          Proctored
+                        </span>
+                      )}
+                    </div>
+                    <h5 className="mt-4 text-lg font-semibold text-slate-950">{exam.title}</h5>
+                    {exam.description && <p className="mt-2 text-sm leading-6 text-slate-600">{exam.description}</p>}
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
+                      <span>{exam.questions?.length || 0} questions</span>
+                      <span>{exam.duration_minutes} min</span>
+                      <span>{exam.total_marks} marks</span>
+                    </div>
+                    <div className="mt-4">
+                      <div className="flex flex-wrap gap-3">
+                        <Link href={`/classrooms/${classroomId}/exam/${exam.id}`} className="btn btn-outline">
+                          {canManage ? 'Open Exam Details' : 'Open Exam'}
+                        </Link>
+                        {canManage && (
+                          <>
+                            <Link href={`/educator/exam-review/${exam.id}?classroomId=${classroomId}`} className="btn btn-outline">
+                              Open grading desk
+                            </Link>
+                            <Link href="/educator/anticheat-bot" className="btn btn-outline">
+                              Anti-cheat review
+                            </Link>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         {canManage && (
@@ -284,6 +401,7 @@ export default function ClassroomClassworkPage() {
                 <select value={assignmentForm.assignment_type} onChange={(event) => setAssignmentForm((current) => ({ ...current, assignment_type: event.target.value }))} className="input">
                   <option value="task">Task</option>
                   <option value="quiz">Quiz</option>
+                  <option value="exam">Exam</option>
                   <option value="material-review">Material review</option>
                 </select>
                 <select value={assignmentForm.document_id} onChange={(event) => setAssignmentForm((current) => ({ ...current, document_id: event.target.value }))} className="input">
@@ -296,6 +414,7 @@ export default function ClassroomClassworkPage() {
                 <input value={assignmentForm.due_at} onChange={(event) => setAssignmentForm((current) => ({ ...current, due_at: event.target.value }))} type="datetime-local" className="input" />
                 <button type="submit" className="btn btn-primary w-full" disabled={saving}>Create classwork</button>
                 <Link href="/educator/quiz-maker" className="btn btn-outline w-full text-center">Open full Quiz Maker</Link>
+                <Link href="/educator/exam-maker" className="btn btn-outline w-full text-center">Open full Exam Maker</Link>
               </div>
             </form>
           </div>

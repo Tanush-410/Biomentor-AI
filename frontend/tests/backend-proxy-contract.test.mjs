@@ -18,13 +18,25 @@ test("backend proxy preserves the trailing slash for the documents root endpoint
   assert.match(source, /normalizedPath}\$\{needsTrailingSlash \? '\/' : ''}/);
 });
 
-test("documents pages prefer the hosted backend directly and keep the proxy as a fallback", () => {
+test("backend proxy accepts either server-only or public backend env vars", () => {
+  const source = read("pages/api/backend/[...path].js");
+  assert.match(source, /process\.env\.API_URL \|\| process\.env\.NEXT_PUBLIC_API_URL/);
+  assert.match(source, /if \(!process\.env\.API_URL && !process\.env\.NEXT_PUBLIC_API_URL\)/);
+});
+
+test("documents pages use the shared backend fallback helper", () => {
   const documentsSource = read("pages/documents.jsx");
   const viewerSource = read("pages/document/[id].jsx");
-  assert.match(documentsSource, /const directDocumentsApi = \(path = ''\) =>/);
-  assert.match(documentsSource, /const proxiedDocumentsApi = \(path = ''\) => `\/api\/backend\/documents\$\{path\}`/);
+  const helperSource = read("lib/backendApi.js");
+  assert.match(helperSource, /export async function fetchBackendWithFallback/);
+  assert.match(helperSource, /export function proxiedBackendApi/);
+  assert.match(helperSource, /export function isHostedFrontend/);
   assert.match(documentsSource, /const fetchDocumentEndpoint = async \(path, options = \{\}\) =>/);
-  assert.match(viewerSource, /const directDocumentsApi = \(path = ''\) =>/);
-  assert.match(viewerSource, /const proxiedDocumentsApi = \(path = ''\) => `\/api\/backend\/documents\$\{path\}`/);
+  assert.match(documentsSource, /fetchBackendWithFallback\(`\/documents\$\{path\}`/);
+  assert.match(documentsSource, /await readErrorDetail\(response\)/);
+  assert.match(documentsSource, /setError\(err\?\.message \|\| 'Unable to connect to the server\.'\)/);
   assert.match(viewerSource, /const fetchDocumentEndpoint = async \(path, options = \{\}\) =>/);
+  assert.match(viewerSource, /fetchBackendWithFallback\(`\/documents\$\{path\}`/);
+  assert.match(viewerSource, /await readErrorDetail\(response\)/);
+  assert.match(viewerSource, /setError\(err\?\.message \|\| 'Unable to connect to the server\.'\)/);
 });

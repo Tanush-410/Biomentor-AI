@@ -1,6 +1,6 @@
 """Pydantic schemas for request/response validation."""
 from pydantic import BaseModel, EmailStr, Field
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Union
 from datetime import datetime
 
 
@@ -76,6 +76,46 @@ class DocumentResponse(BaseModel):
     selected_pages: Optional[List[int]] = None
     created_at: datetime
     
+    class Config:
+        from_attributes = True
+
+
+class StickyNoteBase(BaseModel):
+    """Shared sticky note fields."""
+    page_url: str
+    title: Optional[str] = Field(default=None, max_length=120)
+    content: str = Field(..., max_length=4000)
+    color: str = "amber"
+    x_ratio: float = Field(default=0.5, ge=0.0, le=1.0)
+    y_ratio: float = Field(default=0.25, ge=0.0, le=1.0)
+    width: int = Field(default=320, ge=220, le=420)
+    height: int = Field(default=220, ge=160, le=420)
+
+
+class StickyNoteCreate(StickyNoteBase):
+    """Create sticky note request."""
+
+
+class StickyNoteUpdate(BaseModel):
+    """Partial sticky note update request."""
+    title: Optional[str] = Field(default=None, max_length=120)
+    content: Optional[str] = Field(default=None, max_length=4000)
+    color: Optional[str] = None
+    x_ratio: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    y_ratio: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    width: Optional[int] = Field(default=None, ge=220, le=420)
+    height: Optional[int] = Field(default=None, ge=160, le=420)
+    z_index: Optional[int] = Field(default=None, ge=1)
+
+
+class StickyNoteResponse(StickyNoteBase):
+    """Sticky note response."""
+    id: str
+    user_id: str
+    z_index: int
+    created_at: datetime
+    updated_at: datetime
+
     class Config:
         from_attributes = True
 
@@ -599,6 +639,274 @@ class ClassroomQuizWarningCreate(BaseModel):
     attempt_id: str
     warning_type: str
     details: Optional[dict] = None
+
+
+class ClassroomExamBlockCreate(BaseModel):
+    """Mini-word block used to compose an educator exam."""
+    block_type: str = "text"
+    title: Optional[str] = None
+    content: Dict[str, Any] = Field(default_factory=dict)
+    sort_order: int = 0
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ClassroomExamQuestionOption(BaseModel):
+    """One option for an objective exam question."""
+    id: str
+    text: str
+
+
+class ClassroomExamQuestionCreate(BaseModel):
+    """One exam question authored manually or suggested by AI."""
+    prompt: str
+    question_type: str = "long_text"
+    response_mode: str = "typed"
+    marks: float = 1.0
+    options: List[ClassroomExamQuestionOption] = Field(default_factory=list)
+    answer_key: Optional[str] = None
+    grading_keywords: List[str] = Field(default_factory=list)
+    fixed_response_box: bool = True
+    response_config: Dict[str, Any] = Field(default_factory=dict)
+    ai_suggestion_context: Dict[str, Any] = Field(default_factory=dict)
+    position: int = 0
+
+
+class ClassroomExamCreate(BaseModel):
+    """Create and publish a classroom exam."""
+    title: str
+    description: Optional[str] = None
+    instructions: Optional[str] = None
+    exam_mode: str = "mixed"
+    authoring_mode: str = "manual"
+    generation_scope: str = "selected_materials"
+    total_marks: float = 0.0
+    duration_minutes: int = 60
+    available_from: Optional[datetime] = None
+    available_until: Optional[datetime] = None
+    publish_to_stream: bool = True
+    proctoring_enabled: bool = True
+    allow_late_entries: bool = False
+    linked_material_ids: List[str] = Field(default_factory=list)
+    grading_notes: Dict[str, Any] = Field(default_factory=dict)
+    anticheat_policy: Dict[str, Any] = Field(default_factory=dict)
+    blocks: List[ClassroomExamBlockCreate] = Field(default_factory=list)
+    questions: List[ClassroomExamQuestionCreate] = Field(default_factory=list)
+
+
+class ClassroomExamDraftCreate(BaseModel):
+    """Generate an AI-assisted classroom exam draft from linked material."""
+    title: Optional[str] = None
+    instructions: Optional[str] = None
+    exam_mode: str = "mixed"
+    generation_scope: str = "selected_materials"
+    linked_material_ids: List[str] = Field(default_factory=list)
+    num_questions: int = 6
+
+
+class ClassroomExamHeartbeatCreate(BaseModel):
+    """Keep an in-progress classroom exam attempt active."""
+    attempt_id: str
+
+
+class ClassroomExamResponseInput(BaseModel):
+    """Per-question student response on a classroom exam."""
+    question_id: str
+    typed_answer: Optional[str] = None
+    uploaded_image_urls: List[str] = Field(default_factory=list)
+    selected_option_ids: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ClassroomExamAttemptSubmit(BaseModel):
+    """Submit a classroom exam attempt."""
+    attempt_id: str
+    responses: List[ClassroomExamResponseInput] = Field(default_factory=list)
+
+
+class ClassroomExamTeacherReviewResponseUpdate(BaseModel):
+    """Teacher override for one descriptive exam response."""
+    response_id: str
+    teacher_score: float = 0.0
+    teacher_feedback: Optional[str] = None
+    review_status: str = "teacher_finalized"
+
+
+class ClassroomExamTeacherReviewSubmit(BaseModel):
+    """Finalize teacher review for one submitted classroom exam attempt."""
+    overall_feedback: Optional[str] = None
+    responses: List[ClassroomExamTeacherReviewResponseUpdate] = Field(default_factory=list)
+
+
+class ClassroomCertificationStepCreate(BaseModel):
+    """One milestone inside a classroom certification track."""
+    step_type: str = "custom_checkpoint"
+    title: str
+    description: Optional[str] = None
+    linked_resource_id: Optional[str] = None
+    linked_resource_type: Optional[str] = None
+    required: bool = True
+    minimum_score: Optional[float] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    sort_order: int = 0
+
+
+class ClassroomCertificationCreate(BaseModel):
+    """Create a classroom certification."""
+    title: str
+    description: Optional[str] = None
+    course_mode: str = "biomentor_track"
+    provider_name: Optional[str] = None
+    external_url: Optional[str] = None
+    issuer_name: Optional[str] = None
+    certificate_subtitle: Optional[str] = None
+    completion_message: Optional[str] = None
+    manual_issue_only: bool = False
+    requires_teacher_approval: bool = True
+    certificate_template: Dict[str, Any] = Field(default_factory=dict)
+    ai_notes: Dict[str, Any] = Field(default_factory=dict)
+    steps: List[ClassroomCertificationStepCreate] = Field(default_factory=list)
+
+
+class ClassroomCertificationUpdate(BaseModel):
+    """Update a classroom certification."""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    provider_name: Optional[str] = None
+    external_url: Optional[str] = None
+    issuer_name: Optional[str] = None
+    certificate_subtitle: Optional[str] = None
+    completion_message: Optional[str] = None
+    manual_issue_only: Optional[bool] = None
+    requires_teacher_approval: Optional[bool] = None
+    certificate_template: Optional[Dict[str, Any]] = None
+    ai_notes: Optional[Dict[str, Any]] = None
+    steps: Optional[List[ClassroomCertificationStepCreate]] = None
+
+
+class ClassroomCertificationDraftCreate(BaseModel):
+    """Generate AI-style certification milestone suggestions from selected materials."""
+    title: Optional[str] = None
+    course_mode: str = "biomentor_track"
+    linked_material_ids: List[str] = Field(default_factory=list)
+    target_outcome: Optional[str] = None
+
+
+class ClassroomCertificationStepCompleteCreate(BaseModel):
+    """Student completion payload for one certification step."""
+    note: Optional[str] = None
+    proof_url: Optional[str] = None
+
+
+class ClassroomCertificationOverrideStepCreate(BaseModel):
+    """Teacher override for one certification step."""
+    student_id: str
+    step_id: str
+    status: str = "completed"
+    note: Optional[str] = None
+    score_achieved: Optional[float] = None
+
+
+class ClassroomCertificationProofCreate(BaseModel):
+    """Student proof submission for an external certification step."""
+    step_id: str
+    proof_type: str = "text"
+    proof_url: Optional[str] = None
+    text_note: Optional[str] = None
+
+
+class IssuedCertificateResponse(BaseModel):
+    """Issued certificate artifact summary."""
+    id: str
+    certification_id: str
+    classroom_id: str
+    certificate_number: str
+    student_name: str
+    course_title: str
+    issued_at: Union[datetime, str]
+    render_payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ClassroomCertificationStudentSummaryResponse(BaseModel):
+    """Student progress view for one certification."""
+    student_id: str
+    student_name: str
+    status: str
+    completion_percentage: float = 0.0
+    ready_for_issue: bool = False
+    issued_certificate_id: Optional[str] = None
+
+
+class ClassroomCertificationResponse(BaseModel):
+    """Serialized classroom certification detail."""
+    id: str
+    classroom_id: str
+    title: str
+    description: Optional[str] = None
+    course_mode: str
+    provider_name: Optional[str] = None
+    external_url: Optional[str] = None
+    issuer_name: Optional[str] = None
+    certificate_subtitle: Optional[str] = None
+    completion_message: Optional[str] = None
+    status: str
+    manual_issue_only: bool = False
+    requires_teacher_approval: bool = True
+    steps: List[Dict[str, Any]] = Field(default_factory=list)
+    certificate_template: Dict[str, Any] = Field(default_factory=dict)
+    ai_notes: Dict[str, Any] = Field(default_factory=dict)
+    viewer_progress: Optional[Dict[str, Any]] = None
+    created_at: Union[datetime, str]
+
+
+class ClassroomCertificationRosterResponse(BaseModel):
+    """Educator roster for one certification."""
+    certification: ClassroomCertificationResponse
+    roster: List[ClassroomCertificationStudentSummaryResponse] = Field(default_factory=list)
+
+
+class ClassroomExamWarningCreate(BaseModel):
+    """Record a major anti-cheat warning during a classroom exam."""
+    attempt_id: str
+    warning_type: str
+    details: Optional[dict] = None
+
+
+class ClassroomExamViolationCreate(BaseModel):
+    """Record an auto-end anti-cheat violation during a classroom exam."""
+    attempt_id: str
+    violation_type: str
+    details: Optional[dict] = None
+
+
+class AnticheatEvidenceSnapshotResponse(BaseModel):
+    """One evidence snapshot visible in the educator anti-cheat bot."""
+    id: str
+    image_url: Optional[str] = None
+    violation_type: str
+    action_taken: str
+    captured_at: Union[datetime, str]
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AnticheatBotCaseResponse(BaseModel):
+    """Final debarred review card shown to educators."""
+    id: str
+    assessment_type: str
+    assessment_id: str
+    attempt_id: str
+    student_id: str
+    student_name: Optional[str] = None
+    final_case_reason: Optional[str] = None
+    status: str
+    teacher_review_required: bool = True
+    latest_warning_count: int = 0
+    evidence_snapshots: List[AnticheatEvidenceSnapshotResponse] = Field(default_factory=list)
+    created_at: Union[datetime, str]
+
+
+class AnticheatBotResponse(BaseModel):
+    """Educator anti-cheat bot summary for exams and quizzes."""
+    cases: List[AnticheatBotCaseResponse] = Field(default_factory=list)
 
 
 class ReinforcementLessonCreate(BaseModel):

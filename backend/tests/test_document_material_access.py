@@ -21,7 +21,7 @@ from app.database.models import (  # noqa: E402
     Document,
     User,
 )
-from app.routers.documents import get_accessible_document_for_user  # noqa: E402
+from app.routers.documents import get_accessible_document_for_user, list_accessible_documents_for_user  # noqa: E402
 
 
 class DocumentMaterialAccessTests(unittest.TestCase):
@@ -117,6 +117,26 @@ class DocumentMaterialAccessTests(unittest.TestCase):
 
         self.assertIsNotNone(accessible)
         self.assertEqual(accessible.id, self.document.id)
+
+    def test_student_document_library_includes_classroom_shared_materials(self):
+        visible_documents = list_accessible_documents_for_user(self.session, self.student)
+
+        self.assertEqual(len(visible_documents), 1)
+        self.assertEqual(visible_documents[0].id, self.document.id)
+
+    def test_document_library_deduplicates_owner_and_classroom_access(self):
+        duplicate_share = ClassroomMaterial(
+            id="material-2",
+            classroom_id=self.classroom.id,
+            document_id=self.document.id,
+            shared_by_user_id=self.educator.id,
+        )
+        self.session.add(duplicate_share)
+        self.session.commit()
+
+        visible_documents = list_accessible_documents_for_user(self.session, self.educator)
+
+        self.assertEqual(len([document for document in visible_documents if document.id == self.document.id]), 1)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,19 @@ from sqlalchemy.pool import StaticPool
 
 from app.core import settings
 
-from .models import Base
+from .models import (
+    Base,
+    StickyNote,
+    STICKY_NOTE_HEIGHT_MAX,
+    STICKY_NOTE_HEIGHT_MIN,
+    STICKY_NOTE_WIDTH_MAX,
+    STICKY_NOTE_WIDTH_MIN,
+    STICKY_NOTE_X_RATIO_MAX,
+    STICKY_NOTE_X_RATIO_MIN,
+    STICKY_NOTE_Y_RATIO_MAX,
+    STICKY_NOTE_Y_RATIO_MIN,
+    STICKY_NOTE_Z_INDEX_MIN,
+)
 
 
 DEFAULT_SQLITE_URL = "sqlite:///./app.db"
@@ -138,6 +150,10 @@ def _ensure_incremental_columns():
     classroom_assignment_columns = table_columns.get("classroom_assignments", set())
     if "classroom_quiz_id" not in classroom_assignment_columns:
         statements.append("ALTER TABLE classroom_assignments ADD COLUMN classroom_quiz_id VARCHAR")
+    if "classroom_exam_id" not in classroom_assignment_columns:
+        statements.append("ALTER TABLE classroom_assignments ADD COLUMN classroom_exam_id VARCHAR")
+    if "exam_reference" not in classroom_assignment_columns:
+        statements.append("ALTER TABLE classroom_assignments ADD COLUMN exam_reference VARCHAR")
 
     classroom_quiz_columns = table_columns.get("classroom_quizzes", set())
     if "quiz_mode" not in classroom_quiz_columns:
@@ -148,9 +164,186 @@ def _ensure_incremental_columns():
         else:
             statements.append("ALTER TABLE classroom_quizzes ADD COLUMN manual_questions TEXT")
 
+    classroom_exam_columns = table_columns.get("classroom_exams", set())
+    if classroom_exam_columns:
+        if "instructions" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN instructions TEXT")
+        if "exam_mode" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN exam_mode VARCHAR DEFAULT 'mixed'")
+        if "authoring_mode" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN authoring_mode VARCHAR DEFAULT 'manual'")
+        if "generation_scope" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN generation_scope VARCHAR DEFAULT 'selected_materials'")
+        if "total_marks" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN total_marks FLOAT DEFAULT 0")
+        if "publish_to_stream" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN publish_to_stream BOOLEAN DEFAULT 1")
+        if "proctoring_enabled" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN proctoring_enabled BOOLEAN DEFAULT 1")
+        if "allow_late_entries" not in classroom_exam_columns:
+            statements.append("ALTER TABLE classroom_exams ADD COLUMN allow_late_entries BOOLEAN DEFAULT 0")
+        if "linked_material_ids" not in classroom_exam_columns:
+            if get_database_backend() == "postgresql":
+                statements.append("ALTER TABLE classroom_exams ADD COLUMN linked_material_ids JSON")
+            else:
+                statements.append("ALTER TABLE classroom_exams ADD COLUMN linked_material_ids TEXT")
+        if "grading_notes" not in classroom_exam_columns:
+            if get_database_backend() == "postgresql":
+                statements.append("ALTER TABLE classroom_exams ADD COLUMN grading_notes JSON")
+            else:
+                statements.append("ALTER TABLE classroom_exams ADD COLUMN grading_notes TEXT")
+        if "anticheat_policy" not in classroom_exam_columns:
+            if get_database_backend() == "postgresql":
+                statements.append("ALTER TABLE classroom_exams ADD COLUMN anticheat_policy JSON")
+            else:
+                statements.append("ALTER TABLE classroom_exams ADD COLUMN anticheat_policy TEXT")
+
+    _ensure_sticky_note_constraints(inspector)
+
     if not statements:
         return
 
     with engine.begin() as connection:
         for statement in statements:
             connection.execute(text(statement))
+
+
+def _ensure_sticky_note_constraints(inspector):
+    """Rebuild older SQLite sticky_notes tables so DB checks match the ORM model."""
+    if get_database_backend() != "sqlite":
+        return
+
+    table_names = set(inspector.get_table_names())
+    if "sticky_notes" not in table_names and "sticky_notes_legacy" not in table_names:
+        return
+
+    if "sticky_notes_legacy" in table_names:
+        _recover_sticky_notes_from_legacy(inspector, has_current_table="sticky_notes" in table_names)
+        return
+
+    if _sticky_note_table_has_required_constraints(inspector, "sticky_notes"):
+        return
+
+    sticky_note_index_names = _get_table_index_names(inspector, "sticky_notes")
+    with engine.begin() as connection:
+        connection.execute(text("PRAGMA foreign_keys=OFF"))
+        try:
+            connection.execute(text("ALTER TABLE sticky_notes RENAME TO sticky_notes_legacy"))
+            _drop_index_names(connection, sticky_note_index_names)
+            StickyNote.__table__.create(bind=connection)
+            _copy_sticky_notes_with_normalization(connection, source_table="sticky_notes_legacy")
+            connection.execute(text("DROP TABLE sticky_notes_legacy"))
+        finally:
+            connection.execute(text("PRAGMA foreign_keys=ON"))
+
+
+def _recover_sticky_notes_from_legacy(inspector, has_current_table: bool):
+    """Merge stranded sticky_notes_legacy rows back into sticky_notes and remove the legacy table."""
+    with engine.begin() as connection:
+        connection.execute(text("PRAGMA foreign_keys=OFF"))
+        try:
+            if has_current_table and not _sticky_note_table_has_required_constraints(inspector, "sticky_notes"):
+                current_index_names = _get_table_index_names(inspector, "sticky_notes")
+                connection.execute(text("ALTER TABLE sticky_notes RENAME TO sticky_notes_current_source"))
+                _drop_index_names(connection, current_index_names)
+                StickyNote.__table__.create(bind=connection)
+                _copy_sticky_notes_with_normalization(
+                    connection,
+                    source_table="sticky_notes_current_source",
+                    conflict_policy="error",
+                )
+                connection.execute(text("DROP TABLE sticky_notes_current_source"))
+
+            if not has_current_table:
+                StickyNote.__table__.create(bind=connection)
+
+            _copy_sticky_notes_with_normalization(
+                connection,
+                source_table="sticky_notes_legacy",
+                conflict_policy="ignore",
+            )
+            connection.execute(text("DROP TABLE sticky_notes_legacy"))
+        finally:
+            connection.execute(text("PRAGMA foreign_keys=ON"))
+
+
+def _sticky_note_table_has_required_constraints(inspector, table_name: str) -> bool:
+    """Return whether the given sticky note table already has all expected named checks."""
+    required_constraint_names = {
+        constraint.name
+        for constraint in StickyNote.__table__.constraints
+        if constraint.name
+    }
+    existing_constraint_names = {
+        constraint.get("name")
+        for constraint in inspector.get_check_constraints(table_name)
+        if constraint.get("name")
+    }
+    return required_constraint_names.issubset(existing_constraint_names)
+
+
+def _get_table_index_names(inspector, table_name: str) -> list[str]:
+    """Collect named indexes for a table from the current inspector snapshot."""
+    return [
+        index["name"]
+        for index in inspector.get_indexes(table_name)
+        if index.get("name")
+    ]
+
+
+def _drop_index_names(connection, index_names: list[str]):
+    """Drop a list of indexes by name."""
+    for index_name in index_names:
+        connection.execute(text(f'DROP INDEX IF EXISTS "{index_name}"'))
+
+
+def _copy_sticky_notes_with_normalization(connection, source_table: str, conflict_policy: str = "error"):
+    """Copy sticky note rows into the constrained table, clamping legacy layout values into bounds."""
+    sticky_note_columns = [column.name for column in StickyNote.__table__.columns]
+    quoted_columns = ", ".join(f'"{column}"' for column in sticky_note_columns)
+    normalized_values = {
+        "id": '"id"',
+        "user_id": '"user_id"',
+        "page_url": '"page_url"',
+        "title": '"title"',
+        "content": '"content"',
+        "color": '"color"',
+        "x_ratio": (
+            f'CASE WHEN "x_ratio" < {STICKY_NOTE_X_RATIO_MIN} THEN {STICKY_NOTE_X_RATIO_MIN} '
+            f'WHEN "x_ratio" > {STICKY_NOTE_X_RATIO_MAX} THEN {STICKY_NOTE_X_RATIO_MAX} '
+            'ELSE "x_ratio" END'
+        ),
+        "y_ratio": (
+            f'CASE WHEN "y_ratio" < {STICKY_NOTE_Y_RATIO_MIN} THEN {STICKY_NOTE_Y_RATIO_MIN} '
+            f'WHEN "y_ratio" > {STICKY_NOTE_Y_RATIO_MAX} THEN {STICKY_NOTE_Y_RATIO_MAX} '
+            'ELSE "y_ratio" END'
+        ),
+        "width": (
+            f'CASE WHEN "width" < {STICKY_NOTE_WIDTH_MIN} THEN {STICKY_NOTE_WIDTH_MIN} '
+            f'WHEN "width" > {STICKY_NOTE_WIDTH_MAX} THEN {STICKY_NOTE_WIDTH_MAX} '
+            'ELSE "width" END'
+        ),
+        "height": (
+            f'CASE WHEN "height" < {STICKY_NOTE_HEIGHT_MIN} THEN {STICKY_NOTE_HEIGHT_MIN} '
+            f'WHEN "height" > {STICKY_NOTE_HEIGHT_MAX} THEN {STICKY_NOTE_HEIGHT_MAX} '
+            'ELSE "height" END'
+        ),
+        "z_index": f'CASE WHEN "z_index" < {STICKY_NOTE_Z_INDEX_MIN} THEN {STICKY_NOTE_Z_INDEX_MIN} ELSE "z_index" END',
+        "created_at": '"created_at"',
+        "updated_at": '"updated_at"',
+    }
+    select_values = ", ".join(
+        f'{normalized_values[column]} AS "{column}"'
+        for column in sticky_note_columns
+    )
+    insert_verbs = {
+        "error": "INSERT",
+        "ignore": "INSERT OR IGNORE",
+        "replace": "INSERT OR REPLACE",
+    }
+    insert_verb = insert_verbs[conflict_policy]
+
+    connection.execute(text(
+        f'{insert_verb} INTO sticky_notes ({quoted_columns}) '
+        f'SELECT {select_values} FROM "{source_table}"'
+    ))

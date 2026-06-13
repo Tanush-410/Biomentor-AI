@@ -25,7 +25,42 @@ def _groq_available() -> bool:
     return bool(key and not key.lower().startswith("your_"))
 
 
-def transcribe_meeting_audio_blob(audio_bytes: bytes, filename: str = "meeting-audio.webm") -> str | None:
+def normalize_meeting_transcript_content(content: str | None) -> str:
+    """Collapse noisy transcript whitespace before storage and comparison."""
+    return " ".join(str(content or "").strip().split())
+
+
+def build_meeting_transcription_prompt(
+    meeting_title: str | None = None,
+    recent_transcript_lines: list[str] | None = None,
+) -> str:
+    """Provide lightweight class context so speech-to-text stays on-topic."""
+    recent_lines = [
+        normalize_meeting_transcript_content(line)
+        for line in (recent_transcript_lines or [])
+        if normalize_meeting_transcript_content(line)
+    ]
+    context_suffix = ""
+    if recent_lines:
+        context_suffix = f" Recent classroom context: {' | '.join(recent_lines[-4:])}."
+    title_prefix = f"Meeting topic: {meeting_title}. " if meeting_title else ""
+    return (
+        f"{title_prefix}This is a live classroom meeting transcript. "
+        "Focus on educational terminology, biological or academic vocabulary, and concise spoken content. "
+        "The room can contain multiple speakers, so preserve the clearest academic phrasing instead of filler syllables. "
+        "If a term sounds uncertain, prefer the most plausible classroom word or scientific term from context. "
+        "Ignore filler words, background noise, repeated fragments, and microphone artefacts."
+        f"{context_suffix}"
+    )
+
+
+def transcribe_meeting_audio_blob(
+    audio_bytes: bytes,
+    filename: str = "meeting-audio.webm",
+    content_type: str | None = None,
+    meeting_title: str | None = None,
+    recent_transcript_lines: list[str] | None = None,
+) -> str | None:
     """Transcribe a captured meeting-audio chunk using Groq speech-to-text when available."""
     if not _groq_available() or not audio_bytes:
         return None
@@ -40,19 +75,23 @@ def transcribe_meeting_audio_blob(audio_bytes: bytes, filename: str = "meeting-a
                 "model": "whisper-large-v3-turbo",
                 "response_format": "verbose_json",
                 "language": "en",
-                "prompt": "This is a classroom meeting transcript. Focus on educational terminology and concise spoken content.",
+                "prompt": build_meeting_transcription_prompt(
+                    meeting_title=meeting_title,
+                    recent_transcript_lines=recent_transcript_lines,
+                ),
             },
             files={
-                "file": (filename, audio_bytes, "audio/webm"),
+                "file": (filename, audio_bytes, content_type or "audio/webm"),
             },
             timeout=40,
         )
         response.raise_for_status()
         payload = response.json()
-        transcript = (payload.get("text") or "").strip()
+        transcript = normalize_meeting_transcript_content(payload.get("text"))
         return transcript or None
     except Exception:
         return None
+
 
 def build_teacher_assistant_snapshot(
     transcript_items: list[dict],
@@ -269,12 +308,28 @@ def persist_meeting_transcript(
     speaker_name: str | None,
     content: str,
 ) -> ClassroomMeetingTranscript:
+    normalized_content = normalize_meeting_transcript_content(content)
+    if len(normalized_content.split()) < 2:
+        raise ValueError("Transcript content is too short to persist.")
+
+    latest_transcript = (
+        db.query(ClassroomMeetingTranscript)
+        .filter(
+            ClassroomMeetingTranscript.meeting_id == meeting.id,
+            ClassroomMeetingTranscript.speaker_role == (speaker_role or current_user.role),
+        )
+        .order_by(ClassroomMeetingTranscript.created_at.desc())
+        .first()
+    )
+    if latest_transcript and normalize_meeting_transcript_content(latest_transcript.content).lower() == normalized_content.lower():
+        return latest_transcript
+
     transcript = ClassroomMeetingTranscript(
         meeting_id=meeting.id,
         classroom_id=meeting.classroom_id,
         speaker_role=speaker_role or current_user.role,
         speaker_name=speaker_name or current_user.full_name,
-        content=content.strip(),
+        content=normalized_content,
     )
     db.add(transcript)
     db.commit()

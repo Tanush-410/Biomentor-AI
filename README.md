@@ -17,9 +17,12 @@ The project includes:
 - ask material-grounded questions in Learning Chat
 - fall back to trusted web sources automatically when uploaded material is insufficient
 - generate quizzes from uploaded material
+- take classroom exams with fixed-response and typed-answer flows
+- earn BioMentor-branded classroom certifications after completing tracks
 - join classrooms with invite codes
 - take classroom quizzes with protected attempts
 - track progress across practice activity
+- keep private sticky notes pinned to the exact app page where they were created
 - participate in classrooms, built-in live meetings, and educator communication
 
 ### Educator experience
@@ -31,9 +34,13 @@ The project includes:
 - create quizzes in dual mode:
   - generate from material
   - build manually with answer keys
+- create classroom exams with structured document blocks, descriptive answers, and proctoring
+- review anti-cheat cases with evidence snapshots and teacher decisions
+- create certification tracks and issue student certificates
 - schedule quizzes for classrooms
 - use proctored classroom quiz flows with warning/debar support
 - monitor student progress, alerts, and intervention signals
+- use private sticky notes across educator pages without exposing them to students
 
 ## Core Features
 
@@ -41,6 +48,7 @@ The project includes:
 - adaptive Quick Check mini-tests with short targeted feedback
 - offline-friendly document viewing
 - document upload and delete flows
+- private colorful sticky notes tied to exact page URLs with drag, persistence, and per-user privacy
 - classroom hub with:
   - `Stream`
   - `Classwork`
@@ -53,6 +61,8 @@ The project includes:
 - material-based quiz generation
 - manual quiz authoring with answer-key autograding
 - classroom quiz scheduling
+- classroom exam authoring, review, and anti-cheat case tracking
+- certification authoring with issued certificate generation
 - built-in WebRTC classroom meetings with FastAPI signaling
 - dedicated meeting room route for live classes
 - invite-code classroom enrollment
@@ -107,6 +117,7 @@ BioMentor AI now exposes its intelligence as explicit product workspaces instead
 - AI surfaces were reworked so they format cleanly inside sidebars and narrow classroom rails
 - the upgraded AI cards now wrap and stack correctly instead of collapsing into unreadable vertical text
 - the main classroom and quiz-maker layouts were widened and rebalanced so AI panels feel intentional, not squeezed
+- sticky notes now mount as a global shell layer so students and educators can keep private page-specific reminders anywhere in the app
 
 ## AI Features Map
 
@@ -308,23 +319,23 @@ If the backend connects correctly, `/health` will show:
 }
 ```
 
-## Production Deployment: Vercel + Railway
+## Production Deployment: Vercel + Render
 
 BioMentor AI should be deployed with:
 - `Vercel` for the `frontend`
-- `Railway` for the `backend`
+- `Render` for the `backend`
 - `Supabase/Postgres` for production relational data
 - `Qdrant` for vector retrieval
 
-This split is important because the classroom meeting system uses FastAPI WebSockets for signaling. The backend should stay on Railway instead of being deployed as Vercel Functions.
+This split is important because the classroom meeting system uses FastAPI WebSockets for signaling. The backend should stay on Render instead of being deployed as Vercel Functions.
 
-### 1. Deploy the backend to Railway
+### 1. Deploy the backend to Render
 
-Create a Railway service from the repo and set the service root to `backend`.
+Create a Render web service from the repo and set the service root to `backend`.
 
-Railway can use the included [backend/Dockerfile](/Users/tanush.s.vashisht/Desktop/Tanush/work/backend/Dockerfile:1), which now binds `0.0.0.0:$PORT` correctly for production.
+Render can use the included [backend/Dockerfile](/Users/tanush.s.vashisht/Desktop/Tanush/work/backend/Dockerfile:1), which binds `0.0.0.0:$PORT` correctly for production.
 
-Set these Railway variables:
+Set these Render variables:
 
 ```env
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.your-project.supabase.co:5432/postgres
@@ -346,7 +357,7 @@ TURN_CREDENTIAL=your_turn_password
 ```
 
 After deploy, confirm:
-- `https://your-railway-backend.up.railway.app/health`
+- `https://your-render-service.onrender.com/health`
 - the response should include `"database_backend": "postgresql"`
 
 ### 2. Deploy the frontend to Vercel
@@ -356,7 +367,7 @@ Import the same repo into Vercel and set the project root to `frontend`.
 Set these Vercel environment variables:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-backend.up.railway.app
+NEXT_PUBLIC_API_URL=https://your-render-service.onrender.com
 NEXT_PUBLIC_TURN_URL=turn:your-turn-host:3478?transport=udp
 NEXT_PUBLIC_TURN_USERNAME=your_turn_username
 NEXT_PUBLIC_TURN_CREDENTIAL=your_turn_password
@@ -376,7 +387,7 @@ After deploy, test:
 - Do **not** leave `DEBUG=true`.
 - Set a strong `SECRET_KEY`.
 - Use a real TURN server for reliable classroom calls. STUN-only is not enough for many real-world networks.
-- CORS is now environment-driven through `CORS_ORIGINS`, so Railway should allow your Vercel domain once it is added there.
+- CORS is now environment-driven through `CORS_ORIGINS`, so Render should allow your Vercel domain once it is added there.
 
 ## Running with Qdrant
 
@@ -409,6 +420,7 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 - `/quiz-session`
 - `/progress`
 - `/classrooms`
+- sticky notes render across authenticated app pages and stay tied to the exact URL where they were created
 
 ### Classroom module
 - `/classrooms/[id]/stream`
@@ -420,6 +432,10 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 
 ### Educator pages
 - `/educator/quiz-maker`
+- `/educator/exam-maker`
+- `/educator/exam-review/[attemptId]`
+- `/educator/certification`
+- `/educator/anticheat-bot`
 - `/educator/class-insights`
 - `/educator/student/[id]`
 - `/communication-hub`
@@ -433,6 +449,7 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 - `/api/quiz`
 - `/api/qa`
 - `/api/classrooms`
+- `/api/sticky-notes`
 - `/api/educator`
 - `/api/collaboration`
 

@@ -37,19 +37,33 @@ def is_supabase_document_uri(uri: str) -> bool:
     return str(uri or "").startswith("supabase://")
 
 
+def has_supabase_document_storage_config() -> bool:
+    """Return True when the object-storage settings required for hosted uploads exist."""
+    return bool(
+        str(getattr(settings, "supabase_url", "") or "").strip()
+        and str(getattr(settings, "supabase_service_key", "") or "").strip()
+        and str(getattr(settings, "supabase_documents_bucket", "") or "").strip()
+    )
+
+
 def use_supabase_document_storage() -> bool:
     """Use durable object storage automatically in hosted production."""
-    return settings.environment.strip().lower() == "production"
+    return settings.environment.strip().lower() == "production" and has_supabase_document_storage_config()
 
 
 def persist_document_file(source_path: str, owner_user_id: str, document_id: str, file_name: str, content_type: str | None = None) -> str:
     """Persist a processed upload either locally or in Supabase storage."""
     if use_supabase_document_storage():
-        bucket = settings.supabase_documents_bucket
-        object_key = _build_object_key(owner_user_id, document_id, file_name)
-        _ensure_supabase_bucket(bucket)
-        _upload_to_supabase(bucket, object_key, source_path, content_type)
-        return build_supabase_document_uri(bucket, object_key)
+        try:
+            bucket = settings.supabase_documents_bucket
+            object_key = _build_object_key(owner_user_id, document_id, file_name)
+            _ensure_supabase_bucket(bucket)
+            _upload_to_supabase(bucket, object_key, source_path, content_type)
+            return build_supabase_document_uri(bucket, object_key)
+        except Exception as exc:
+            raise RuntimeError(
+                "Durable document storage is unavailable. Check the Supabase storage bucket/service-role configuration."
+            ) from exc
 
     os.makedirs(LOCAL_UPLOAD_DIR, exist_ok=True)
     destination_path = os.path.join(LOCAL_UPLOAD_DIR, os.path.basename(source_path))

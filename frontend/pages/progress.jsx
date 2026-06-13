@@ -8,6 +8,7 @@ import AISpotlightBanner from '../components/AISpotlightBanner'
 import CircularProgress from '../components/CircularProgress'
 import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
+import { getMyCertificates } from '../lib/classroomApi'
 
 const LEVEL_COLORS = {
   1: 'stroke-slate-500',
@@ -23,6 +24,7 @@ export default function ProgressPage() {
   const { token, loading: authLoading } = useAuth()
   const [progress, setProgress] = useState(null)
   const [coachProgress, setCoachProgress] = useState(null)
+  const [certificates, setCertificates] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -75,7 +77,7 @@ export default function ProgressPage() {
     setLoading(true)
     setError('')
     try {
-      const [response, coachResponse] = await Promise.all([
+      const [response, coachResponse, certificatePayload] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/progress`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -85,12 +87,14 @@ export default function ProgressPage() {
           headers: {
             'Authorization': `Bearer ${token}`
           }
-        })
+        }),
+        getMyCertificates(token)
       ])
 
       if (response.ok) {
         const payload = await response.json()
         setProgress(payload)
+        setCertificates(certificatePayload)
         if (coachResponse.ok) {
           const coachPayload = await coachResponse.json()
           setCoachProgress(coachPayload)
@@ -180,6 +184,58 @@ export default function ProgressPage() {
           </div>
 
           <div className="space-y-6">
+            <div className="card p-6">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Certificates and active tracks</h2>
+              {loading ? (
+                <p className="text-slate-500">Loading certification progress...</p>
+              ) : (
+                <div className="space-y-4">
+                  {(certificates?.earned_certifications || []).length > 0 ? (
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Earned certificates</p>
+                      {certificates.earned_certifications.map((item) => (
+                        <div key={item.id} className="rounded-xl border border-slate-200 p-4">
+                          <p className="font-semibold text-slate-900">{item.title}</p>
+                          <p className="mt-1 text-sm text-slate-600">{item.classroom_name || 'Classroom certification'} · {item.course_mode === 'external_course' ? 'External + BioMentor' : 'BioMentor track'}</p>
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            {item.issued_certificate_id ? (
+                              <Link href={`/certificate/${item.issued_certificate_id}`} className="btn btn-outline">
+                                View certificate
+                              </Link>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {(certificates?.active_certifications || []).length > 0 ? (
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Active certification tracks</p>
+                      {certificates.active_certifications.map((item) => (
+                        <div key={item.id} className="rounded-xl border border-slate-200 p-4">
+                          <p className="font-semibold text-slate-900">{item.title}</p>
+                          <p className="mt-1 text-sm text-slate-600">{item.classroom_name || 'Classroom certification'}</p>
+                          <p className="mt-3 text-sm text-slate-600">{Math.round(item.completion_percentage || 0)}% complete · {item.status.replaceAll('_', ' ')}</p>
+                          <div className="mt-4">
+                            <Link href={`/classrooms/${item.classroom_id}/certification/${item.id}`} className="btn btn-outline">
+                              Continue track
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {(!certificates?.earned_certifications?.length && !certificates?.active_certifications?.length) ? (
+                    <div className="surface-subtle p-4 text-sm text-slate-600">
+                      Your classroom certifications will appear here after an educator publishes one for you.
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
             <div id="progress-coach">
               <StudyCoachPanel
                 title="Practice guidance"

@@ -8,6 +8,7 @@ import '@fontsource/source-sans-3/700.css'
 import '@fontsource/cormorant-garamond/500.css'
 import '@fontsource/cormorant-garamond/600.css'
 import '@fontsource/cormorant-garamond/700.css'
+import StickyNotesLayer from '../components/sticky-notes/StickyNotesLayer'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import '../styles/globals.css'
 
@@ -44,7 +45,12 @@ function AppContent({ Component, pageProps }) {
     )
   }
 
-  return <Component {...pageProps} />
+  return (
+    <>
+      <Component {...pageProps} />
+      <StickyNotesLayer />
+    </>
+  )
 }
 
 export default function App(props) {

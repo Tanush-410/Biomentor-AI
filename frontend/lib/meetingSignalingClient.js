@@ -1,12 +1,10 @@
-function toWebSocketBase(apiBase) {
-  if (!apiBase) return ''
-  if (apiBase.startsWith('https://')) return apiBase.replace('https://', 'wss://')
-  if (apiBase.startsWith('http://')) return apiBase.replace('http://', 'ws://')
-  return apiBase
-}
+import { toWebSocketBase } from './backendApi'
 
 export function createMeetingSignalingClient({ meetingId, token, onMessage, onOpen, onClose, onError }) {
-  const base = toWebSocketBase(process.env.NEXT_PUBLIC_API_URL || '')
+  const base = toWebSocketBase()
+  if (!base) {
+    throw new Error('Meeting signaling is not configured. Add NEXT_PUBLIC_API_URL or NEXT_PUBLIC_WS_URL.')
+  }
   const url = `${base}/api/classrooms/ws/meetings/${meetingId}?token=${encodeURIComponent(token)}`
   const socket = new WebSocket(url)
 

@@ -5,8 +5,12 @@ import { createMeetingSignalingClient } from '../lib/meetingSignalingClient'
 const getIceServers = () => {
   const servers = [{ urls: 'stun:stun.l.google.com:19302' }]
   if (process.env.NEXT_PUBLIC_TURN_URL && process.env.NEXT_PUBLIC_TURN_USERNAME && process.env.NEXT_PUBLIC_TURN_CREDENTIAL) {
+    const turnUrls = String(process.env.NEXT_PUBLIC_TURN_URL)
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean)
     servers.push({
-      urls: process.env.NEXT_PUBLIC_TURN_URL,
+      urls: turnUrls.length > 1 ? turnUrls : turnUrls[0],
       username: process.env.NEXT_PUBLIC_TURN_USERNAME,
       credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL
     })
@@ -25,9 +29,12 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
 
   const signalingRef = useRef(null)
   const peerConnectionsRef = useRef(new Map())
+  const offerInFlightRef = useRef(new Set())
+  const iceRestartInFlightRef = useRef(new Set())
   const pendingIceCandidatesRef = useRef(new Map())
   const remoteStreamsRef = useRef(new Map())
   const localStreamRef = useRef(null)
+  const makingOfferRef = useRef(new Set())
 
   useEffect(() => {
     if (!enabled || !meetingId || !token || !user?.id) return undefined
@@ -49,6 +56,32 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
         await peer.addIceCandidate(new RTCIceCandidate(candidatePayload))
       }
       pendingIceCandidatesRef.current.delete(targetUserId)
+    }
+
+    const shouldInitiateOffer = (targetUserId) => String(user.id) < String(targetUserId)
+    const isPolitePeer = (targetUserId) => String(user.id) > String(targetUserId)
+
+    const createAndSendOffer = async (targetUserId, { iceRestart = false } = {}) => {
+      if (!signalingRef.current || offerInFlightRef.current.has(targetUserId)) return
+      const peer = createPeerConnection(targetUserId)
+      if (!peer || (peer.signalingState !== 'stable' && !iceRestart)) return
+
+      offerInFlightRef.current.add(targetUserId)
+      makingOfferRef.current.add(targetUserId)
+      try {
+        const offer = await peer.createOffer(iceRestart ? { iceRestart: true } : undefined)
+        if (peer.signalingState !== 'stable' && !iceRestart) return
+        await peer.setLocalDescription(offer)
+        signalingRef.current?.send({
+          type: 'offer',
+          target_user_id: targetUserId,
+          payload: offer
+        })
+      } finally {
+        makingOfferRef.current.delete(targetUserId)
+        offerInFlightRef.current.delete(targetUserId)
+        iceRestartInFlightRef.current.delete(targetUserId)
+      }
     }
 
     const createPeerConnection = (targetUserId) => {
@@ -83,19 +116,49 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
         })
       }
 
+      peer.onnegotiationneeded = async () => {
+        if (!shouldInitiateOffer(targetUserId)) return
+        await createAndSendOffer(targetUserId)
+      }
+
       peer.onconnectionstatechange = () => {
         if (peer.connectionState === 'failed') {
-          setError('A participant connection failed. The room may need a refresh.')
+          setError('A participant connection dropped. BioMentor is trying to reconnect it.')
+          if (!iceRestartInFlightRef.current.has(targetUserId)) {
+            iceRestartInFlightRef.current.add(targetUserId)
+            createAndSendOffer(targetUserId, { iceRestart: true }).catch(() => {})
+          }
+        }
+      }
+
+      peer.oniceconnectionstatechange = () => {
+        if (peer.iceConnectionState === 'failed' || peer.iceConnectionState === 'disconnected') {
+          if (!iceRestartInFlightRef.current.has(targetUserId)) {
+            iceRestartInFlightRef.current.add(targetUserId)
+            createAndSendOffer(targetUserId, { iceRestart: true }).catch(() => {})
+          }
         }
       }
 
       return peer
     }
 
+    const syncParticipantConnection = async (participant) => {
+      if (!participant?.user_id || participant.user_id === user.id) return
+      createPeerConnection(participant.user_id)
+      if (shouldInitiateOffer(participant.user_id)) {
+        await createAndSendOffer(participant.user_id)
+      }
+    }
+
     const handleMessage = async (message) => {
       if (disposed) return
       if (message.type === 'meeting_state') {
-        setParticipants(message.participants || [])
+        const nextParticipants = message.participants || []
+        setParticipants(nextParticipants)
+        for (const participant of nextParticipants) {
+          await syncParticipantConnection(participant)
+        }
         return
       }
 
@@ -105,16 +168,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
           const filtered = current.filter((entry) => entry.user_id !== participant.user_id)
           return [...filtered, participant]
         })
-        if (participant.user_id !== user.id) {
-          const peer = createPeerConnection(participant.user_id)
-          const offer = await peer.createOffer()
-          await peer.setLocalDescription(offer)
-          signalingRef.current?.send({
-            type: 'offer',
-            target_user_id: participant.user_id,
-            payload: offer
-          })
-        }
+        await syncParticipantConnection(participant)
         return
       }
 
@@ -134,7 +188,20 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
       if (message.type === 'offer') {
         const sourceUserId = message.from_user_id
         const peer = createPeerConnection(sourceUserId)
-        await peer.setRemoteDescription(new RTCSessionDescription(message.payload))
+        const offerCollision =
+          makingOfferRef.current.has(sourceUserId) || peer.signalingState !== 'stable'
+        if (!isPolitePeer(sourceUserId) && offerCollision) {
+          return
+        }
+
+        if (offerCollision) {
+          await Promise.all([
+            peer.setLocalDescription({ type: 'rollback' }),
+            peer.setRemoteDescription(new RTCSessionDescription(message.payload))
+          ])
+        } else {
+          await peer.setRemoteDescription(new RTCSessionDescription(message.payload))
+        }
         await flushPendingIceCandidates(sourceUserId, peer)
         const answer = await peer.createAnswer()
         await peer.setLocalDescription(answer)
@@ -149,6 +216,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
       if (message.type === 'answer') {
         const sourceUserId = message.from_user_id
         const peer = createPeerConnection(sourceUserId)
+        if (peer.signalingState !== 'have-local-offer') return
         await peer.setRemoteDescription(new RTCSessionDescription(message.payload))
         await flushPendingIceCandidates(sourceUserId, peer)
         return
@@ -175,7 +243,18 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
     const start = async () => {
       try {
         setConnectionState('requesting_media')
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 24, max: 30 }
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        })
         if (disposed) {
           stream.getTracks().forEach((track) => track.stop())
           return
@@ -225,6 +304,9 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
       peerConnectionsRef.current.forEach((peer) => peer.close())
       peerConnectionsRef.current.clear()
       pendingIceCandidatesRef.current.clear()
+      offerInFlightRef.current.clear()
+      iceRestartInFlightRef.current.clear()
+      makingOfferRef.current.clear()
       remoteStreamsRef.current.clear()
     }
   }, [enabled, meetingId, token, user?.id, user?.full_name])

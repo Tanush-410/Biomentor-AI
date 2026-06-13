@@ -202,6 +202,39 @@ export default function ClassroomQuizPage() {
     }
   }
 
+  const captureEvidenceSnapshot = async () => {
+    const video = videoRef.current
+    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null
+
+    const targetWidth = Math.min(960, video.videoWidth)
+    const targetHeight = Math.max(1, Math.round((targetWidth / video.videoWidth) * video.videoHeight))
+    const canvas = document.createElement('canvas')
+    canvas.width = targetWidth
+    canvas.height = targetHeight
+
+    const context = canvas.getContext('2d')
+    if (!context) return null
+    context.drawImage(video, 0, 0, targetWidth, targetHeight)
+    return canvas.toDataURL('image/jpeg', 0.78)
+  }
+
+  const buildEvidenceDetails = async (reasonCode, details = {}, nextWarningCount = warningCount + 1) => {
+    const snapshot = await captureEvidenceSnapshot()
+    return {
+      ...details,
+      reason_code: reasonCode,
+      warning_count_snapshot: nextWarningCount,
+      captured_at_client: new Date().toISOString(),
+      evidence_image_data_url: snapshot,
+      camera_dimensions: videoRef.current
+        ? {
+            width: videoRef.current.videoWidth || null,
+            height: videoRef.current.videoHeight || null
+          }
+        : null
+    }
+  }
+
   const ensureCameraAndFullscreen = async () => {
     setCameraError('')
     if (!quiz?.proctoring_enabled) return
@@ -265,10 +298,11 @@ export default function ClassroomQuizPage() {
     if (!attempt?.id || violationSentRef.current || attemptState !== 'active') return
     violationSentRef.current = true
     try {
+      const evidenceDetails = await buildEvidenceDetails(type, details, warningCount + 1)
       const payload = await reportClassroomQuizViolation(token, classroomId, quizId, {
         attempt_id: attempt.id,
         violation_type: type,
-        details
+        details: evidenceDetails
       })
       setAttempt(payload.attempt || null)
       setAttemptState('terminated')
@@ -292,10 +326,11 @@ export default function ClassroomQuizPage() {
     warningTimestampsRef.current[type] = now
 
     try {
+      const evidenceDetails = await buildEvidenceDetails(type, details, warningCount + 1)
       const payload = await reportClassroomQuizWarning(token, classroomId, quizId, {
         attempt_id: attempt.id,
         warning_type: type,
-        details
+        details: evidenceDetails
       })
       if (payload?.attempt) {
         setAttempt(payload.attempt)

@@ -18,7 +18,7 @@ export const config = {
 }
 
 function buildTargetUrl(pathSegments, query) {
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '')
+  const baseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '')
   const normalizedPath = pathSegments.join('/')
   const needsTrailingSlash = pathSegments.length === 1 && pathSegments[0] === 'documents'
   const target = new URL(`${baseUrl}/api/${normalizedPath}${needsTrailingSlash ? '/' : ''}`)
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     return
   }
 
-  if (!process.env.NEXT_PUBLIC_API_URL) {
+  if (!process.env.API_URL && !process.env.NEXT_PUBLIC_API_URL) {
     res.status(500).json({ detail: 'Backend API URL is not configured.' })
     return
   }

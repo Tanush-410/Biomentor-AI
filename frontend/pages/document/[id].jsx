@@ -7,34 +7,11 @@ import AppShell from '../../components/AppShell'
 import AISpotlightBanner from '../../components/AISpotlightBanner'
 import MaterialIntelligencePanel from '../../components/MaterialIntelligencePanel'
 import { useAuth } from '../../context/AuthContext'
+import { fetchBackendWithFallback, readErrorDetail } from '../../lib/backendApi'
 import { deleteOfflineDocument, getOfflineDocument, saveOfflineDocument } from '../../lib/offlineDocuments'
 
-const normalizeApiBase = (baseUrl = '') => baseUrl.replace(/\/+$/, '')
-const directDocumentsApi = (path = '') =>
-  process.env.NEXT_PUBLIC_API_URL ? `${normalizeApiBase(process.env.NEXT_PUBLIC_API_URL)}/api/documents${path}` : null
-const proxiedDocumentsApi = (path = '') => `/api/backend/documents${path}`
-
 const fetchDocumentEndpoint = async (path, options = {}) => {
-  const attempted = new Set()
-  const candidates = [directDocumentsApi(path), proxiedDocumentsApi(path)].filter(
-    (candidate) => candidate && !attempted.has(candidate) && attempted.add(candidate)
-  )
-
-  let lastError = null
-  for (const url of candidates) {
-    try {
-      const response = await fetch(url, options)
-      if (response.status >= 500) {
-        lastError = new Error(`Upstream request failed with status ${response.status}`)
-        continue
-      }
-      return response
-    } catch (error) {
-      lastError = error
-    }
-  }
-
-  throw lastError || new Error('Unable to reach the materials service.')
+  return fetchBackendWithFallback(`/documents${path}`, options)
 }
 
 export default function StudyDocumentPage() {
@@ -127,9 +104,8 @@ export default function StudyDocumentPage() {
           setError('This study material could not be found.')
         }
       } else {
-        const payload = await response.json().catch(() => ({}))
         if (!cached?.metadata) {
-          setError(payload?.detail || 'Unable to load this document.')
+          setError((await readErrorDetail(response)) || 'Unable to load this document.')
         }
       }
     } catch (err) {
@@ -140,7 +116,7 @@ export default function StudyDocumentPage() {
         fetchMaterialIntelligence(cached.metadata.id)
         await loadDocumentFile(cached.metadata, { preferCache: true })
       } else {
-        setError('Unable to connect to the server.')
+        setError(err?.message || 'Unable to connect to the server.')
       }
     } finally {
       setLoading(false)
@@ -203,8 +179,7 @@ export default function StudyDocumentPage() {
       })
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        const detail = payload?.detail || `Failed to load file (${response.status})`
+        const detail = (await readErrorDetail(response)) || `Failed to load file (${response.status})`
         throw new Error(detail)
       }
 

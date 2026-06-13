@@ -1,0 +1,464 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Palette, Pin, Plus, StickyNote, Trash2, X } from 'lucide-react'
+import { useRouter } from 'next/router'
+
+import { useAuth } from '../../context/AuthContext'
+import {
+  createStickyNote,
+  deleteStickyNote,
+  listStickyNotes,
+  updateStickyNote,
+} from '../../lib/stickyNotesApi'
+import { clamp, resolveStickyNoteCollisions } from '../../lib/stickyNotesLayout'
+
+const NOTE_COLORS = [
+  { id: 'amber', label: 'Amber', classes: 'from-amber-100 via-[#f8ddb3] to-[#f1c88a] border-[#d4a25c] text-[#53361b]' },
+  { id: 'rose', label: 'Rose', classes: 'from-rose-100 via-[#f7c9d3] to-[#ef9db1] border-[#d46f88] text-[#5d2133]' },
+  { id: 'mint', label: 'Mint', classes: 'from-emerald-100 via-[#c8f3dd] to-[#94e7bf] border-[#58b486] text-[#164733]' },
+  { id: 'sky', label: 'Sky', classes: 'from-sky-100 via-[#cbe7fb] to-[#97cff5] border-[#5a9ece] text-[#173d5c]' },
+  { id: 'violet', label: 'Violet', classes: 'from-violet-100 via-[#e1d4fb] to-[#c1aaf5] border-[#8a73ca] text-[#3d2c63]' },
+]
+
+const DEFAULT_NOTE = {
+  title: '',
+  content: '',
+  color: 'amber',
+  width: 320,
+  height: 220,
+}
+
+const PROTECTED_PATHS = ['/', '/login', '/register', '/forgot-password']
+
+function colorClasses(color) {
+  return NOTE_COLORS.find((entry) => entry.id === color)?.classes || NOTE_COLORS[0].classes
+}
+
+function getViewport() {
+  if (typeof window === 'undefined') {
+    return { width: 1440, height: 900 }
+  }
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }
+}
+
+function toPageUrl(asPath) {
+  if (typeof window === 'undefined') {
+    return asPath || '/'
+  }
+  return `${window.location.pathname}${window.location.search}`
+}
+
+function toStyle(note, viewport) {
+  return {
+    left: clamp(note.x_ratio * viewport.width, 12, Math.max(12, viewport.width - note.width - 12)),
+    top: clamp(note.y_ratio * viewport.height, 12, Math.max(12, viewport.height - note.height - 12)),
+    width: note.width,
+    minHeight: note.height,
+    zIndex: 120 + note.z_index,
+  }
+}
+
+export default function StickyNotesLayer() {
+  const router = useRouter()
+  const { token, user, loading } = useAuth()
+  const [notes, setNotes] = useState([])
+  const [activeNoteId, setActiveNoteId] = useState(null)
+  const [contextMenu, setContextMenu] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [statusMessage, setStatusMessage] = useState(null)
+  const [statusTone, setStatusTone] = useState('neutral')
+  const [viewport, setViewport] = useState(getViewport)
+  const draggingRef = useRef(null)
+  const notesRef = useRef([])
+  const statusTimerRef = useRef(null)
+
+  const currentPageUrl = useMemo(() => toPageUrl(router.asPath), [router.asPath])
+  const isEnabledPage = token && !loading && !PROTECTED_PATHS.includes(router.pathname)
+
+  useEffect(() => {
+    notesRef.current = notes
+  }, [notes])
+
+  useEffect(() => () => {
+    if (statusTimerRef.current) {
+      window.clearTimeout(statusTimerRef.current)
+    }
+  }, [])
+
+  const showStatus = (message, tone = 'neutral') => {
+    setStatusMessage(message)
+    setStatusTone(tone)
+    if (typeof window !== 'undefined') {
+      if (statusTimerRef.current) {
+        window.clearTimeout(statusTimerRef.current)
+      }
+      statusTimerRef.current = window.setTimeout(() => {
+        setStatusMessage(null)
+      }, 2400)
+    }
+  }
+
+  useEffect(() => {
+    if (!isEnabledPage) {
+      setNotes([])
+      setContextMenu(null)
+      setStatusMessage(null)
+      return
+    }
+
+    let cancelled = false
+    const loadNotes = async () => {
+      try {
+        const payload = await listStickyNotes(token, currentPageUrl)
+        if (!cancelled) {
+          const nextViewport = getViewport()
+          setViewport(nextViewport)
+          const nextNotes = resolveStickyNoteCollisions(payload || [], nextViewport.width, nextViewport.height)
+          setNotes(nextNotes)
+        }
+      } catch (error) {
+        console.error('Sticky notes failed to load:', error)
+        if (!cancelled) {
+          showStatus('Unable to load sticky notes for this page right now.', 'error')
+        }
+      }
+    }
+
+    loadNotes()
+    return () => {
+      cancelled = true
+    }
+  }, [currentPageUrl, isEnabledPage, token])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const handleResize = () => {
+      const nextViewport = getViewport()
+      setViewport(nextViewport)
+      setNotes((current) => resolveStickyNoteCollisions(current, nextViewport.width, nextViewport.height))
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (!isEnabledPage || typeof window === 'undefined') {
+      return undefined
+    }
+
+    const handleContextMenu = (event) => {
+      const target = event.target
+      if (target instanceof HTMLElement && target.closest('[data-sticky-note-root="true"]')) {
+        return
+      }
+      event.preventDefault()
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+      })
+    }
+
+    const closeMenu = () => setContextMenu(null)
+
+    window.addEventListener('contextmenu', handleContextMenu)
+    window.addEventListener('click', closeMenu)
+    window.addEventListener('scroll', closeMenu, true)
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu)
+      window.removeEventListener('click', closeMenu)
+      window.removeEventListener('scroll', closeMenu, true)
+    }
+  }, [isEnabledPage])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const handlePointerMove = (event) => {
+      if (!draggingRef.current) {
+        return
+      }
+
+      const { noteId, pointerOffsetX, pointerOffsetY } = draggingRef.current
+      setNotes((current) =>
+        current.map((note) => {
+          if (note.id !== noteId) {
+            return note
+          }
+
+          const left = clamp(event.clientX - pointerOffsetX, 12, Math.max(12, viewport.width - note.width - 12))
+          const top = clamp(event.clientY - pointerOffsetY, 12, Math.max(12, viewport.height - note.height - 12))
+          return {
+            ...note,
+            x_ratio: left / viewport.width,
+            y_ratio: top / viewport.height,
+          }
+        })
+      )
+    }
+
+    const handlePointerUp = async () => {
+      if (!draggingRef.current) {
+        return
+      }
+
+      const { noteId, previousNotes } = draggingRef.current
+      draggingRef.current = null
+      const note = notesRef.current.find((entry) => entry.id === noteId)
+      if (!note) {
+        return
+      }
+
+      try {
+        await updateStickyNote(token, note.id, {
+          x_ratio: note.x_ratio,
+          y_ratio: note.y_ratio,
+        })
+        showStatus('Sticky note saved.', 'success')
+      } catch (error) {
+        console.error('Sticky note position failed to persist:', error)
+        setNotes(previousNotes)
+        showStatus('Unable to save sticky note changes right now.', 'error')
+      }
+    }
+
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+  }, [token, viewport.height, viewport.width])
+
+  const handleCreateNote = async () => {
+    if (!contextMenu || !token) {
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const created = await createStickyNote(token, {
+        ...DEFAULT_NOTE,
+        page_url: currentPageUrl,
+        x_ratio: clamp(contextMenu.x / viewport.width, 0, 1),
+        y_ratio: clamp(contextMenu.y / viewport.height, 0, 1),
+        title: `${user?.role === 'educator' ? 'Teacher' : 'Study'} note`,
+        content: '',
+      })
+      setNotes((current) =>
+        resolveStickyNoteCollisions([...current, created], viewport.width, viewport.height)
+      )
+      setActiveNoteId(created.id)
+      showStatus('Sticky note created.', 'success')
+    } catch (error) {
+      console.error('Sticky note creation failed:', error)
+      showStatus('Unable to create a sticky note right now.', 'error')
+    } finally {
+      setContextMenu(null)
+      setIsSaving(false)
+    }
+  }
+
+  const handlePatchNote = async (noteId, changes) => {
+    const previousNotes = notesRef.current
+    setNotes((current) => current.map((note) => (note.id === noteId ? { ...note, ...changes } : note)))
+
+    try {
+      const updated = await updateStickyNote(token, noteId, changes)
+      setNotes((current) => current.map((note) => (note.id === noteId ? updated : note)))
+      showStatus('Sticky note saved.', 'success')
+    } catch (error) {
+      console.error('Sticky note update failed:', error)
+      setNotes(previousNotes)
+      showStatus('Unable to save sticky note changes right now.', 'error')
+    }
+  }
+
+  const handleDeleteNote = async (noteId) => {
+    const previousNotes = notesRef.current
+    setNotes((current) => current.filter((note) => note.id !== noteId))
+    try {
+      await deleteStickyNote(token, noteId)
+      showStatus('Sticky note deleted.', 'success')
+    } catch (error) {
+      console.error('Sticky note delete failed:', error)
+      setNotes(previousNotes)
+      showStatus('Unable to delete that sticky note right now.', 'error')
+    }
+  }
+
+  const handleBringToFront = (noteId) => {
+    const highestZIndex = notes.reduce((max, note) => Math.max(max, note.z_index), 0)
+    void handlePatchNote(noteId, { z_index: highestZIndex + 1 })
+  }
+
+  if (!isEnabledPage) {
+    return null
+  }
+
+  return (
+    <>
+      {statusMessage && (
+        <div
+          data-sticky-note-root="true"
+          className={`fixed right-4 top-4 z-[320] rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur ${
+            statusTone === 'error'
+              ? 'border-rose-300 bg-white/95 text-rose-700'
+              : statusTone === 'success'
+                ? 'border-emerald-300 bg-white/95 text-emerald-700'
+                : 'border-stone-200 bg-white/95 text-stone-700'
+          }`}
+        >
+          {statusMessage}
+        </div>
+      )}
+
+      <div className="pointer-events-none fixed inset-0 z-[90]">
+        {notes.map((note) => {
+          const isActive = activeNoteId === note.id
+          const style = toStyle(note, viewport)
+          return (
+            <section
+              key={note.id}
+              data-sticky-note-root="true"
+              style={style}
+              className={`pointer-events-auto fixed overflow-hidden rounded-[24px] border bg-gradient-to-br shadow-[0_24px_60px_rgba(74,44,20,0.18)] transition ${
+                colorClasses(note.color)
+              } ${isActive ? 'ring-2 ring-white/70' : ''}`}
+              onMouseDown={() => {
+                setActiveNoteId(note.id)
+                handleBringToFront(note.id)
+              }}
+            >
+              <header
+                className="flex cursor-grab items-center justify-between border-b border-black/10 px-4 py-3"
+                onPointerDown={(event) => {
+                  const rect = event.currentTarget.parentElement?.getBoundingClientRect()
+                  if (!rect) {
+                    return
+                  }
+                  draggingRef.current = {
+                    noteId: note.id,
+                    pointerOffsetX: event.clientX - rect.left,
+                    pointerOffsetY: event.clientY - rect.top,
+                    previousNotes: notesRef.current,
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em]">
+                  <StickyNote className="h-3.5 w-3.5" />
+                  Private note
+                </div>
+                <button
+                  type="button"
+                  className="rounded-full bg-white/55 p-1.5 transition hover:bg-white/80"
+                  onClick={() => handleDeleteNote(note.id)}
+                  aria-label="Delete sticky note"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </header>
+
+              <div className="space-y-3 p-4">
+                <input
+                  value={note.title || ''}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setNotes((current) => current.map((entry) => (entry.id === note.id ? { ...entry, title: value } : entry)))
+                  }}
+                  onBlur={(event) => void handlePatchNote(note.id, { title: event.target.value })}
+                  placeholder="Title"
+                  maxLength={120}
+                  className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-current/55"
+                />
+                <textarea
+                  value={note.content || ''}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setNotes((current) => current.map((entry) => (entry.id === note.id ? { ...entry, content: value } : entry)))
+                  }}
+                  onBlur={(event) => void handlePatchNote(note.id, { content: event.target.value })}
+                  placeholder="Type your note here..."
+                  maxLength={4000}
+                  className="min-h-[96px] w-full resize-none bg-transparent text-sm leading-6 outline-none placeholder:text-current/50"
+                />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 rounded-full bg-white/55 px-3 py-2">
+                    <Palette className="h-3.5 w-3.5" />
+                    {NOTE_COLORS.map((entry) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        aria-label={`Set note color to ${entry.label}`}
+                        className={`h-4 w-4 rounded-full border border-black/10 transition ${
+                          note.color === entry.id ? 'scale-110 ring-2 ring-white' : ''
+                        } ${
+                          entry.id === 'amber'
+                            ? 'bg-amber-300'
+                            : entry.id === 'rose'
+                              ? 'bg-rose-300'
+                              : entry.id === 'mint'
+                                ? 'bg-emerald-300'
+                                : entry.id === 'sky'
+                                  ? 'bg-sky-300'
+                                  : 'bg-violet-300'
+                        }`}
+                        onClick={() => void handlePatchNote(note.id, { color: entry.id })}
+                      />
+                    ))}
+                  </div>
+                  <div className="rounded-full bg-white/55 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.24em]">
+                    {currentPageUrl}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )
+        })}
+      </div>
+
+      {contextMenu && (
+        <div
+          data-sticky-note-root="true"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+            zIndex: 300,
+          }}
+          className="fixed rounded-[20px] border border-stone-200 bg-white/95 p-3 shadow-2xl backdrop-blur"
+        >
+          <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-stone-500">
+            <div className="flex items-center gap-2">
+              <Pin className="h-3.5 w-3.5" />
+              Sticky notes
+            </div>
+            <button
+              type="button"
+              className="rounded-full p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              onClick={() => setContextMenu(null)}
+              aria-label="Close sticky notes menu"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#7c4d2a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#63391d] disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => void handleCreateNote()}
+            disabled={isSaving}
+          >
+            <Plus className="h-4 w-4" />
+            {isSaving ? 'Creating…' : 'Add sticky note here'}
+          </button>
+        </div>
+      )}
+    </>
+  )
+}

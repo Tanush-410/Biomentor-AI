@@ -8,34 +8,15 @@ import AISpotlightBanner from '../components/AISpotlightBanner'
 import MaterialIntelligencePanel from '../components/MaterialIntelligencePanel'
 import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
+import { fetchBackendWithFallback, readErrorDetail } from '../lib/backendApi'
 import { getOfflineDocument } from '../lib/offlineDocuments'
 
-const normalizeApiBase = (baseUrl = '') => baseUrl.replace(/\/+$/, '')
-const directDocumentsApi = (path = '') =>
-  process.env.NEXT_PUBLIC_API_URL ? `${normalizeApiBase(process.env.NEXT_PUBLIC_API_URL)}/api/documents${path}` : null
-const proxiedDocumentsApi = (path = '') => `/api/backend/documents${path}`
-
 const fetchDocumentEndpoint = async (path, options = {}) => {
-  const attempted = new Set()
-  const candidates = [directDocumentsApi(path), proxiedDocumentsApi(path)].filter(
-    (candidate) => candidate && !attempted.has(candidate) && attempted.add(candidate)
-  )
+  return fetchBackendWithFallback(`/documents${path}`, options)
+}
 
-  let lastError = null
-  for (const url of candidates) {
-    try {
-      const response = await fetch(url, options)
-      if (response.status >= 500) {
-        lastError = new Error(`Upstream request failed with status ${response.status}`)
-        continue
-      }
-      return response
-    } catch (error) {
-      lastError = error
-    }
-  }
-
-  throw lastError || new Error('Unable to reach the materials service.')
+const fetchBackendEndpoint = async (path, options = {}) => {
+  return fetchBackendWithFallback(path, options)
 }
 
 export default function DocumentsPage() {
@@ -84,11 +65,11 @@ export default function DocumentsPage() {
         loadStudyCoachMaterials()
         loadMaterialIntelligence(docs)
       } else {
-        setError('Failed to load your materials.')
+        setError((await readErrorDetail(response)) || 'Failed to load your materials.')
       }
     } catch (err) {
       console.error('Document fetch error:', err)
-      setError('Unable to connect to the server.')
+      setError(err?.message || 'Unable to connect to the server.')
     } finally {
       setLoading(false)
     }
@@ -106,7 +87,7 @@ export default function DocumentsPage() {
 
   const loadStudyCoachMaterials = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/materials`, {
+      const response = await fetchBackendEndpoint('/study-coach/materials', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.ok) {
@@ -165,12 +146,11 @@ export default function DocumentsPage() {
         event.target.value = ''
         fetchDocuments()
       } else {
-        const payload = await response.json().catch(() => ({}))
-        setError(payload?.detail || 'Upload failed.')
+        setError((await readErrorDetail(response)) || 'Upload failed.')
       }
     } catch (err) {
       console.error('Upload error:', err)
-      setError('Unable to upload file right now.')
+      setError(err?.message || 'Unable to upload file right now.')
     } finally {
       setUploading(false)
     }

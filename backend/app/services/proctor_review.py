@@ -9,6 +9,8 @@ from app.services.ai_quality import classify_confidence
 
 
 SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+HARD_RULE_SIGNAL_TYPES = {"fullscreen_exit", "tab_hidden", "window_blur", "camera_lost", "blocked_shortcut", "context_menu"}
+HEURISTIC_SIGNAL_TYPES = {"ai_multiple_faces", "ai_face_missing", "ai_looking_down"}
 
 VIOLATION_LABELS = {
     "ai_multiple_faces": "Multiple faces detected",
@@ -39,6 +41,15 @@ def infer_incident_severity(violation_type: str, action_taken: str, warning_coun
     return "low"
 
 
+def classify_signal_family(violation_type: str) -> str:
+    """Split incidents into harder rule violations vs softer camera heuristics."""
+    if violation_type in HARD_RULE_SIGNAL_TYPES:
+        return "hard_rule"
+    if violation_type in HEURISTIC_SIGNAL_TYPES:
+        return "heuristic"
+    return "other"
+
+
 def build_proctor_review_payload(
     *,
     quiz: dict[str, Any],
@@ -57,12 +68,14 @@ def build_proctor_review_payload(
         attempt for attempt in attempts
         if (attempt.get("violation_count") or 0) > 0 and attempt.get("status") == "submitted"
     ]
+    signal_breakdown = Counter(classify_signal_family(item["violation_type"]) for item in incidents)
 
     timeline = [
         {
             "id": incident["id"],
             "student_name": incident["student_name"],
             "incident_type": incident["incident_type"],
+            "signal_family": classify_signal_family(incident["violation_type"]),
             "severity": incident["severity"],
             "action_taken": incident["action_taken"],
             "details": incident.get("details") or {},
@@ -126,6 +139,22 @@ def build_proctor_review_payload(
     evidence_strength = _infer_evidence_strength(incidents, terminated_attempts, top_incident_type)
     review_priority = _infer_review_priority(terminated_attempts, severity_totals, len(incidents))
     debarrment_guidance = _build_debar_guidance(terminated_attempts, top_incident_type)
+    evidence_posture_reason = _build_evidence_posture_reason(signal_breakdown, terminated_attempts, top_incident_type)
+    evidence_snapshots = [
+        {
+            "id": incident["id"],
+            "image_url": (incident.get("details") or {}).get("evidence_image_url"),
+            "violation_type": incident["violation_type"],
+            "signal_family": classify_signal_family(incident["violation_type"]),
+            "action_taken": incident["action_taken"],
+            "captured_at": incident["created_at"],
+            "details": incident.get("details") or {},
+        }
+        for incident in sorted(incidents, key=lambda item: item["created_at"], reverse=True)
+        if (incident.get("details") or {}).get("evidence_image_url")
+    ][:3]
+    final_case_reason = terminated_attempts[0].get("termination_reason") if terminated_attempts else None
+    teacher_review_required = bool(terminated_attempts) or case_posture in {"review_required", "debarrment_candidate"}
 
     educator_recommendations = []
     if terminated_attempts:
@@ -158,11 +187,20 @@ def build_proctor_review_payload(
     return {
         "quiz_id": quiz["id"],
         "quiz_title": quiz["title"],
+        "assessment_type": "quiz",
+        "final_case_reason": final_case_reason,
+        "teacher_review_required": teacher_review_required,
         "overall_severity": overall_severity,
         "review_summary": review_summary,
         "case_posture": case_posture,
         "evidence_strength": evidence_strength,
+        "evidence_posture_reason": evidence_posture_reason,
         "review_priority": review_priority,
+        "signal_breakdown": {
+            "hard_rule": signal_breakdown.get("hard_rule", 0),
+            "heuristic": signal_breakdown.get("heuristic", 0),
+            "other": signal_breakdown.get("other", 0),
+        },
         "incident_totals": {
             "total_incidents": len(incidents),
             "warning_events": action_counts.get("warning", 0),
@@ -180,6 +218,12 @@ def build_proctor_review_payload(
         ],
         "student_summaries": student_summaries,
         "timeline": timeline[:12],
+        "evidence_snapshots": evidence_snapshots,
+        "latest_decisive_signals": [
+            describe_violation(item["violation_type"])
+            for item in sorted(incidents, key=lambda incident: incident["created_at"], reverse=True)
+            if infer_incident_severity(item["violation_type"], item.get("action_taken") or "recorded") in {"high", "critical"}
+        ][:3],
         "debarrment_guidance": debarrment_guidance,
         "follow_up_actions": follow_up_actions,
         "educator_recommendations": educator_recommendations,
@@ -285,6 +329,20 @@ def _build_follow_up_actions(
             }
         )
     return actions
+
+
+def _build_evidence_posture_reason(
+    signal_breakdown: Counter,
+    terminated_attempts: list[dict[str, Any]],
+    top_incident_type: str | None,
+) -> str:
+    if terminated_attempts and signal_breakdown.get("hard_rule"):
+        return "The attempt ended after hard-rule violations, so the evidence posture is stronger than heuristic-only warnings."
+    if signal_breakdown.get("heuristic") and not signal_breakdown.get("hard_rule"):
+        return "The review is driven mainly by camera heuristics, so the teacher should confirm context before finalizing misconduct."
+    if top_incident_type:
+        return f"The case is being shaped mostly by {describe_violation(top_incident_type).lower()}."
+    return "There is limited signal evidence for this review."
 
 
 def serialize_proctor_incident_row(
