@@ -72,3 +72,46 @@ test("fetchBackendWithFallback preserves the first backend response detail acros
   );
   assert.equal(attempt, 2);
 });
+
+test("requestBackendJson retries the alternate hosted backend path when the first successful response has no JSON payload", async () => {
+  process.env.NEXT_PUBLIC_API_URL = "https://api.biomentor.example";
+  const backendApi = await loadBackendApiModule();
+
+  global.window = {
+    location: { hostname: "biomentor-ai-delta.vercel.app" },
+  };
+
+  let attempt = 0;
+  global.fetch = async (url) => {
+    attempt += 1;
+
+    if (attempt === 1) {
+      assert.equal(url, "/api/backend/auth/login");
+      return new Response("", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    assert.equal(url, "https://api.biomentor.example/api/auth/login");
+    return new Response(
+      JSON.stringify({
+        access_token: "demo-token",
+        token_type: "bearer",
+        user: { id: "u1", role: "student" },
+      }),
+      {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      },
+    );
+  };
+
+  const payload = await backendApi.requestBackendJson("/auth/login", {
+    method: "POST",
+    body: { email: "student@example.com", password: "secret123" },
+  });
+
+  assert.equal(attempt, 2);
+  assert.equal(payload.access_token, "demo-token");
+});

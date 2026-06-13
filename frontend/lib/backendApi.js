@@ -108,27 +108,64 @@ export async function requestBackendJson(path, options = {}, runtime = {}) {
   const resolvedBody = body == null || isFormData || typeof body === 'string'
     ? body
     : JSON.stringify(body)
-
-  const response = await fetchBackendWithFallback(path, {
-    ...options,
-    method,
-    headers: {
-      ...(resolvedBody != null && !isFormData && typeof resolvedBody !== 'string' ? { 'Content-Type': 'application/json' } : {}),
-      ...(resolvedBody != null && typeof resolvedBody === 'string' && !(options.headers || {})['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
-      ...(options.headers || {}),
-    },
-    body: resolvedBody,
-  }, runtime)
-
-  if (response.status === 204) {
-    return null
+  const headers = {
+    ...(resolvedBody != null && !isFormData && typeof resolvedBody !== 'string' ? { 'Content-Type': 'application/json' } : {}),
+    ...(resolvedBody != null && typeof resolvedBody === 'string' && !(options.headers || {})['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
+    ...(options.headers || {}),
   }
 
-  const payload = await response.json().catch(() => null)
-  if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || (await readErrorDetail(response)) || 'Request failed')
+  const defaultRetryOnStatuses = ['GET', 'HEAD'].includes(method)
+    ? [401, 403, 404, 408, 409, 413, 429, 500, 502, 503, 504]
+    : [401, 403, 404, 408, 409, 413, 429, 502, 503, 504]
+  const { preferProxy = isHostedFrontend(), retryOnStatuses = defaultRetryOnStatuses } = runtime
+  const candidates = buildBackendCandidates(path, { preferProxy })
+  const canRetryEmptyJson = candidates.length > 1 && !isFormData
+  let lastError = null
+
+  for (let index = 0; index < candidates.length; index += 1) {
+    const url = candidates[index]
+
+    let response
+    try {
+      response = await fetch(url, {
+        ...options,
+        method,
+        headers,
+        body: resolvedBody,
+      })
+    } catch (error) {
+      lastError = error
+      continue
+    }
+
+    if (response.status === 204) {
+      return null
+    }
+
+    const payload = await response.clone().json().catch(() => null)
+    if (response.ok) {
+      if (payload != null) {
+        return payload
+      }
+
+      const shouldRetryEmptyJson = canRetryEmptyJson && index < candidates.length - 1
+      if (shouldRetryEmptyJson) {
+        lastError = new Error('Backend returned an empty JSON response.')
+        continue
+      }
+
+      throw new Error('Backend returned an empty JSON response.')
+    }
+
+    const shouldRetry = index < candidates.length - 1 && retryOnStatuses.includes(response.status)
+    const error = new Error(payload?.detail || payload?.message || (await readErrorDetail(response)) || 'Request failed')
+    if (!shouldRetry) {
+      throw error
+    }
+    lastError = error
   }
-  return payload
+
+  throw lastError || new Error('Unable to reach the backend service.')
 }
 
 export function toWebSocketBase() {
