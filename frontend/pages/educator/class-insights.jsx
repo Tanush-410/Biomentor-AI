@@ -6,6 +6,7 @@ import AISpotlightBanner from '../../components/AISpotlightBanner'
 import CircularProgress from '../../components/CircularProgress'
 import { CopilotRecommendationCard, EducatorCopilotPanel } from '../../components/EducatorCopilotPanel'
 import { useAuth } from '../../context/AuthContext'
+import { requestBackendJson } from '../../lib/backendApi'
 
 export default function ClassInsightsPage() {
   const router = useRouter()
@@ -29,21 +30,16 @@ export default function ClassInsightsPage() {
 
   const loadInsights = async () => {
     try {
-      const [response, copilotResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/class-insights`, {
+      const [payload, copilotPayload] = await Promise.all([
+        requestBackendJson('/educator/class-insights', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/copilot/class-insights`, {
+        requestBackendJson('/educator/copilot/class-insights', {
           headers: { Authorization: `Bearer ${token}` }
-        })
+        }).catch(() => null)
       ])
-      const payload = await response.json().catch(() => ({}))
-      const copilotPayload = await copilotResponse.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not load class insights')
-      }
       setInsights(payload)
-      setCopilot(copilotResponse.ok ? copilotPayload : null)
+      setCopilot(copilotPayload)
     } catch (err) {
       setError(err.message || 'Could not load class insights')
     }

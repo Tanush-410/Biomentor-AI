@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import AppShell from '../../components/AppShell'
 import AISpotlightBanner from '../../components/AISpotlightBanner'
 import { useAuth } from '../../context/AuthContext'
+import { normalizeListPayload } from '../../lib/backendApi'
 import { createClassroomExam, createClassroomExamDraft, listClassrooms, listDocuments } from '../../lib/classroomApi'
 
 const BLOCK_TYPES = [
@@ -165,8 +166,8 @@ export default function EducatorExamMakerPage() {
         listClassrooms(token),
         listDocuments(token)
       ])
-      const classroomList = classroomPayload.classrooms || classroomPayload || []
-      const documentList = documentPayload || []
+      const classroomList = normalizeListPayload(classroomPayload, 'classrooms')
+      const documentList = normalizeListPayload(documentPayload, 'documents')
       setClassrooms(classroomList)
       setDocuments(documentList)
       setForm((current) => ({

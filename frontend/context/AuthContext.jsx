@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { requestBackendJson } from '../lib/backendApi'
 
 const AuthContext = createContext()
 
@@ -25,18 +26,14 @@ export function AuthProvider({ children }) {
 
       if (savedToken && !savedUser) {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+          const profile = await requestBackendJson('/auth/me', {
             headers: { Authorization: `Bearer ${savedToken}` }
           })
-          if (response.ok) {
-            const profile = await response.json()
-            setUser(profile)
-            localStorage.setItem('user', JSON.stringify(profile))
-          } else {
-            localStorage.removeItem('token')
-          }
+          setUser(profile)
+          localStorage.setItem('user', JSON.stringify(profile))
         } catch (error) {
           console.error('Auth profile fetch failed:', error)
+          localStorage.removeItem('token')
         }
       }
 
@@ -66,14 +63,17 @@ export function AuthProvider({ children }) {
 
   const refreshUser = async () => {
     if (!token) return null
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    if (!response.ok) return null
-    const profile = await response.json()
-    setUser(profile)
-    localStorage.setItem('user', JSON.stringify(profile))
-    return profile
+    try {
+      const profile = await requestBackendJson('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUser(profile)
+      localStorage.setItem('user', JSON.stringify(profile))
+      return profile
+    } catch (error) {
+      console.error('Auth refresh failed:', error)
+      return null
+    }
   }
 
   return (

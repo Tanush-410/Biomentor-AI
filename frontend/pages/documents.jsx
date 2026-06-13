@@ -8,7 +8,7 @@ import AISpotlightBanner from '../components/AISpotlightBanner'
 import MaterialIntelligencePanel from '../components/MaterialIntelligencePanel'
 import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
-import { fetchBackendWithFallback, readErrorDetail } from '../lib/backendApi'
+import { fetchBackendWithFallback, normalizeListPayload, readErrorDetail } from '../lib/backendApi'
 import { getOfflineDocument } from '../lib/offlineDocuments'
 
 const fetchDocumentEndpoint = async (path, options = {}) => {
@@ -59,7 +59,7 @@ export default function DocumentsPage() {
 
       if (response.ok) {
         const payload = await response.json()
-        const docs = payload || []
+        const docs = normalizeListPayload(payload, 'documents')
         setDocuments(docs)
         hydrateOfflineStatus(docs)
         loadStudyCoachMaterials()

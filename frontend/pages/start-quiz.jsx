@@ -5,6 +5,7 @@ import { Brain, Clock, FileText } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
+import { normalizeListPayload, requestBackendJson } from '../lib/backendApi'
 
 const BLOOM_LEVELS = [
   { level: 1, name: 'Remember', description: 'Recall facts and definitions' },
@@ -50,14 +51,10 @@ export default function StartQuizPage() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const payload = await requestBackendJson('/documents/', {
+        headers: { Authorization: `Bearer ${token}` }
       })
-
-      if (response.ok) {
-        const payload = await response.json()
-        setDocuments(payload || [])
-      }
+      setDocuments(normalizeListPayload(payload))
     } catch (err) {
       console.error('Error fetching documents:', err)
     }
@@ -68,45 +65,38 @@ export default function StartQuizPage() {
     setError('')
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/generate`, {
+      const payload = await requestBackendJson('/quiz/generate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
+        body: {
           num_questions: numQuestions,
           bloom_level: selectedLevel,
           document_ids: selectedDoc ? [selectedDoc] : [],
           duration_minutes: duration
-        })
+        }
       })
 
-      if (response.ok) {
-        const payload = await response.json()
-        const questions = Array.isArray(payload?.questions) ? payload.questions : []
+      const questions = Array.isArray(payload?.questions) ? payload.questions : []
 
-        if (questions.length === 0) {
-          setError('We could not generate a usable quiz from that material yet. Try another file or choose a different Bloom level.')
-          return
-        }
-
-        sessionStorage.setItem('quizConfig', JSON.stringify({
-          numQuestions,
-          duration,
-          documentId: selectedDoc,
-          sessionId: payload.session_id || null,
-          bloomLevel: selectedLevel
-        }))
-        sessionStorage.setItem('generatedQuestions', JSON.stringify(questions))
-        router.push('/quiz-session')
-      } else {
-        const payload = await response.json().catch(() => ({}))
-        setError(payload?.detail || 'Failed to generate quiz')
+      if (questions.length === 0) {
+        setError('We could not generate a usable quiz from that material yet. Try another file or choose a different Bloom level.')
+        return
       }
+
+      sessionStorage.setItem('quizConfig', JSON.stringify({
+        numQuestions,
+        duration,
+        documentId: selectedDoc,
+        sessionId: payload.session_id || null,
+        bloomLevel: selectedLevel
+      }))
+      sessionStorage.setItem('generatedQuestions', JSON.stringify(questions))
+      router.push('/quiz-session')
     } catch (err) {
       console.error('Start quiz error:', err)
-      setError('Unable to connect to the server.')
+      setError(err.message || 'Unable to connect to the server.')
     } finally {
       setLoading(false)
     }

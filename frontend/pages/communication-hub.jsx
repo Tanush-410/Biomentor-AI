@@ -5,6 +5,7 @@ import AppShell from '../components/AppShell'
 import AISpotlightBanner from '../components/AISpotlightBanner'
 import { CopilotDraftCard, EducatorCopilotPanel } from '../components/EducatorCopilotPanel'
 import { useAuth } from '../context/AuthContext'
+import { requestBackendJson, toWebSocketBase } from '../lib/backendApi'
 
 export default function CommunicationHubPage() {
   const router = useRouter()
@@ -33,8 +34,10 @@ export default function CommunicationHubPage() {
   useEffect(() => {
     if (!token || !['educator', 'admin'].includes(user?.role)) return undefined
 
-    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const apiBase = process.env.NEXT_PUBLIC_API_URL.replace(/^http/, wsProtocol)
+    const apiBase = toWebSocketBase()
+    if (!apiBase) {
+      return undefined
+    }
     const ws = new WebSocket(`${apiBase}/api/educator/notifications/ws?token=${encodeURIComponent(token)}`)
 
     ws.onmessage = (event) => {
@@ -65,30 +68,18 @@ export default function CommunicationHubPage() {
 
   const loadCommunications = async () => {
     try {
-      const [copilotResponse, messagesResponse, complaintsResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/copilot/communication`, {
+      const [copilotPayload, messagesPayload, complaintsPayload] = await Promise.all([
+        requestBackendJson('/educator/copilot/communication', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/messages`, {
+        requestBackendJson('/educator/messages', {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/complaints`, {
+        requestBackendJson('/educator/complaints', {
           headers: { Authorization: `Bearer ${token}` }
         })
       ])
-
-      const copilotPayload = await copilotResponse.json().catch(() => ({}))
-      const messagesPayload = await messagesResponse.json().catch(() => ({}))
-      const complaintsPayload = await complaintsResponse.json().catch(() => ({}))
-
-      if (!messagesResponse.ok) {
-        throw new Error(messagesPayload.detail || 'Could not load communications')
-      }
-      if (!complaintsResponse.ok) {
-        throw new Error(complaintsPayload.detail || 'Could not load complaints')
-      }
-
-      setCopilot(copilotResponse.ok ? copilotPayload : null)
+      setCopilot(copilotPayload || null)
       setMessages(messagesPayload.messages || [])
       setComplaints(complaintsPayload.complaints || [])
     } catch (err) {
@@ -109,18 +100,13 @@ export default function CommunicationHubPage() {
     setSaving(true)
     setError('')
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/messages`, {
+      await requestBackendJson('/educator/messages', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(form)
+        body: form
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not send communication')
-      }
       setForm({ subject: '', content: '', audience: 'student' })
       loadCommunications()
     } catch (err) {
@@ -132,14 +118,10 @@ export default function CommunicationHubPage() {
 
   const resolveComplaint = async (complaintId) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/complaints/${complaintId}/resolve`, {
+      await requestBackendJson(`/educator/complaints/${complaintId}/resolve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not resolve complaint')
-      }
       setComplaints((current) => current.map((item) => item.id === complaintId ? { ...item, status: 'resolved' } : item))
     } catch (err) {
       setError(err.message || 'Could not resolve complaint')

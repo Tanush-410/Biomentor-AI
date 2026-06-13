@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import AppShell from '../../components/AppShell'
 import AISpotlightBanner from '../../components/AISpotlightBanner'
 import { useAuth } from '../../context/AuthContext'
+import { normalizeListPayload } from '../../lib/backendApi'
 import {
   createClassroomCertification,
   draftClassroomCertification,
@@ -102,13 +103,14 @@ export default function EducatorCertificationPage() {
         listClassrooms(token),
         listDocuments(token)
       ])
-      const nextClassrooms = classroomPayload.classrooms || classroomPayload || []
+      const nextClassrooms = normalizeListPayload(classroomPayload, 'classrooms')
+      const nextDocuments = normalizeListPayload(documentPayload, 'documents')
       setClassrooms(nextClassrooms)
-      setDocuments(documentPayload || [])
+      setDocuments(nextDocuments)
       setForm((current) => ({
         ...current,
         classroom_id: current.classroom_id || nextClassrooms?.[0]?.id || '',
-        linked_material_ids: current.linked_material_ids.length ? current.linked_material_ids : (documentPayload || []).slice(0, 2).map((item) => item.id)
+        linked_material_ids: current.linked_material_ids.length ? current.linked_material_ids : nextDocuments.slice(0, 2).map((item) => item.id)
       }))
     } catch (err) {
       setError(err.message || 'Could not load certification authoring data.')

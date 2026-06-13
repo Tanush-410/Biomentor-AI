@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import AppShell from '../../components/AppShell'
 import AISpotlightBanner from '../../components/AISpotlightBanner'
 import { useAuth } from '../../context/AuthContext'
+import { backendOrigin } from '../../lib/backendApi'
 import {
   excuseAnticheatBotCase,
   getAnticheatBotCaseDetail,
@@ -457,7 +458,7 @@ function ProtectedEvidenceImage({ token, cache, setCache, snapshot }) {
       }
 
       try {
-        const base = process.env.NEXT_PUBLIC_API_URL || ''
+        const base = backendOrigin()
         const targetUrl = snapshot.image_url.startsWith('http') ? snapshot.image_url : `${base}${snapshot.image_url}`
         const response = await fetch(targetUrl, {
           headers: {

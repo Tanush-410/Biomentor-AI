@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 
 import AppShell from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
+import { requestBackendJson } from '../lib/backendApi'
 
 const BLOOM_LEVELS = [
   { level: 1, name: 'Remember', tone: 'border-stone-200 bg-stone-50 text-stone-700' },
@@ -55,20 +56,13 @@ export default function CheckDifficultyPage() {
     setError('')
     setAnalyzing(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/analyze-level`, {
+      const data = await requestBackendJson('/quiz/analyze-level', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ question_text: question })
+        body: { question_text: question }
       })
-
-      if (!response.ok) {
-        throw new Error('Error analyzing question')
-      }
-
-      const data = await response.json()
       setAnalyzeResult(data)
     } catch (err) {
       console.error('Error analyzing level:', err)
@@ -87,19 +81,13 @@ export default function CheckDifficultyPage() {
     setError('')
     setGeneratingAll(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/generate-level-variants`, {
+      const data = await requestBackendJson('/quiz/generate-level-variants', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ question_text: question })
+        body: { question_text: question }
       })
-
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(data?.detail || 'Error generating all Bloom variants')
-      }
 
       setAnalyzeResult({
         level: data.identified_level,
@@ -127,25 +115,17 @@ export default function CheckDifficultyPage() {
     setError('')
     setConverting(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/convert-difficulty`, {
+      const data = await requestBackendJson('/quiz/convert-difficulty', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
+        body: {
           question_text: question,
           current_level: analyzeResult.level,
           target_level: targetLevel
-        })
+        }
       })
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}))
-        throw new Error(payload?.detail || 'Error converting question')
-      }
-
-      const data = await response.json()
       setConvertedQuestion(data)
     } catch (err) {
       console.error('Error converting question:', err)

@@ -1,3 +1,5 @@
+const DEFAULT_HOSTED_BACKEND_ORIGIN = 'https://biomentor-ai.onrender.com'
+
 const normalizeApiBase = (baseUrl = '') => String(baseUrl || '').replace(/\/+$/, '')
 
 function browserHostname() {
@@ -14,8 +16,20 @@ export function isHostedFrontend() {
   )
 }
 
+function configuredBackendOrigin() {
+  const configured = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '')
+  if (configured) {
+    return configured
+  }
+  return isHostedFrontend() ? DEFAULT_HOSTED_BACKEND_ORIGIN : ''
+}
+
+export function backendOrigin() {
+  return configuredBackendOrigin()
+}
+
 export function directBackendApi(path = '') {
-  const base = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '')
+  const base = configuredBackendOrigin()
   return base ? `${base}/api${path}` : null
 }
 
@@ -37,6 +51,21 @@ export async function readErrorDetail(response) {
     return payload.detail || payload.message
   }
   return response.text().catch(() => '')
+}
+
+export function normalizeListPayload(payload, keys = []) {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  const candidateKeys = Array.isArray(keys) ? keys : [keys]
+  for (const key of candidateKeys) {
+    if (Array.isArray(payload?.[key])) {
+      return payload[key]
+    }
+  }
+
+  return []
 }
 
 export async function fetchBackendWithFallback(path, options = {}, runtime = {}) {
@@ -72,8 +101,38 @@ export async function fetchBackendWithFallback(path, options = {}, runtime = {})
   throw firstBackendError || lastError || new Error('Unable to reach the backend service.')
 }
 
+export async function requestBackendJson(path, options = {}, runtime = {}) {
+  const method = String(options.method || 'GET').toUpperCase()
+  const body = options.body
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+  const resolvedBody = body == null || isFormData || typeof body === 'string'
+    ? body
+    : JSON.stringify(body)
+
+  const response = await fetchBackendWithFallback(path, {
+    ...options,
+    method,
+    headers: {
+      ...(resolvedBody != null && !isFormData && typeof resolvedBody !== 'string' ? { 'Content-Type': 'application/json' } : {}),
+      ...(resolvedBody != null && typeof resolvedBody === 'string' && !(options.headers || {})['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {}),
+    },
+    body: resolvedBody,
+  }, runtime)
+
+  if (response.status === 204) {
+    return null
+  }
+
+  const payload = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(payload?.detail || payload?.message || (await readErrorDetail(response)) || 'Request failed')
+  }
+  return payload
+}
+
 export function toWebSocketBase() {
-  const configuredBase = normalizeApiBase(process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '')
+  const configuredBase = normalizeApiBase(process.env.NEXT_PUBLIC_WS_URL || configuredBackendOrigin())
   if (!configuredBase) return ''
   if (configuredBase.startsWith('https://')) return configuredBase.replace('https://', 'wss://')
   if (configuredBase.startsWith('http://')) return configuredBase.replace('http://', 'ws://')

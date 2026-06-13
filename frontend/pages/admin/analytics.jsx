@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import AppShell from '../../components/AppShell'
 import CircularProgress from '../../components/CircularProgress'
 import { useAuth } from '../../context/AuthContext'
+import { requestBackendJson } from '../../lib/backendApi'
 
 export default function AdminAnalyticsPage() {
   const router = useRouter()
@@ -26,13 +27,9 @@ export default function AdminAnalyticsPage() {
 
   const loadAnalytics = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/analytics`, {
+      const payload = await requestBackendJson('/admin/analytics', {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not load admin analytics')
-      }
       setAnalytics(payload)
     } catch (err) {
       setError(err.message || 'Could not load admin analytics')

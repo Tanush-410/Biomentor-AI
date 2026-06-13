@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import ClassroomIntelligencePanel from '../../../components/ClassroomIntelligencePanel'
 import ClassroomShell from '../../../components/ClassroomShell'
 import { useAuth } from '../../../context/AuthContext'
+import { normalizeListPayload } from '../../../lib/backendApi'
 import { normalizeClassroomId, shouldApplyClassroomResponse } from '../../../lib/classroomRouteState'
 import {
   createClassroomAssignment,
@@ -78,10 +79,11 @@ export default function ClassroomClassworkPage() {
       setCertifications(classworkPayload.certifications || [])
       setExams(examPayload.exams || [])
       setIntelligence(intelligencePayload)
-      setDocuments(documentPayload || [])
-      if ((documentPayload || []).length > 0) {
-        setMaterialForm((current) => ({ ...current, document_id: current.document_id || documentPayload[0].id }))
-        setAssignmentForm((current) => ({ ...current, document_id: current.document_id || documentPayload[0].id }))
+      const nextDocuments = normalizeListPayload(documentPayload, 'documents')
+      setDocuments(nextDocuments)
+      if (nextDocuments.length > 0) {
+        setMaterialForm((current) => ({ ...current, document_id: current.document_id || nextDocuments[0].id }))
+        setAssignmentForm((current) => ({ ...current, document_id: current.document_id || nextDocuments[0].id }))
       }
     } catch (err) {
       if (requestSequence.current === requestId) {

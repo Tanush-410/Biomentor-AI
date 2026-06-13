@@ -11,6 +11,8 @@ const HOP_BY_HOP_HEADERS = new Set([
   'upgrade',
 ])
 
+const DEFAULT_HOSTED_BACKEND_ORIGIN = 'https://biomentor-ai.onrender.com'
+
 export const config = {
   api: {
     bodyParser: false,
@@ -18,7 +20,7 @@ export const config = {
 }
 
 function buildTargetUrl(pathSegments, query) {
-  const baseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '')
+  const baseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_HOSTED_BACKEND_ORIGIN).replace(/\/+$/, '')
   const normalizedPath = pathSegments.join('/')
   const needsTrailingSlash = pathSegments.length === 1 && pathSegments[0] === 'documents'
   const target = new URL(`${baseUrl}/api/${normalizedPath}${needsTrailingSlash ? '/' : ''}`)
@@ -60,11 +62,6 @@ export default async function handler(req, res) {
   const pathSegments = Array.isArray(req.query.path) ? req.query.path : [req.query.path].filter(Boolean)
   if (!pathSegments.length) {
     res.status(400).json({ detail: 'Missing backend path.' })
-    return
-  }
-
-  if (!process.env.API_URL && !process.env.NEXT_PUBLIC_API_URL) {
-    res.status(500).json({ detail: 'Backend API URL is not configured.' })
     return
   }
 

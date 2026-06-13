@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { requestBackendJson } from '../lib/backendApi'
 
 const ROLE_OPTIONS = [
   { value: 'student', label: 'Student', hint: 'Upload study material, practice quizzes, and track Bloom’s progress.' },
@@ -44,10 +45,9 @@ export default function Register() {
     setLoading(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      await requestBackendJson('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           email: formData.email,
           password: formData.password,
           full_name: formData.full_name,
@@ -55,13 +55,8 @@ export default function Register() {
           institution_name: formData.institution_name || null,
           focus_area: formData.focus_area || null,
           class_code: formData.class_code || null
-        })
+        }
       })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.detail || 'Registration failed')
-      }
 
       router.push(`/login?mode=${formData.role}`)
     } catch (err) {

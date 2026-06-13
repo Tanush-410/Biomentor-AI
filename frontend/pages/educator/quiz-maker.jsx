@@ -7,6 +7,7 @@ import AppShell from '../../components/AppShell'
 import AISpotlightBanner from '../../components/AISpotlightBanner'
 import QuizQualityPanel from '../../components/QuizQualityPanel'
 import { useAuth } from '../../context/AuthContext'
+import { normalizeListPayload, requestBackendJson } from '../../lib/backendApi'
 import { createClassroomQuiz, listClassrooms, listDocuments } from '../../lib/classroomApi'
 
 const BLOOM_LEVELS = [
@@ -96,8 +97,8 @@ export default function EducatorQuizMakerPage() {
         listClassrooms(token),
         listDocuments(token)
       ])
-      const classroomList = classroomPayload.classrooms || classroomPayload || []
-      const documentList = documentPayload || []
+      const classroomList = normalizeListPayload(classroomPayload, 'classrooms')
+      const documentList = normalizeListPayload(documentPayload, 'documents')
       setClassrooms(classroomList)
       setDocuments(documentList)
       setForm((current) => ({
@@ -194,18 +195,13 @@ export default function EducatorQuizMakerPage() {
     setReviewing(true)
     setReviewError('')
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/quiz-quality/review`, {
+      const payload = await requestBackendJson('/educator/quiz-quality/review', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(buildReviewPayload())
+        body: buildReviewPayload()
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || payload.message || 'Could not review quiz quality.')
-      }
       setQualityReview(payload)
     } catch (err) {
       setReviewError(err.message || 'Could not review quiz quality.')

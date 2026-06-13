@@ -8,6 +8,7 @@ import AISpotlightBanner from '../components/AISpotlightBanner'
 import QuickCheckCard from '../components/QuickCheckCard'
 import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
+import { normalizeListPayload, requestBackendJson } from '../lib/backendApi'
 
 export default function LearningChatPage() {
   const router = useRouter()
@@ -42,15 +43,13 @@ export default function LearningChatPage() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const payload = await requestBackendJson('/documents/', {
+        headers: { Authorization: `Bearer ${token}` }
       })
-      if (response.ok) {
-        const payload = await response.json()
-        setDocuments(payload || [])
-        if (payload?.[0]?.id) {
-          setSelectedDocumentId(String(payload[0].id))
-        }
+      const nextDocuments = normalizeListPayload(payload)
+      setDocuments(nextDocuments)
+      if (nextDocuments[0]?.id) {
+        setSelectedDocumentId(String(nextDocuments[0].id))
       }
       fetchStudyCoachSuggestions()
     } catch (err) {
@@ -60,13 +59,10 @@ export default function LearningChatPage() {
 
   const fetchStudyCoachSuggestions = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/chat-suggestions`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const payload = await requestBackendJson('/study-coach/chat-suggestions', {
+        headers: { Authorization: `Bearer ${token}` }
       })
-      if (response.ok) {
-        const payload = await response.json()
-        setChatCoach(payload)
-      }
+      setChatCoach(payload)
     } catch (err) {
       console.error('Failed to load study coach chat suggestions:', err)
     }
@@ -95,49 +91,34 @@ export default function LearningChatPage() {
           content: message.content
         }))
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/qa/answer`, {
+      const payload = await requestBackendJson('/qa/answer', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
+        body: {
           question,
           document_ids: selectedDocumentId ? [selectedDocumentId] : undefined,
           include_sources: true,
           conversation_history: conversationHistory
-        })
+        }
       })
 
-      if (response.ok) {
-        const payload = await response.json()
-        setMessages((current) => [
-          ...current,
-          {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: payload.answer,
-            sources: payload.sources || [],
-            answerOrigin: payload.answer_origin || 'material',
-            sourceBadge: payload.source_badge || null,
-            confidenceLabel: payload.confidence_label || 'medium',
-            confidenceReason: payload.confidence_reason || '',
-            fallbackUsed: Boolean(payload.fallback_used),
-            quickCheck: payload.quick_check || null
-          }
-        ])
-      } else {
-        const payload = await response.json().catch(() => ({}))
-        setMessages((current) => [
-          ...current,
-          {
-            id: `assistant-error-${Date.now()}`,
-            role: 'assistant',
-            content: payload?.detail || 'I could not answer from your material right now.',
-            sources: []
-          }
-        ])
-      }
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: payload.answer,
+          sources: payload.sources || [],
+          answerOrigin: payload.answer_origin || 'material',
+          sourceBadge: payload.source_badge || null,
+          confidenceLabel: payload.confidence_label || 'medium',
+          confidenceReason: payload.confidence_reason || '',
+          fallbackUsed: Boolean(payload.fallback_used),
+          quickCheck: payload.quick_check || null
+        }
+      ])
     } catch (err) {
       console.error('Chat request failed:', err)
       setMessages((current) => [
@@ -145,7 +126,7 @@ export default function LearningChatPage() {
         {
           id: `assistant-error-${Date.now()}`,
           role: 'assistant',
-          content: 'I could not reach the server. Please try again.',
+          content: err.message || 'I could not reach the server. Please try again.',
           sources: []
         }
       ])

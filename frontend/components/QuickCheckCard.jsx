@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { requestBackendJson } from '../lib/backendApi'
 
 export default function QuickCheckCard({ quickCheck, token }) {
   const [selectedAnswers, setSelectedAnswers] = useState({})
@@ -13,25 +14,21 @@ export default function QuickCheckCard({ quickCheck, token }) {
     if (!quickCheck?.questions?.length) return
     setSubmitting(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/qa/quick-check/evaluate`, {
+      const payload = await requestBackendJson('/qa/quick-check/evaluate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
+        body: {
           quick_check_id: quickCheck.id,
           quick_check: quickCheck,
           answers: quickCheck.questions.map((question) => ({
             question_id: question.id,
             selected_option_id: selectedAnswers[question.id] || ''
           }))
-        })
+        }
       })
-      const payload = await response.json()
-      if (response.ok) {
-        setFeedback(payload)
-      }
+      setFeedback(payload)
     } catch (error) {
       console.error('Quick check evaluation failed:', error)
     } finally {

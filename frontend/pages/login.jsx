@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { GraduationCap, School2 } from 'lucide-react'
 
 import { useAuth } from '../context/AuthContext'
+import { requestBackendJson } from '../lib/backendApi'
 
 const ROLE_MODES = [
   {
@@ -59,16 +60,10 @@ export default function Login() {
     setError('')
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const data = await requestBackendJson('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, desired_role: mode })
+        body: { email, password, desired_role: mode }
       })
-
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(data.detail || 'Invalid email or password')
-      }
 
       login(data.access_token, data.user)
 

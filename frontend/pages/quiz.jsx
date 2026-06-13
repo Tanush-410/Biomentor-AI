@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Brain, ArrowDown, ArrowUp, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
+import { requestBackendJson } from '../lib/backendApi'
 
 export default function QuizPage() {
   const { token } = useAuth()
@@ -20,29 +21,19 @@ export default function QuizPage() {
     
     setAnalyzing(true)
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/quiz/analyze-level`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            question_text: question
-          })
+      const data = await requestBackendJson('/quiz/analyze-level', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: {
+          question_text: question
         }
-      )
-      
-      if (response.ok) {
-        const data = await response.json()
-        setAnalyzeResult(data)
-      } else {
-        alert('Error analyzing question')
-      }
+      })
+      setAnalyzeResult(data)
     } catch (err) {
       console.error('Error analyzing level:', err)
-      alert('Failed to analyze question')
+      alert(err.message || 'Failed to analyze question')
     } finally {
       setAnalyzing(false)
     }
@@ -51,28 +42,21 @@ export default function QuizPage() {
   const handleConvertDifficulty = async () => {
     setLoading(true)
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/quiz/convert-difficulty`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            question_text: question,
-            current_level: bloomLevel,
-            target_level: bloomLevel
-          })
+      const data = await requestBackendJson('/quiz/convert-difficulty', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: {
+          question_text: question,
+          current_level: bloomLevel,
+          target_level: bloomLevel
         }
-      )
-      
-      if (response.ok) {
-        const data = await response.json()
-        setVariants(data.variants)
-      }
+      })
+      setVariants(data.variants)
     } catch (err) {
       console.error('Error converting difficulty:', err)
+      alert(err.message || 'Failed to generate difficulty variants')
     } finally {
       setLoading(false)
     }

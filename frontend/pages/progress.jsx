@@ -9,6 +9,7 @@ import CircularProgress from '../components/CircularProgress'
 import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 import { getMyCertificates } from '../lib/classroomApi'
+import { requestBackendJson } from '../lib/backendApi'
 
 const LEVEL_COLORS = {
   1: 'stroke-slate-500',
@@ -77,34 +78,25 @@ export default function ProgressPage() {
     setLoading(true)
     setError('')
     try {
-      const [response, coachResponse, certificatePayload] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/progress`, {
+      const [progressPayload, coachPayload, certificatePayload] = await Promise.all([
+        requestBackendJson('/quiz/progress', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/progress`, {
+        requestBackendJson('/study-coach/progress', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
         }),
         getMyCertificates(token)
       ])
-
-      if (response.ok) {
-        const payload = await response.json()
-        setProgress(payload)
-        setCertificates(certificatePayload)
-        if (coachResponse.ok) {
-          const coachPayload = await coachResponse.json()
-          setCoachProgress(coachPayload)
-        }
-      } else {
-        setError('Unable to load progress data.')
-      }
+      setProgress(progressPayload)
+      setCoachProgress(coachPayload)
+      setCertificates(certificatePayload)
     } catch (err) {
       console.error('Progress load error:', err)
-      setError('Unable to connect to the server.')
+      setError(err.message || 'Unable to connect to the server.')
     } finally {
       setLoading(false)
     }

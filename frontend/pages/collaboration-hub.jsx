@@ -4,6 +4,7 @@ import { CheckCircle2, Send, Users } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
+import { requestBackendJson, toWebSocketBase } from '../lib/backendApi'
 
 export default function CollaborationHubPage() {
   const router = useRouter()
@@ -34,8 +35,10 @@ export default function CollaborationHubPage() {
   useEffect(() => {
     if (!activeSession || !token) return undefined
 
-    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const apiBase = process.env.NEXT_PUBLIC_API_URL.replace(/^http/, wsProtocol)
+    const apiBase = toWebSocketBase()
+    if (!apiBase) {
+      return undefined
+    }
     const ws = new WebSocket(`${apiBase}/api/collaboration/ws/${activeSession.id}?token=${encodeURIComponent(token)}`)
     socketRef.current = ws
 
@@ -61,13 +64,9 @@ export default function CollaborationHubPage() {
 
   const loadSessions = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions`, {
+      const payload = await requestBackendJson('/collaboration/sessions', {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not load collaboration sessions')
-      }
       setSessions(payload.sessions || [])
     } catch (err) {
       setError(err.message || 'Could not load collaboration sessions')
@@ -76,13 +75,9 @@ export default function CollaborationHubPage() {
 
   const openSession = async (sessionId) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions/${sessionId}`, {
+      const payload = await requestBackendJson(`/collaboration/sessions/${sessionId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not open session')
-      }
       setActiveSession(payload)
       setEvents(payload.events || [])
       loadSummary(sessionId)
@@ -93,13 +88,10 @@ export default function CollaborationHubPage() {
 
   const loadSummary = async (sessionId) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions/${sessionId}/summary`, {
+      const payload = await requestBackendJson(`/collaboration/sessions/${sessionId}/summary`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (response.ok) {
-        setSummary(payload)
-      }
+      setSummary(payload)
     } catch (err) {
       console.error('Summary load error', err)
     }
@@ -108,18 +100,13 @@ export default function CollaborationHubPage() {
   const createSession = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions`, {
+      const payload = await requestBackendJson('/collaboration/sessions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(createForm)
+        body: createForm
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not create session')
-      }
       setCreateForm({ title: '', agenda: '' })
       await loadSessions()
       await openSession(payload.id)
@@ -131,18 +118,13 @@ export default function CollaborationHubPage() {
   const joinSession = async (e) => {
     e.preventDefault()
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions/join`, {
+      const payload = await requestBackendJson('/collaboration/sessions/join', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ join_code: joinCode })
+        body: { join_code: joinCode }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not join session')
-      }
       setJoinCode('')
       await loadSessions()
       await openSession(payload.session_id)
@@ -153,79 +135,72 @@ export default function CollaborationHubPage() {
 
   const sendEvent = async (eventType = 'message') => {
     if (!message.trim() || !activeSession) return
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions/${activeSession.id}/events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ event_type: eventType, content: message })
-    })
-    const payload = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      setError(payload.detail || 'Could not send event')
-      return
+    try {
+      await requestBackendJson(`/collaboration/sessions/${activeSession.id}/events`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: { event_type: eventType, content: message }
+      })
+      setMessage('')
+    } catch (err) {
+      setError(err.message || 'Could not send event')
     }
-    setMessage('')
   }
 
   const createPoll = async (e) => {
     e.preventDefault()
     if (!activeSession) return
     const options = pollForm.options.split('\n').map((option) => option.trim()).filter(Boolean)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions/${activeSession.id}/polls`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ question: pollForm.question, options })
-    })
-    const payload = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      setError(payload.detail || 'Could not create poll')
-      return
+    try {
+      await requestBackendJson(`/collaboration/sessions/${activeSession.id}/polls`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: { question: pollForm.question, options }
+      })
+      setPollForm({ question: '', options: 'Yes\nNo\nNeed review' })
+    } catch (err) {
+      setError(err.message || 'Could not create poll')
     }
-    setPollForm({ question: '', options: 'Yes\nNo\nNeed review' })
   }
 
   const createQuickCheck = async (e) => {
     e.preventDefault()
     if (!activeSession) return
     const options = quickCheckForm.options.split('\n').map((option) => option.trim()).filter(Boolean)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/sessions/${activeSession.id}/quick-checks`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        question: quickCheckForm.question,
-        options,
-        correct_option: quickCheckForm.correct_option,
-        explanation: quickCheckForm.explanation
+    try {
+      await requestBackendJson(`/collaboration/sessions/${activeSession.id}/quick-checks`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: {
+          question: quickCheckForm.question,
+          options,
+          correct_option: quickCheckForm.correct_option,
+          explanation: quickCheckForm.explanation
+        }
       })
-    })
-    const payload = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      setError(payload.detail || 'Could not create quick check')
-      return
+      setQuickCheckForm({ question: '', options: 'A\nB\nC\nD', correct_option: 'A', explanation: '' })
+    } catch (err) {
+      setError(err.message || 'Could not create quick check')
     }
-    setQuickCheckForm({ question: '', options: 'A\nB\nC\nD', correct_option: 'A', explanation: '' })
   }
 
   const respondToEvent = async (eventId, choice) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/collaboration/events/${eventId}/respond`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ choice })
-    })
-    const payload = await response.json().catch(() => ({}))
-    if (!response.ok) {
-      setError(payload.detail || 'Could not submit your response')
+    try {
+      await requestBackendJson(`/collaboration/events/${eventId}/respond`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: { choice }
+      })
+    } catch (err) {
+      setError(err.message || 'Could not send response')
     }
   }
 

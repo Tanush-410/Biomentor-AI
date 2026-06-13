@@ -5,6 +5,7 @@ import AppShell from '../../../components/AppShell'
 import CircularProgress from '../../../components/CircularProgress'
 import ProctorReviewPanel from '../../../components/ProctorReviewPanel'
 import { useAuth } from '../../../context/AuthContext'
+import { requestBackendJson } from '../../../lib/backendApi'
 
 const BLOOM_ORDER = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create']
 
@@ -40,13 +41,9 @@ export default function StudentAnalyticsPage() {
 
   const loadAnalytics = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/student-analytics/${id}`, {
+      const payload = await requestBackendJson(`/educator/student-analytics/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not load student analytics')
-      }
       setAnalytics(payload)
     } catch (err) {
       setError(err.message || 'Could not load student analytics')
@@ -58,18 +55,13 @@ export default function StudentAnalyticsPage() {
     setSaving(true)
     setError('')
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/lessons`, {
+      await requestBackendJson('/educator/lessons', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ ...lessonForm, student_id: id, target_bloom_level: Number(lessonForm.target_bloom_level) })
+        body: { ...lessonForm, student_id: id, target_bloom_level: Number(lessonForm.target_bloom_level) }
       })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || 'Could not assign lesson')
-      }
       setLessonForm({ title: '', instructions: '', target_bloom_level: 3 })
       loadAnalytics()
     } catch (err) {

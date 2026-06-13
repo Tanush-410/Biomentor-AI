@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import AppShell from '../components/AppShell'
 import CircularProgress from '../components/CircularProgress'
 import { useAuth } from '../context/AuthContext'
+import { requestBackendJson } from '../lib/backendApi'
 
 export default function QuizSessionPage() {
   const { token, loading: authLoading } = useAuth()
@@ -59,35 +60,26 @@ export default function QuizSessionPage() {
 
   const loadQuiz = async (config) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/quiz/generate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            num_questions: config.numQuestions,
-            bloom_level: config.bloomLevel || 3,
-            document_ids: config.documentId ? [config.documentId] : [],
-            duration_minutes: config.duration
-          })
+      const data = await requestBackendJson('/quiz/generate', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: {
+          num_questions: config.numQuestions,
+          bloom_level: config.bloomLevel || 3,
+          document_ids: config.documentId ? [config.documentId] : [],
+          duration_minutes: config.duration
         }
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        const normalized = normalizeQuestions(data)
-        if (normalized.length > 0) {
-          setQuizConfig((current) => ({
-            ...(current || config),
-            sessionId: data.session_id || current?.sessionId || null
-          }))
-          setQuestions(normalized)
-          return
-        }
-        setQuestions([])
+      })
+      const normalized = normalizeQuestions(data)
+      if (normalized.length > 0) {
+        setQuizConfig((current) => ({
+          ...(current || config),
+          sessionId: data.session_id || current?.sessionId || null
+        }))
+        setQuestions(normalized)
+        return
       } else {
         setQuestions([])
       }
@@ -161,24 +153,17 @@ export default function QuizSessionPage() {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/quiz/submit-answer`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            session_id: quizConfig?.sessionId,
-            answers: submittedAnswers,
-            total_questions: questions.length
-          })
+      await requestBackendJson('/quiz/submit-answer', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: {
+          session_id: quizConfig?.sessionId,
+          answers: submittedAnswers,
+          total_questions: questions.length
         }
-      )
-      if (!response.ok) {
-        console.error('Error submitting quiz with status:', response.status)
-      }
+      })
     } catch (err) {
       console.error('Error submitting quiz:', err)
     }
