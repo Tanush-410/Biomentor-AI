@@ -8,6 +8,7 @@ import '@fontsource/source-sans-3/700.css'
 import '@fontsource/cormorant-garamond/500.css'
 import '@fontsource/cormorant-garamond/600.css'
 import '@fontsource/cormorant-garamond/700.css'
+import FeatureBoundary from '../components/FeatureBoundary'
 import StickyNotesLayer from '../components/sticky-notes/StickyNotesLayer'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import '../styles/globals.css'
@@ -48,7 +49,9 @@ function AppContent({ Component, pageProps }) {
   return (
     <>
       <Component {...pageProps} />
-      <StickyNotesLayer />
+      <FeatureBoundary name="Sticky notes">
+        <StickyNotesLayer />
+      </FeatureBoundary>
     </>
   )
 }

@@ -9,6 +9,7 @@ import CircularProgress from '../components/CircularProgress'
 import { CopilotPriorityCard, EducatorCopilotPanel } from '../components/EducatorCopilotPanel'
 import { StudyCoachActionList, StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
+import { fetchBackendWithFallback, readErrorDetail, toWebSocketBase } from '../lib/backendApi'
 
 const BLOOM_LABELS = {
   1: 'Remember',
@@ -23,14 +24,23 @@ function normalizeList(value) {
   return Array.isArray(value) ? value : []
 }
 
+function normalizeObjectList(value) {
+  return normalizeList(value).filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+}
+
+function normalizeStringList(value) {
+  return normalizeList(value).filter((item) => typeof item === 'string')
+}
+
 function normalizeEducatorDashboardPayload(payload, messages) {
   return {
     ...(payload || {}),
-    alerts: normalizeList(payload?.alerts),
-    classrooms: normalizeList(payload?.classrooms),
-    complaints: normalizeList(payload?.complaints),
-    live_sessions: normalizeList(payload?.live_sessions),
-    messages: normalizeList(messages),
+    overview: payload?.overview && typeof payload.overview === 'object' ? payload.overview : {},
+    alerts: normalizeObjectList(payload?.alerts),
+    classrooms: normalizeObjectList(payload?.classrooms),
+    complaints: normalizeObjectList(payload?.complaints),
+    live_sessions: normalizeObjectList(payload?.live_sessions),
+    messages: normalizeObjectList(messages),
   }
 }
 
@@ -38,9 +48,9 @@ function normalizeEducatorCopilotPayload(payload) {
   if (!payload) return null
   return {
     ...payload,
-    priorities: normalizeList(payload?.priorities),
-    meeting_follow_ups: normalizeList(payload?.meeting_follow_ups),
-    intervention_plan: normalizeList(payload?.intervention_plan),
+    priorities: normalizeObjectList(payload?.priorities),
+    meeting_follow_ups: normalizeStringList(payload?.meeting_follow_ups),
+    intervention_plan: normalizeStringList(payload?.intervention_plan),
   }
 }
 
@@ -73,17 +83,27 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isEducator || !token) return undefined
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL
-    if (!apiUrl) return undefined
+    const apiBase = toWebSocketBase()
+    if (!apiBase) return undefined
 
-    const wsProtocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws'
-    const apiBase = apiUrl.replace(/^http/, wsProtocol)
+    const notificationsPath = `/api/educator/notifications/ws?token=${encodeURIComponent(token)}`
+    const wsCandidates = [apiBase + notificationsPath]
+    if (typeof window !== 'undefined') {
+      const hostProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+      wsCandidates.push(`${hostProtocol}://${window.location.host}${notificationsPath}`)
+    }
     let ws
 
-    try {
-      ws = new WebSocket(`${apiBase}/api/educator/notifications/ws?token=${encodeURIComponent(token)}`)
-    } catch (wsSetupError) {
-      console.error('Educator notification socket setup error', wsSetupError)
+    for (const candidate of wsCandidates) {
+      try {
+        ws = new WebSocket(candidate)
+        break
+      } catch (wsSetupError) {
+        console.error('Educator notification socket setup error', wsSetupError)
+      }
+    }
+
+    if (!ws) {
       return undefined
     }
 
@@ -189,10 +209,10 @@ export default function Dashboard() {
     setError('')
     try {
       const [documentsResponse, progressResponse, recommendationsResponse, coachResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/documents/`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/quiz/progress`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/recommendations/study-plan`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/study-coach/overview`, { headers: { Authorization: `Bearer ${token}` } })
+        fetchBackendWithFallback('/documents/', { headers: { Authorization: `Bearer ${token}` } }),
+        fetchBackendWithFallback('/quiz/progress', { headers: { Authorization: `Bearer ${token}` } }),
+        fetchBackendWithFallback('/recommendations/study-plan', { headers: { Authorization: `Bearer ${token}` } }),
+        fetchBackendWithFallback('/study-coach/overview', { headers: { Authorization: `Bearer ${token}` } })
       ])
 
       const documents = documentsResponse.ok ? await documentsResponse.json() : []
@@ -208,7 +228,12 @@ export default function Dashboard() {
       setStudyCoach(coachPayload)
 
       if (!documentsResponse.ok && !progressResponse.ok && !recommendationsResponse.ok) {
-        setError('We could not load your dashboard right now.')
+        setError(
+          (await readErrorDetail(documentsResponse))
+          || (await readErrorDetail(progressResponse))
+          || (await readErrorDetail(recommendationsResponse))
+          || 'We could not load your dashboard right now.'
+        )
       }
     } catch (err) {
       console.error('Student dashboard load error:', err)
@@ -223,14 +248,13 @@ export default function Dashboard() {
     setError('')
     try {
       const [dashboardResponse, messagesResponse, copilotResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/dashboard`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/messages`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/educator/copilot/dashboard`, { headers: { Authorization: `Bearer ${token}` } })
+        fetchBackendWithFallback('/educator/dashboard', { headers: { Authorization: `Bearer ${token}` } }),
+        fetchBackendWithFallback('/educator/messages', { headers: { Authorization: `Bearer ${token}` } }),
+        fetchBackendWithFallback('/educator/copilot/dashboard', { headers: { Authorization: `Bearer ${token}` } })
       ])
 
       if (!dashboardResponse.ok) {
-        const payload = await dashboardResponse.json().catch(() => ({}))
-        throw new Error(payload.detail || 'Unable to load educator dashboard')
+        throw new Error((await readErrorDetail(dashboardResponse)) || 'Unable to load educator dashboard')
       }
 
       const dashboard = await dashboardResponse.json()
