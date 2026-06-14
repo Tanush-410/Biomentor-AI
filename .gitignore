@@ -1,0 +1,32 @@
+.DS_Store
+.superpowers/
+.venv/
+.pycache/
+__pycache__/
+*.py[cod]
+*.log
+
+# Local environment files
+backend/.env
+frontend/.env.local
+
+# Local databases and generated runtime data
+backend/*.db
+backend/*.db-*
+backend/*.sqlite
+backend/uploads/
+uploads/
+
+# Frontend build and dependency folders
+frontend/node_modules/
+frontend/.next/
+frontend/.next.*
+
+# Python/pytest coverage
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Editor folders
+.idea/
+.vscode/

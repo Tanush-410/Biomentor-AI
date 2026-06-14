@@ -1,0 +1,90 @@
+{
+  "name": "BioMentor - Intelligent Learning Platform",
+  "short_name": "BioMentor",
+  "description": "AI-powered learning platform for biology with Bloom's taxonomy-based quizzes and offline support",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Quiz",
+      "short_name": "Quiz",
+      "description": "Begin a new quiz session",
+      "url": "/start-quiz",
+      "icons": [{"src": "/icon-96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "Learning Chat",
+      "short_name": "Chat",
+      "description": "Chat with AI tutor",
+      "url": "/learning-chat",
+      "icons": [{"src": "/icon-96.png", "sizes": "96x96"}]
+    },
+    {
+      "name": "View Progress",
+      "short_name": "Progress",
+      "description": "Check your learning progress",
+      "url": "/progress",
+      "icons": [{"src": "/icon-96.png", "sizes": "96x96"}]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "document",
+          "accept": [".pdf", ".txt", ".md", "application/pdf", "text/plain", "text/markdown"]
+        }
+      ]
+    }
+  }
+}
