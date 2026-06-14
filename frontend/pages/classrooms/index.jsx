@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { Bell, PlusCircle, School2, UserPlus } from 'lucide-react'
 import { useRouter } from 'next/router'
 
@@ -24,16 +24,7 @@ export default function ClassroomsHomePage() {
   const [joinCode, setJoinCode] = useState('')
   const [classroomForm, setClassroomForm] = useState({ name: '', subject: 'Biology', description: '' })
 
-  useEffect(() => {
-    if (authLoading) return
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    loadPage()
-  }, [authLoading, token, router])
-
-  const loadPage = async () => {
+  const loadPage = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -48,7 +39,18 @@ export default function ClassroomsHomePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    loadPage()
+  }, [authLoading, loadPage, router])
+
+  
 
   const handleJoin = async (event) => {
     event.preventDefault()

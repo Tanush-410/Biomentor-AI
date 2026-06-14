@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { CalendarDays, Camera, FileText, PlusCircle } from 'lucide-react'
 import { useRouter } from 'next/router'
@@ -44,17 +44,7 @@ export default function ClassroomClassworkPage() {
     due_at: ''
   })
 
-  useEffect(() => {
-    if (authLoading || !router.isReady) return
-    if (!token) {
-      router.push('/login')
-      return
-    }
-    if (!classroomId) return
-    loadPage(classroomId)
-  }, [authLoading, token, router.isReady, classroomId])
-
-  const loadPage = async (requestedId) => {
+  const loadPage = useCallback(async (requestedId) => {
     const requestId = ++requestSequence.current
     setLoading(true)
     setError('')
@@ -94,7 +84,19 @@ export default function ClassroomClassworkPage() {
         setLoading(false)
       }
     }
-  }
+  }, [token, user?.role])
+
+  useEffect(() => {
+    if (authLoading || !router.isReady) return
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    if (!classroomId) return
+    loadPage(classroomId)
+  }, [authLoading, loadPage, router.isReady, router, classroomId])
+
+  
 
   const handleShareMaterial = async (event) => {
     event.preventDefault()

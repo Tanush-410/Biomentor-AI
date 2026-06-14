@@ -1,56 +1,40 @@
-const STICKY_NOTES_PROXY_BASE = '/api/backend/sticky-notes'
+import { requestBackendJson } from './backendApi'
 
-function buildStickyNotesUrl(pageUrl) {
-  const target = new URL(STICKY_NOTES_PROXY_BASE, 'http://localhost')
-  if (pageUrl) {
-    target.searchParams.set('page_url', pageUrl)
-  }
-  return `${target.pathname}${target.search}`
-}
+const STICKY_NOTES_PATH = '/sticky-notes'
 
-async function stickyNotesRequest(path, token, options = {}) {
-  const response = await fetch(`${STICKY_NOTES_PROXY_BASE}${path}`, {
-    ...options,
-    headers: {
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (response.status === 204) {
-    return null
-  }
-
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error(payload.detail || payload.message || 'Sticky note request failed')
-  }
-  return payload
+export function buildStickyNotesUrl(pageUrl) {
+  const encoded = pageUrl ? `?page_url=${encodeURIComponent(pageUrl)}` : ''
+  return `/api${STICKY_NOTES_PATH}${encoded}`
 }
 
 export function listStickyNotes(token, pageUrl) {
-  return stickyNotesRequest(buildStickyNotesUrl(pageUrl).replace(STICKY_NOTES_PROXY_BASE, ''), token)
+  return requestBackendJson(`${STICKY_NOTES_PATH}${pageUrl ? `?page_url=${encodeURIComponent(pageUrl)}` : ''}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  })
 }
 
 export function createStickyNote(token, payload) {
-  return stickyNotesRequest('', token, {
+  return requestBackendJson(STICKY_NOTES_PATH, {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: payload,
+    headers: { Authorization: `Bearer ${token}` },
   })
 }
 
 export function updateStickyNote(token, noteId, payload) {
-  return stickyNotesRequest(`/${noteId}`, token, {
+  return requestBackendJson(`${STICKY_NOTES_PATH}/${noteId}`, {
     method: 'PATCH',
-    body: JSON.stringify(payload),
+    body: payload,
+    headers: { Authorization: `Bearer ${token}` },
   })
 }
 
 export function deleteStickyNote(token, noteId) {
-  return stickyNotesRequest(`/${noteId}`, token, {
+  return requestBackendJson(`${STICKY_NOTES_PATH}/${noteId}`, {
     method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
   })
 }
 
-export { STICKY_NOTES_PROXY_BASE, buildStickyNotesUrl }
+export { STICKY_NOTES_PATH as STICKY_NOTES_PROXY_BASE }
