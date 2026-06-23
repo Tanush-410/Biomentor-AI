@@ -3,6 +3,17 @@ import { requestBackendJson } from '../lib/backendApi'
 
 const AuthContext = createContext()
 
+function isTokenExpired(token) {
+  try {
+    const segment = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const paddedSegment = segment.padEnd(Math.ceil(segment.length / 4) * 4, '=')
+    const payload = JSON.parse(atob(paddedSegment))
+    return !payload?.exp || payload.exp * 1000 <= Date.now()
+  } catch {
+    return true
+  }
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null)
   const [user, setUser] = useState(null)
@@ -13,28 +24,39 @@ export function AuthProvider({ children }) {
       const savedToken = localStorage.getItem('token')
       const savedUser = localStorage.getItem('user')
 
-      if (savedToken) {
-        setToken(savedToken)
+      if (!savedToken || isTokenExpired(savedToken)) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setToken(null)
+        setUser(null)
+        setLoading(false)
+        return
       }
+
+      setToken(savedToken)
+
       if (savedUser) {
         try {
           setUser(JSON.parse(savedUser))
+          setLoading(false)
         } catch (error) {
           console.error('Failed to parse saved user:', error)
+          localStorage.removeItem('user')
         }
       }
 
-      if (savedToken && !savedUser) {
-        try {
-          const profile = await requestBackendJson('/auth/me', {
-            headers: { Authorization: `Bearer ${savedToken}` }
-          })
-          setUser(profile)
-          localStorage.setItem('user', JSON.stringify(profile))
-        } catch (error) {
-          console.error('Auth profile fetch failed:', error)
-          localStorage.removeItem('token')
-        }
+      try {
+        const profile = await requestBackendJson('/auth/me', {
+          headers: { Authorization: `Bearer ${savedToken}` }
+        })
+        setUser(profile)
+        localStorage.setItem('user', JSON.stringify(profile))
+      } catch (error) {
+        console.error('Auth profile fetch failed:', error)
+        setToken(null)
+        setUser(null)
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
       }
 
       setLoading(false)

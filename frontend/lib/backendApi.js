@@ -3,6 +3,15 @@ const DEFAULT_LOCAL_BACKEND_ORIGIN = 'http://localhost:8000'
 
 const normalizeApiBase = (baseUrl = '') => String(baseUrl || '').replace(/\/+$/, '')
 
+function isLoopbackOrigin(baseUrl = '') {
+  try {
+    const hostname = new URL(baseUrl).hostname
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0'
+  } catch {
+    return false
+  }
+}
+
 function browserHostname() {
   if (typeof window === 'undefined') return ''
   return window.location?.hostname || ''
@@ -19,7 +28,7 @@ export function isHostedFrontend() {
 
 function configuredBackendOrigin() {
   const configured = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '')
-  if (configured) {
+  if (configured && !(isHostedFrontend() && isLoopbackOrigin(configured))) {
     return configured
   }
   return isHostedFrontend() ? DEFAULT_HOSTED_BACKEND_ORIGIN : DEFAULT_LOCAL_BACKEND_ORIGIN
@@ -39,7 +48,11 @@ export function proxiedBackendApi(path = '') {
   return `/api/backend${normalizedPath}`
 }
 
-export function buildBackendCandidates(path = '', { preferProxy = isHostedFrontend() } = {}) {
+function shouldPreferProxy() {
+  return process.env.NEXT_PUBLIC_API_PROXY_ONLY === 'true'
+}
+
+export function buildBackendCandidates(path = '', { preferProxy = shouldPreferProxy() } = {}) {
   const preferred = preferProxy
     ? [proxiedBackendApi(path), directBackendApi(path)]
     : [directBackendApi(path), proxiedBackendApi(path)]
@@ -75,7 +88,7 @@ export async function fetchBackendWithFallback(path, options = {}, runtime = {})
   const defaultRetryOnStatuses = ['GET', 'HEAD'].includes(method)
     ? [401, 403, 404, 408, 409, 413, 429, 500, 502, 503, 504]
     : [401, 403, 404, 408, 409, 413, 429, 502, 503, 504]
-  const { preferProxy = isHostedFrontend(), retryOnStatuses = defaultRetryOnStatuses } = runtime
+  const { preferProxy = shouldPreferProxy(), retryOnStatuses = defaultRetryOnStatuses } = runtime
   const candidates = buildBackendCandidates(path, { preferProxy })
   let lastError = null
   let firstBackendError = null
@@ -119,9 +132,10 @@ export async function requestBackendJson(path, options = {}, runtime = {}) {
   const defaultRetryOnStatuses = ['GET', 'HEAD'].includes(method)
     ? [401, 403, 404, 408, 409, 413, 429, 500, 502, 503, 504]
     : [401, 403, 404, 408, 409, 413, 429, 502, 503, 504]
-  const { preferProxy = isHostedFrontend(), retryOnStatuses = defaultRetryOnStatuses } = runtime
+  const { preferProxy = shouldPreferProxy(), retryOnStatuses = defaultRetryOnStatuses } = runtime
   const candidates = buildBackendCandidates(path, { preferProxy })
-  const canRetryEmptyJson = candidates.length > 1 && !isFormData
+  const acceptsEmptyResponse = method === 'DELETE' || method === 'HEAD'
+  const canRetryEmptyJson = candidates.length > 1 && !isFormData && !acceptsEmptyResponse
   let lastError = null
 
   for (let index = 0; index < candidates.length; index += 1) {
@@ -141,6 +155,14 @@ export async function requestBackendJson(path, options = {}, runtime = {}) {
     }
 
     if (response.status === 204) {
+      if (acceptsEmptyResponse) {
+        return null
+      }
+      const shouldRetryEmptyResponse = canRetryEmptyJson && index < candidates.length - 1
+      if (shouldRetryEmptyResponse) {
+        lastError = new Error('Backend returned an empty JSON response.')
+        continue
+      }
       return null
     }
 
@@ -148,6 +170,10 @@ export async function requestBackendJson(path, options = {}, runtime = {}) {
     if (response.ok) {
       if (payload != null) {
         return payload
+      }
+
+      if (acceptsEmptyResponse) {
+        return null
       }
 
       const shouldRetryEmptyJson = canRetryEmptyJson && index < candidates.length - 1
@@ -171,7 +197,12 @@ export async function requestBackendJson(path, options = {}, runtime = {}) {
 }
 
 export function toWebSocketBase() {
-  const configuredBase = normalizeApiBase(process.env.NEXT_PUBLIC_WS_URL || configuredBackendOrigin())
+  const configuredWsBase = normalizeApiBase(process.env.NEXT_PUBLIC_WS_URL || '')
+  const configuredBase = (
+    configuredWsBase && !(isHostedFrontend() && isLoopbackOrigin(configuredWsBase))
+      ? configuredWsBase
+      : configuredBackendOrigin()
+  )
   if (!configuredBase) return ''
   if (configuredBase.startsWith('https://')) return configuredBase.replace('https://', 'wss://')
   if (configuredBase.startsWith('http://')) return configuredBase.replace('http://', 'ws://')

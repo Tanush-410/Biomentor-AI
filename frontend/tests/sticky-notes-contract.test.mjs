@@ -2,11 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 
-test('sticky notes frontend helper routes private note traffic through the hosted backend proxy', () => {
+test('sticky notes frontend helper routes private note traffic through the shared backend client', () => {
   const source = fs.readFileSync(new URL('../lib/stickyNotesApi.js', import.meta.url), 'utf8')
-  assert.match(source, /const STICKY_NOTES_PROXY_BASE = '\/api\/backend\/sticky-notes'/)
+  assert.match(source, /import \{ requestBackendJson \} from '\.\/backendApi'/)
+  assert.match(source, /const STICKY_NOTES_PATH = '\/sticky-notes'/)
   assert.match(source, /Authorization: `Bearer \$\{token\}`/)
-  assert.match(source, /target\.searchParams\.set\('page_url', pageUrl\)/)
+  assert.match(source, /encodeURIComponent\(pageUrl\)/)
   assert.match(source, /export function listStickyNotes\(token, pageUrl\)/)
   assert.match(source, /export function createStickyNote\(token, payload\)/)
   assert.match(source, /export function updateStickyNote\(token, noteId, payload\)/)

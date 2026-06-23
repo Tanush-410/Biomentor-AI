@@ -6,7 +6,7 @@ const read = (relativePath) => fs.readFileSync(new URL(`../${relativePath}`, imp
 
 test("student dashboard references study coach overview endpoint", () => {
   const source = read("pages/dashboard.jsx");
-  assert.match(source, /\/api\/study-coach\/overview/);
+  assert.match(source, /\/study-coach\/overview/);
   assert.match(source, /StudyCoachPanel/);
   assert.match(source, /Study Coach Command/);
   assert.match(source, /Next best move/);
@@ -16,20 +16,20 @@ test("student dashboard references study coach overview endpoint", () => {
 
 test("progress page references study coach progress endpoint", () => {
   const source = read("pages/progress.jsx");
-  assert.match(source, /\/api\/study-coach\/progress/);
+  assert.match(source, /\/study-coach\/progress/);
   assert.match(source, /Practice guidance/);
   assert.match(source, /Checkpoint goal/);
 });
 
 test("materials page references study coach materials endpoint", () => {
   const source = read("pages/documents.jsx");
-  assert.match(source, /\/api\/study-coach\/materials/);
+  assert.match(source, /\/study-coach\/materials/);
   assert.match(source, /Coach Recommended Review Path/);
 });
 
 test("learning chat references study coach chat suggestions endpoint", () => {
   const source = read("pages/learning-chat.jsx");
-  assert.match(source, /\/api\/study-coach\/chat-suggestions/);
+  assert.match(source, /\/study-coach\/chat-suggestions/);
   assert.match(source, /Coach next question/);
   assert.match(source, /Quick Check timing/);
 });

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # JWT
     secret_key: str = "changeme"
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 480
     
     # Qdrant
     qdrant_url: str = "http://localhost:6333"

@@ -21,10 +21,15 @@ export const config = {
 }
 
 function buildTargetUrl(pathSegments, query) {
+  const configuredBaseUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || ''
+  const isProductionLoopback = process.env.NODE_ENV === 'production'
+    && /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?\/?$/i.test(configuredBaseUrl)
   const baseUrl = (
-    process.env.API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    (process.env.NODE_ENV === 'production' ? DEFAULT_HOSTED_BACKEND_ORIGIN : DEFAULT_LOCAL_BACKEND_ORIGIN)
+    configuredBaseUrl && !isProductionLoopback
+      ? configuredBaseUrl
+      : process.env.NODE_ENV === 'production'
+        ? DEFAULT_HOSTED_BACKEND_ORIGIN
+        : DEFAULT_LOCAL_BACKEND_ORIGIN
   ).replace(/\/+$/, '')
   const normalizedPath = pathSegments.join('/')
   const needsTrailingSlash = pathSegments.length === 1 && pathSegments[0] === 'documents'
@@ -72,6 +77,7 @@ export default async function handler(req, res) {
 
   const upstreamUrl = buildTargetUrl(pathSegments, { ...req.query, path: undefined })
   const requestHeaders = copyRequestHeaders(req)
+  requestHeaders['accept-encoding'] = 'identity'
   const hasBody = !['GET', 'HEAD'].includes(req.method)
   const requestBody = hasBody ? await readRequestBody(req) : undefined
 
@@ -94,6 +100,7 @@ export default async function handler(req, res) {
   }
 
   res.status(upstreamResponse.status)
+  res.setHeader('Cache-Control', 'private, no-store')
 
   upstreamResponse.headers.forEach((value, key) => {
     if (HOP_BY_HOP_HEADERS.has(key.toLowerCase())) {
@@ -107,5 +114,5 @@ export default async function handler(req, res) {
   })
 
   const arrayBuffer = await upstreamResponse.arrayBuffer()
-  res.send(Buffer.from(arrayBuffer))
+  res.end(Buffer.from(arrayBuffer))
 }

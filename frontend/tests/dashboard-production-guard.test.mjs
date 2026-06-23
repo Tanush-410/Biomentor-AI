@@ -8,12 +8,12 @@ const readFromRepo = (relativePath) => fs.readFileSync(path.join(repoRoot, relat
 
 test("educator dashboard guards websocket setup and normalizes list-shaped data before mapping", () => {
   const source = readFromRepo("pages/dashboard.jsx");
-  assert.match(source, /const apiUrl = process\.env\.NEXT_PUBLIC_API_URL/);
-  assert.match(source, /if \(!apiUrl\) return undefined/);
+  assert.match(source, /const apiBase = toWebSocketBase\(\)/);
+  assert.match(source, /if \(!apiBase\) return undefined/);
   assert.match(source, /function normalizeList\(value\)/);
-  assert.match(source, /alerts: normalizeList\(payload\?\.alerts\)/);
-  assert.match(source, /classrooms: normalizeList\(payload\?\.classrooms\)/);
-  assert.match(source, /messages: normalizeList\(messages\)/);
+  assert.match(source, /alerts: normalizeObjectList\(payload\?\.alerts\)/);
+  assert.match(source, /classrooms: normalizeObjectList\(payload\?\.classrooms\)/);
+  assert.match(source, /messages: normalizeObjectList\(messages\)/);
   assert.match(source, /const educatorAlerts = normalizeList\(educatorData\?\.alerts\)/);
   assert.match(source, /const educatorClassrooms = normalizeList\(educatorData\?\.classrooms\)/);
   assert.match(source, /const educatorMessages = normalizeList\(educatorData\?\.messages\)/);

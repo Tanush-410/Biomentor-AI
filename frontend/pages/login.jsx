@@ -65,6 +65,10 @@ export default function Login() {
         body: { email, password, desired_role: mode }
       })
 
+      if (!data?.access_token || !data?.user) {
+        throw new Error('The server returned an incomplete login response. Please try again.')
+      }
+
       login(data.access_token, data.user)
 
       if (rememberMe) {

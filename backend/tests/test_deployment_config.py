@@ -50,6 +50,17 @@ class DeploymentConfigParsingTests(unittest.TestCase):
 
         self.assertFalse(settings.debug)
 
+    def test_access_tokens_default_to_a_full_workday(self):
+        settings = Settings(
+            supabase_url="https://example.supabase.co",
+            supabase_key="anon",
+            supabase_service_key="service",
+            groq_api_key="groq",
+            secret_key="secret",
+        )
+
+        self.assertEqual(settings.access_token_expire_minutes, 480)
+
 
 if __name__ == "__main__":
     unittest.main()

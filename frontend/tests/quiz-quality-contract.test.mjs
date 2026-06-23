@@ -10,7 +10,7 @@ function readFromRepo(...segments) {
 test("quiz maker references quiz quality review endpoint and panel", () => {
   const source = readFromRepo("pages", "educator", "quiz-maker.jsx");
   assert.match(source, /QuizQualityPanel/);
-  assert.match(source, /\/api\/educator\/quiz-quality\/review/);
+  assert.match(source, /\/educator\/quiz-quality\/review/);
   assert.match(source, /handleReview/);
 });
 
