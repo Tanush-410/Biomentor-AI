@@ -202,9 +202,52 @@ export default function ClassroomQuizPage() {
     }
   }
 
+  const waitForEvidenceVideoFrame = (video, timeoutMs = 2500) =>
+    new Promise((resolve) => {
+      if (!video) {
+        resolve(false)
+        return
+      }
+
+      const hasFrame = () => video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0
+      if (hasFrame()) {
+        resolve(true)
+        return
+      }
+
+      let settled = false
+      let timeoutId = null
+      const events = ['loadedmetadata', 'loadeddata', 'canplay', 'playing']
+      const cleanup = () => {
+        events.forEach((eventName) => video.removeEventListener(eventName, onReady))
+        if (timeoutId) window.clearTimeout(timeoutId)
+      }
+      const finish = (value) => {
+        if (settled) return
+        settled = true
+        cleanup()
+        resolve(value)
+      }
+      const onReady = () => {
+        if (hasFrame()) finish(true)
+      }
+
+      events.forEach((eventName) => video.addEventListener(eventName, onReady))
+      timeoutId = window.setTimeout(() => finish(hasFrame()), timeoutMs)
+      try {
+        const playResult = video.play?.()
+        if (playResult?.catch) playResult.catch(() => {})
+      } catch (_error) {
+        // A blocked play call should not prevent a later loadeddata event from producing evidence.
+      }
+      onReady()
+    })
+
   const captureEvidenceSnapshot = async () => {
     const video = videoRef.current
-    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null
+    if (!video) return null
+    await waitForEvidenceVideoFrame(video, 1200)
+    if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) return null
 
     const targetWidth = Math.min(960, video.videoWidth)
     const targetHeight = Math.max(1, Math.round((targetWidth / video.videoWidth) * video.videoHeight))
@@ -244,6 +287,9 @@ export default function ClassroomQuizPage() {
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        videoRef.current.muted = true
+        videoRef.current.playsInline = true
+        await waitForEvidenceVideoFrame(videoRef.current, 3000)
       }
       stream.getVideoTracks().forEach((track) => {
         track.onended = () => {

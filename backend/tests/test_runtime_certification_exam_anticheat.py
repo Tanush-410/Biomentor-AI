@@ -505,6 +505,88 @@ class RuntimeCertificationExamAnticheatFlowTests(unittest.TestCase):
         self.assertEqual(detail_case["signal_summary"]["heuristic_count"], 2)
         self.assertEqual(detail_case["signal_summary"]["hard_rule_count"], 1)
 
+    def test_quiz_warnings_and_violations_create_anticheat_evidence_cases(self):
+        create_response = self.client.post(
+            f"/api/classrooms/{self.classroom.id}/quizzes",
+            headers=self._auth_headers(self.educator["access_token"]),
+            json={
+                "title": "Protected ATP Quiz",
+                "description": "Manual protected quiz for anti-cheat evidence regression.",
+                "quiz_mode": "manual",
+                "duration_minutes": 15,
+                "publish_to_stream": False,
+                "proctoring_enabled": True,
+                "allow_late_entries": False,
+                "manual_questions": [
+                    {
+                        "prompt": "Which molecule stores usable cellular energy?",
+                        "explanation": "ATP stores and releases usable cellular energy.",
+                        "bloom_level": 2,
+                        "options": [
+                            {"id": "A", "text": "ATP"},
+                            {"id": "B", "text": "DNA"},
+                            {"id": "C", "text": "Cellulose"},
+                            {"id": "D", "text": "Water"},
+                        ],
+                        "correct_option_id": "A",
+                    }
+                ],
+            },
+        )
+        self.assertEqual(create_response.status_code, 200, create_response.text)
+        quiz = create_response.json()["quiz"]
+
+        start_response = self.client.post(
+            f"/api/classrooms/{self.classroom.id}/quizzes/{quiz['id']}/start",
+            headers=self._auth_headers(self.student["access_token"]),
+            json={},
+        )
+        self.assertEqual(start_response.status_code, 200, start_response.text)
+        attempt_id = start_response.json()["attempt"]["id"]
+
+        warning_response = self.client.post(
+            f"/api/classrooms/{self.classroom.id}/quizzes/{quiz['id']}/warning",
+            headers=self._auth_headers(self.student["access_token"]),
+            json={
+                "attempt_id": attempt_id,
+                "warning_type": "ai_looking_down",
+                "details": {
+                    "teacher_reason": "possible phone glance",
+                    "evidence_image_data_url": PNG_DATA_URL,
+                },
+            },
+        )
+        self.assertEqual(warning_response.status_code, 200, warning_response.text)
+
+        violation_response = self.client.post(
+            f"/api/classrooms/{self.classroom.id}/quizzes/{quiz['id']}/violation",
+            headers=self._auth_headers(self.student["access_token"]),
+            json={
+                "attempt_id": attempt_id,
+                "violation_type": "tab_hidden",
+                "details": {
+                    "teacher_reason": "student left the quiz tab",
+                    "evidence_image_data_url": PNG_DATA_URL,
+                },
+            },
+        )
+        self.assertEqual(violation_response.status_code, 200, violation_response.text)
+
+        cases_response = self.client.get(
+            f"/api/classrooms/{self.classroom.id}/anticheat-bot",
+            headers=self._auth_headers(self.educator["access_token"]),
+        )
+        self.assertEqual(cases_response.status_code, 200, cases_response.text)
+        cases = cases_response.json()["cases"]
+        self.assertEqual(len(cases), 1)
+        case = cases[0]
+        self.assertEqual(case["assessment_type"], "quiz")
+        self.assertEqual(case["final_case_reason"], "tab_hidden")
+        self.assertEqual(case["latest_warning_count"], 2)
+        self.assertEqual(case["last_three_reasons"], ["tab_hidden", "ai_looking_down"])
+        self.assertEqual(len(case["evidence_snapshots"]), 2)
+        self.assertTrue(all(snapshot["image_url"] for snapshot in case["evidence_snapshots"]))
+
     def _register_and_login(self, *, email, password, full_name, role):
         register_response = self.client.post(
             "/api/auth/register",

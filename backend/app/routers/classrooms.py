@@ -1338,6 +1338,30 @@ async def report_quiz_warning(
     )
     db.add(warning)
     attempt.violation_count = warning_count
+    anticheat_case = upsert_anticheat_case(
+        db=db,
+        classroom_id=classroom.id,
+        assessment_type="quiz",
+        assessment_id=quiz.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        final_case_reason="ai_proctoring_debarred" if should_terminate else None,
+        warning_count=warning_count,
+        status="teacher_review_required" if should_terminate else "monitoring",
+        teacher_review_required=should_terminate,
+    )
+    create_anticheat_evidence(
+        db=db,
+        case=anticheat_case,
+        classroom_id=classroom.id,
+        assessment_type="quiz",
+        assessment_id=quiz.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        violation_type=payload.warning_type,
+        action_taken="terminated" if should_terminate else "warning",
+        details=payload.details or {},
+    )
 
     session = db.query(QuizSession).filter(QuizSession.id == attempt.quiz_session_id).first()
     if should_terminate:
@@ -1465,6 +1489,30 @@ async def report_quiz_violation(
     attempt.violation_count = (attempt.violation_count or 0) + 1
     attempt.termination_reason = payload.violation_type
     attempt.ended_at = datetime.utcnow()
+    anticheat_case = upsert_anticheat_case(
+        db=db,
+        classroom_id=classroom.id,
+        assessment_type="quiz",
+        assessment_id=quiz.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        final_case_reason=payload.violation_type,
+        warning_count=attempt.violation_count,
+        status="teacher_review_required",
+        teacher_review_required=True,
+    )
+    create_anticheat_evidence(
+        db=db,
+        case=anticheat_case,
+        classroom_id=classroom.id,
+        assessment_type="quiz",
+        assessment_id=quiz.id,
+        attempt_id=attempt.id,
+        student_id=current_user.id,
+        violation_type=payload.violation_type,
+        action_taken="terminated",
+        details=payload.details or {},
+    )
 
     session = db.query(QuizSession).filter(QuizSession.id == attempt.quiz_session_id).first()
     if session:
