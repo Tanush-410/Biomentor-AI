@@ -9,7 +9,7 @@ import {
   listStickyNotes,
   updateStickyNote,
 } from '../../lib/stickyNotesApi'
-import { clamp, resolveStickyNoteCollisions } from '../../lib/stickyNotesLayout'
+import { clamp } from '../../lib/stickyNotesLayout'
 
 const NOTE_COLORS = [
   { id: 'amber', label: 'Amber', classes: 'from-amber-100 via-[#f8ddb3] to-[#f1c88a] border-[#d4a25c] text-[#53361b]' },
@@ -73,6 +73,10 @@ export default function StickyNotesLayer() {
   const draggingRef = useRef(null)
   const notesRef = useRef([])
   const statusTimerRef = useRef(null)
+  const saveTimersRef = useRef(new Map())
+  const saveQueuesRef = useRef(new Map())
+  const positionSavesRef = useRef(new Map())
+  const deletedNoteIdsRef = useRef(new Set())
 
   const currentPageUrl = useMemo(() => toPageUrl(router.asPath), [router.asPath])
   const isEnabledPage = token && !loading && !PROTECTED_PATHS.includes(router.pathname)
@@ -85,6 +89,8 @@ export default function StickyNotesLayer() {
     if (statusTimerRef.current) {
       window.clearTimeout(statusTimerRef.current)
     }
+    saveTimersRef.current.forEach(({ timer }) => window.clearTimeout(timer))
+    saveTimersRef.current.clear()
   }, [])
 
   const showStatus = (message, tone = 'neutral') => {
@@ -113,10 +119,8 @@ export default function StickyNotesLayer() {
       try {
         const payload = await listStickyNotes(token, currentPageUrl)
         if (!cancelled) {
-          const nextViewport = getViewport()
-          setViewport(nextViewport)
-          const nextNotes = resolveStickyNoteCollisions(payload || [], nextViewport.width, nextViewport.height)
-          setNotes(nextNotes)
+          setViewport(getViewport())
+          setNotes(payload || [])
         }
       } catch (error) {
         console.error('Sticky notes failed to load:', error)
@@ -137,11 +141,7 @@ export default function StickyNotesLayer() {
       return undefined
     }
 
-    const handleResize = () => {
-      const nextViewport = getViewport()
-      setViewport(nextViewport)
-      setNotes((current) => resolveStickyNoteCollisions(current, nextViewport.width, nextViewport.height))
-    }
+    const handleResize = () => setViewport(getViewport())
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -216,16 +216,29 @@ export default function StickyNotesLayer() {
         return
       }
 
+      const positionSave = updateStickyNote(token, note.id, {
+        x_ratio: note.x_ratio,
+        y_ratio: note.y_ratio,
+      })
+      positionSavesRef.current.set(note.id, positionSave)
+
       try {
-        await updateStickyNote(token, note.id, {
-          x_ratio: note.x_ratio,
-          y_ratio: note.y_ratio,
-        })
+        await positionSave
+        if (deletedNoteIdsRef.current.has(note.id)) {
+          return
+        }
         showStatus('Sticky note saved.', 'success')
       } catch (error) {
+        if (deletedNoteIdsRef.current.has(note.id)) {
+          return
+        }
         console.error('Sticky note position failed to persist:', error)
         setNotes(previousNotes)
         showStatus('Unable to save sticky note changes right now.', 'error')
+      } finally {
+        if (positionSavesRef.current.get(note.id) === positionSave) {
+          positionSavesRef.current.delete(note.id)
+        }
       }
     }
 
@@ -252,9 +265,7 @@ export default function StickyNotesLayer() {
         title: `${user?.role === 'educator' ? 'Teacher' : 'Study'} note`,
         content: '',
       })
-      setNotes((current) =>
-        resolveStickyNoteCollisions([...current, created], viewport.width, viewport.height)
-      )
+      setNotes((current) => [...current, created])
       setActiveNoteId(created.id)
       showStatus('Sticky note created.', 'success')
     } catch (error) {
@@ -266,29 +277,94 @@ export default function StickyNotesLayer() {
     }
   }
 
-  const handlePatchNote = async (noteId, changes) => {
+  const handlePatchNote = (noteId, changes) => {
+    if (deletedNoteIdsRef.current.has(noteId)) {
+      return Promise.resolve()
+    }
+
     const previousNotes = notesRef.current
+    const preserveDraftOnFailure = Object.hasOwn(changes, 'title') || Object.hasOwn(changes, 'content')
     setNotes((current) => current.map((note) => (note.id === noteId ? { ...note, ...changes } : note)))
 
-    try {
-      const updated = await updateStickyNote(token, noteId, changes)
-      setNotes((current) => current.map((note) => (note.id === noteId ? updated : note)))
-      showStatus('Sticky note saved.', 'success')
-    } catch (error) {
-      console.error('Sticky note update failed:', error)
-      setNotes(previousNotes)
-      showStatus('Unable to save sticky note changes right now.', 'error')
+    const previousSave = saveQueuesRef.current.get(noteId) || Promise.resolve()
+    const nextSave = previousSave
+      .catch(() => undefined)
+      .then(async () => {
+        if (deletedNoteIdsRef.current.has(noteId)) {
+          return
+        }
+
+        try {
+          await updateStickyNote(token, noteId, changes)
+          showStatus('Sticky note saved.', 'success')
+        } catch (error) {
+          if (deletedNoteIdsRef.current.has(noteId)) {
+            return
+          }
+          console.error('Sticky note update failed:', error)
+          if (!preserveDraftOnFailure) {
+            setNotes(previousNotes)
+          }
+          showStatus('Unable to save sticky note changes right now.', 'error')
+        }
+      })
+
+    saveQueuesRef.current.set(noteId, nextSave)
+    void nextSave.finally(() => {
+      if (saveQueuesRef.current.get(noteId) === nextSave) {
+        saveQueuesRef.current.delete(noteId)
+      }
+    })
+    return nextSave
+  }
+
+  const clearPendingNoteSave = (noteId) => {
+    const pending = saveTimersRef.current.get(noteId)
+    if (pending?.timer && typeof window !== 'undefined') {
+      window.clearTimeout(pending.timer)
     }
+    saveTimersRef.current.delete(noteId)
+    return pending?.changes || {}
+  }
+
+  const scheduleNoteSave = (noteId, changes) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const pendingChanges = clearPendingNoteSave(noteId)
+    const nextChanges = { ...pendingChanges, ...changes }
+    const timer = window.setTimeout(() => {
+      saveTimersRef.current.delete(noteId)
+      void handlePatchNote(noteId, nextChanges)
+    }, 650)
+    saveTimersRef.current.set(noteId, { timer, changes: nextChanges })
+  }
+
+  const flushNoteSave = (noteId, changes) => {
+    const pendingChanges = clearPendingNoteSave(noteId)
+    void handlePatchNote(noteId, { ...pendingChanges, ...changes })
   }
 
   const handleDeleteNote = async (noteId) => {
+    clearPendingNoteSave(noteId)
     const previousNotes = notesRef.current
+    deletedNoteIdsRef.current.add(noteId)
     setNotes((current) => current.filter((note) => note.id !== noteId))
     try {
+      const pendingSave = saveQueuesRef.current.get(noteId)
+      if (pendingSave) {
+        await pendingSave.catch(() => undefined)
+      }
+      const pendingPositionSave = positionSavesRef.current.get(noteId)
+      if (pendingPositionSave) {
+        await pendingPositionSave.catch(() => undefined)
+      }
       await deleteStickyNote(token, noteId)
       showStatus('Sticky note deleted.', 'success')
     } catch (error) {
       console.error('Sticky note delete failed:', error)
+      deletedNoteIdsRef.current.delete(noteId)
       setNotes(previousNotes)
       showStatus('Unable to delete that sticky note right now.', 'error')
     }
@@ -372,8 +448,9 @@ export default function StickyNotesLayer() {
                   onChange={(event) => {
                     const value = event.target.value
                     setNotes((current) => current.map((entry) => (entry.id === note.id ? { ...entry, title: value } : entry)))
+                    scheduleNoteSave(note.id, { title: value })
                   }}
-                  onBlur={(event) => void handlePatchNote(note.id, { title: event.target.value })}
+                  onBlur={(event) => flushNoteSave(note.id, { title: event.target.value })}
                   placeholder="Title"
                   maxLength={120}
                   className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-current/55"
@@ -383,8 +460,9 @@ export default function StickyNotesLayer() {
                   onChange={(event) => {
                     const value = event.target.value
                     setNotes((current) => current.map((entry) => (entry.id === note.id ? { ...entry, content: value } : entry)))
+                    scheduleNoteSave(note.id, { content: value })
                   }}
-                  onBlur={(event) => void handlePatchNote(note.id, { content: event.target.value })}
+                  onBlur={(event) => flushNoteSave(note.id, { content: event.target.value })}
                   placeholder="Type your note here..."
                   maxLength={4000}
                   className="min-h-[96px] w-full resize-none bg-transparent text-sm leading-6 outline-none placeholder:text-current/50"

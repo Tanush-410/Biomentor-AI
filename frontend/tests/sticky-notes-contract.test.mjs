@@ -20,8 +20,15 @@ test('sticky notes layer mounts globally, opens from right click, and keys notes
   assert.match(appSource, /<StickyNotesLayer \/>/)
   assert.match(layerSource, /window\.addEventListener\('contextmenu', handleContextMenu\)/)
   assert.match(layerSource, /return `\$\{window\.location\.pathname\}\$\{window\.location\.search\}`/)
-  assert.match(layerSource, /resolveStickyNoteCollisions/)
   assert.match(layerSource, /data-sticky-note-root="true"/)
+})
+
+test('sticky notes preserve saved positions without collision-driven movement', () => {
+  const layerSource = fs.readFileSync(new URL('../components/sticky-notes/StickyNotesLayer.jsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(layerSource, /resolveStickyNoteCollisions/)
+  assert.match(layerSource, /setNotes\(payload \|\| \[\]\)/)
+  assert.match(layerSource, /setNotes\(\(current\) => \[\.\.\.current, created\]\)/)
+  assert.match(layerSource, /const handleResize = \(\) => setViewport\(getViewport\(\)\)/)
 })
 
 test('sticky notes layer includes request feedback and optimistic rollback protections', () => {
@@ -32,6 +39,25 @@ test('sticky notes layer includes request feedback and optimistic rollback prote
   assert.match(layerSource, /setNotes\(previousNotes\)/)
   assert.match(layerSource, /Unable to save sticky note changes right now/)
   assert.match(layerSource, /Sticky note saved/)
+})
+
+test('sticky note text autosaves, blur flushes, and delete cancels pending saves', () => {
+  const layerSource = fs.readFileSync(new URL('../components/sticky-notes/StickyNotesLayer.jsx', import.meta.url), 'utf8')
+  assert.match(layerSource, /const saveTimersRef = useRef\(new Map\(\)\)/)
+  assert.match(layerSource, /const saveQueuesRef = useRef\(new Map\(\)\)/)
+  assert.match(layerSource, /const positionSavesRef = useRef\(new Map\(\)\)/)
+  assert.match(layerSource, /const scheduleNoteSave = \(noteId, changes\) =>/)
+  assert.match(layerSource, /window\.setTimeout\(\(\) =>/)
+  assert.match(layerSource, /const flushNoteSave = \(noteId, changes\) =>/)
+  assert.match(layerSource, /clearPendingNoteSave\(noteId\)/)
+  assert.match(layerSource, /scheduleNoteSave\(note\.id, \{ title: value \}\)/)
+  assert.match(layerSource, /scheduleNoteSave\(note\.id, \{ content: value \}\)/)
+  assert.match(layerSource, /flushNoteSave\(note\.id, \{ title: event\.target\.value \}\)/)
+  assert.match(layerSource, /flushNoteSave\(note\.id, \{ content: event\.target\.value \}\)/)
+  assert.match(layerSource, /const pendingSave = saveQueuesRef\.current\.get\(noteId\)/)
+  assert.match(layerSource, /const pendingPositionSave = positionSavesRef\.current\.get\(noteId\)/)
+  assert.match(layerSource, /await pendingSave\.catch\(\(\) => undefined\)/)
+  assert.match(layerSource, /await pendingPositionSave\.catch\(\(\) => undefined\)/)
 })
 
 test('sticky notes loading is tied to page and auth changes rather than viewport resize churn', () => {
