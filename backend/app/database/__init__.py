@@ -198,14 +198,19 @@ def _ensure_incremental_columns():
             else:
                 statements.append("ALTER TABLE classroom_exams ADD COLUMN anticheat_policy TEXT")
 
-    _ensure_sticky_note_constraints(inspector)
+    sticky_note_columns = table_columns.get("sticky_notes", set())
+    if sticky_note_columns:
+        if "x_position" not in sticky_note_columns:
+            statements.append("ALTER TABLE sticky_notes ADD COLUMN x_position INTEGER")
+        if "y_position" not in sticky_note_columns:
+            statements.append("ALTER TABLE sticky_notes ADD COLUMN y_position INTEGER")
 
-    if not statements:
-        return
+    if statements:
+        with engine.begin() as connection:
+            for statement in statements:
+                connection.execute(text(statement))
 
-    with engine.begin() as connection:
-        for statement in statements:
-            connection.execute(text(statement))
+    _ensure_sticky_note_constraints(inspect(engine))
 
 
 def _ensure_sticky_note_constraints(inspector):
@@ -300,6 +305,10 @@ def _drop_index_names(connection, index_names: list[str]):
 def _copy_sticky_notes_with_normalization(connection, source_table: str, conflict_policy: str = "error"):
     """Copy sticky note rows into the constrained table, clamping legacy layout values into bounds."""
     sticky_note_columns = [column.name for column in StickyNote.__table__.columns]
+    source_columns = {
+        column["name"]
+        for column in inspect(connection).get_columns(source_table)
+    }
     quoted_columns = ", ".join(f'"{column}"' for column in sticky_note_columns)
     normalized_values = {
         "id": '"id"',
@@ -318,6 +327,8 @@ def _copy_sticky_notes_with_normalization(connection, source_table: str, conflic
             f'WHEN "y_ratio" > {STICKY_NOTE_Y_RATIO_MAX} THEN {STICKY_NOTE_Y_RATIO_MAX} '
             'ELSE "y_ratio" END'
         ),
+        "x_position": '"x_position"' if "x_position" in source_columns else "NULL",
+        "y_position": '"y_position"' if "y_position" in source_columns else "NULL",
         "width": (
             f'CASE WHEN "width" < {STICKY_NOTE_WIDTH_MIN} THEN {STICKY_NOTE_WIDTH_MIN} '
             f'WHEN "width" > {STICKY_NOTE_WIDTH_MAX} THEN {STICKY_NOTE_WIDTH_MAX} '

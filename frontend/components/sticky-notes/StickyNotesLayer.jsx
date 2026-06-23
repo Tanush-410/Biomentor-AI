@@ -43,6 +43,19 @@ function getViewport() {
   }
 }
 
+function getDocumentBounds() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return { width: 1440, height: 900 }
+  }
+
+  const root = document.documentElement
+  const body = document.body
+  return {
+    width: Math.max(window.innerWidth, root.scrollWidth, body?.scrollWidth || 0),
+    height: Math.max(window.innerHeight, root.scrollHeight, body?.scrollHeight || 0),
+  }
+}
+
 function toPageUrl(asPath) {
   if (typeof window === 'undefined') {
     return asPath || '/'
@@ -51,9 +64,16 @@ function toPageUrl(asPath) {
 }
 
 function toStyle(note, viewport) {
+  const fallbackLeft =
+    (typeof window === 'undefined' ? 0 : window.scrollX) +
+    clamp(note.x_ratio * viewport.width, 12, Math.max(12, viewport.width - note.width - 12))
+  const fallbackTop =
+    (typeof window === 'undefined' ? 0 : window.scrollY) +
+    clamp(note.y_ratio * viewport.height, 12, Math.max(12, viewport.height - note.height - 12))
+
   return {
-    left: clamp(note.x_ratio * viewport.width, 12, Math.max(12, viewport.width - note.width - 12)),
-    top: clamp(note.y_ratio * viewport.height, 12, Math.max(12, viewport.height - note.height - 12)),
+    left: note.x_position ?? fallbackLeft,
+    top: note.y_position ?? fallbackTop,
     width: note.width,
     minHeight: note.height,
     zIndex: 120 + note.z_index,
@@ -119,8 +139,50 @@ export default function StickyNotesLayer() {
       try {
         const payload = await listStickyNotes(token, currentPageUrl)
         if (!cancelled) {
-          setViewport(getViewport())
+          const nextViewport = getViewport()
+          setViewport(nextViewport)
           setNotes(payload || [])
+
+          const legacyNotes = (payload || []).filter(
+            (note) => note.x_position == null || note.y_position == null
+          )
+          if (legacyNotes.length > 0) {
+            const scrollX = window.scrollX
+            const scrollY = window.scrollY
+            const migratedNotes = (payload || []).map((note) => {
+              if (note.x_position != null && note.y_position != null) {
+                return note
+              }
+              return {
+                ...note,
+                x_position:
+                  scrollX +
+                  clamp(
+                    note.x_ratio * nextViewport.width,
+                    12,
+                    Math.max(12, nextViewport.width - note.width - 12)
+                  ),
+                y_position:
+                  scrollY +
+                  clamp(
+                    note.y_ratio * nextViewport.height,
+                    12,
+                    Math.max(12, nextViewport.height - note.height - 12)
+                  ),
+              }
+            })
+            setNotes(migratedNotes)
+            void Promise.allSettled(
+              migratedNotes
+                .filter((note) => legacyNotes.some((legacyNote) => legacyNote.id === note.id))
+                .map((note) =>
+                  updateStickyNote(token, note.id, {
+                    x_position: Math.round(note.x_position),
+                    y_position: Math.round(note.y_position),
+                  })
+                )
+            )
+          }
         }
       } catch (error) {
         console.error('Sticky notes failed to load:', error)
@@ -161,6 +223,8 @@ export default function StickyNotesLayer() {
       setContextMenu({
         x: event.clientX,
         y: event.clientY,
+        pageX: event.pageX,
+        pageY: event.pageY,
       })
     }
 
@@ -187,18 +251,29 @@ export default function StickyNotesLayer() {
       }
 
       const { noteId, pointerOffsetX, pointerOffsetY } = draggingRef.current
+      const documentBounds = getDocumentBounds()
       setNotes((current) =>
         current.map((note) => {
           if (note.id !== noteId) {
             return note
           }
 
-          const left = clamp(event.clientX - pointerOffsetX, 12, Math.max(12, viewport.width - note.width - 12))
-          const top = clamp(event.clientY - pointerOffsetY, 12, Math.max(12, viewport.height - note.height - 12))
+          const left = clamp(
+            event.pageX - pointerOffsetX,
+            12,
+            Math.max(12, documentBounds.width - note.width - 12)
+          )
+          const top = clamp(
+            event.pageY - pointerOffsetY,
+            12,
+            Math.max(12, documentBounds.height - note.height - 12)
+          )
           return {
             ...note,
-            x_ratio: left / viewport.width,
-            y_ratio: top / viewport.height,
+            x_position: Math.round(left),
+            y_position: Math.round(top),
+            x_ratio: clamp((left - window.scrollX) / viewport.width, 0, 1),
+            y_ratio: clamp((top - window.scrollY) / viewport.height, 0, 1),
           }
         })
       )
@@ -219,6 +294,8 @@ export default function StickyNotesLayer() {
       const positionSave = updateStickyNote(token, note.id, {
         x_ratio: note.x_ratio,
         y_ratio: note.y_ratio,
+        x_position: note.x_position,
+        y_position: note.y_position,
       })
       positionSavesRef.current.set(note.id, positionSave)
 
@@ -257,11 +334,24 @@ export default function StickyNotesLayer() {
 
     setIsSaving(true)
     try {
+      const documentBounds = getDocumentBounds()
+      const xPosition = clamp(
+        contextMenu.pageX,
+        12,
+        Math.max(12, documentBounds.width - DEFAULT_NOTE.width - 12)
+      )
+      const yPosition = clamp(
+        contextMenu.pageY,
+        12,
+        Math.max(12, documentBounds.height - DEFAULT_NOTE.height - 12)
+      )
       const created = await createStickyNote(token, {
         ...DEFAULT_NOTE,
         page_url: currentPageUrl,
         x_ratio: clamp(contextMenu.x / viewport.width, 0, 1),
         y_ratio: clamp(contextMenu.y / viewport.height, 0, 1),
+        x_position: Math.round(xPosition),
+        y_position: Math.round(yPosition),
         title: `${user?.role === 'educator' ? 'Teacher' : 'Study'} note`,
         content: '',
       })
@@ -396,7 +486,7 @@ export default function StickyNotesLayer() {
         </div>
       )}
 
-      <div className="pointer-events-none fixed inset-0 z-[90]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[90]">
         {notes.map((note) => {
           const isActive = activeNoteId === note.id
           const style = toStyle(note, viewport)
@@ -405,7 +495,7 @@ export default function StickyNotesLayer() {
               key={note.id}
               data-sticky-note-root="true"
               style={style}
-              className={`pointer-events-auto fixed overflow-hidden rounded-[24px] border bg-gradient-to-br shadow-[0_24px_60px_rgba(74,44,20,0.18)] transition ${
+              className={`pointer-events-auto absolute overflow-hidden rounded-[24px] border bg-gradient-to-br shadow-[0_24px_60px_rgba(74,44,20,0.18)] transition ${
                 colorClasses(note.color)
               } ${isActive ? 'ring-2 ring-white/70' : ''}`}
               onMouseDown={() => {

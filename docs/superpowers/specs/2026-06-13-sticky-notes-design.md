@@ -22,10 +22,11 @@ The feature should feel embedded into the product rather than like an external w
 - Notes are draggable after creation
 - Notes support colorful themes instead of a single default style
 - Placement is stable:
-  - placement is stored in normalized coordinates
+  - placement is stored as document-relative pixel coordinates
   - notes never auto-rearrange after creation, reload, or resize
+  - notes remain attached to their document location while the user scrolls
   - overlapping notes are allowed
-  - rendering may clamp a note into the visible viewport without rewriting its saved position
+  - legacy viewport-ratio notes migrate once to document coordinates when loaded
 - Notes persist until the user deletes them
 
 ## Scope
@@ -99,7 +100,7 @@ The sticky note layer should not interfere with quizzes, exams, rich text entry,
 ### Move or delete a note
 
 1. Student drags the note to a new position.
-2. System stores the updated normalized placement.
+2. System stores the updated document placement.
 3. The note remains in that position across reload, logout, and login.
 4. Student can delete the note permanently when it is no longer needed.
 
@@ -198,6 +199,8 @@ Fields:
 - `color`
 - `x_ratio`
 - `y_ratio`
+- `x_position`
+- `y_position`
 - `width`
 - `height`
 - `z_index`
@@ -217,9 +220,13 @@ Fields:
 - `color`
   - selected note theme token
 - `x_ratio`
-  - horizontal placement as a normalized value between `0` and `1`
+  - legacy horizontal viewport placement retained for backward compatibility
 - `y_ratio`
-  - vertical placement as a normalized value between `0` and `1`
+  - legacy vertical viewport placement retained for backward compatibility
+- `x_position`
+  - horizontal document coordinate in pixels
+- `y_position`
+  - vertical document coordinate in pixels
 - `width`
   - note width in UI-safe bounds
 - `height`

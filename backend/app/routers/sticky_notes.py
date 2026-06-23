@@ -69,6 +69,8 @@ async def create_sticky_note(
         color=payload.color,
         x_ratio=payload.x_ratio,
         y_ratio=payload.y_ratio,
+        x_position=payload.x_position,
+        y_position=payload.y_position,
         width=payload.width,
         height=payload.height,
         z_index=(top_note.z_index + 1) if top_note else 1,

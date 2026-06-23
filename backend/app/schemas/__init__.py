@@ -88,6 +88,8 @@ class StickyNoteBase(BaseModel):
     color: str = "amber"
     x_ratio: float = Field(default=0.5, ge=0.0, le=1.0)
     y_ratio: float = Field(default=0.25, ge=0.0, le=1.0)
+    x_position: Optional[int] = Field(default=None, ge=0, le=1_000_000)
+    y_position: Optional[int] = Field(default=None, ge=0, le=1_000_000)
     width: int = Field(default=320, ge=220, le=420)
     height: int = Field(default=220, ge=160, le=420)
 
@@ -103,6 +105,8 @@ class StickyNoteUpdate(BaseModel):
     color: Optional[str] = None
     x_ratio: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     y_ratio: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    x_position: Optional[int] = Field(default=None, ge=0, le=1_000_000)
+    y_position: Optional[int] = Field(default=None, ge=0, le=1_000_000)
     width: Optional[int] = Field(default=None, ge=220, le=420)
     height: Optional[int] = Field(default=None, ge=160, le=420)
     z_index: Optional[int] = Field(default=None, ge=1)

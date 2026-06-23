@@ -117,6 +117,8 @@ class StickyNote(Base):
     color = Column(String, default=STICKY_NOTE_COLOR_DEFAULT, nullable=False)
     x_ratio = Column(Float, default=STICKY_NOTE_X_RATIO_DEFAULT, nullable=False)
     y_ratio = Column(Float, default=STICKY_NOTE_Y_RATIO_DEFAULT, nullable=False)
+    x_position = Column(Integer, nullable=True)
+    y_position = Column(Integer, nullable=True)
     width = Column(Integer, default=STICKY_NOTE_WIDTH_DEFAULT, nullable=False)
     height = Column(Integer, default=STICKY_NOTE_HEIGHT_DEFAULT, nullable=False)
     z_index = Column(Integer, default=STICKY_NOTE_Z_INDEX_DEFAULT, nullable=False)

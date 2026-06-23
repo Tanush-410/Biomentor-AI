@@ -141,6 +141,8 @@ class StickyNoteModelAndSchemaTests(unittest.TestCase):
         self.assertEqual(sticky_note_table.c.color.default.arg, "amber")
         self.assertEqual(sticky_note_table.c.x_ratio.default.arg, 0.5)
         self.assertEqual(sticky_note_table.c.y_ratio.default.arg, 0.25)
+        self.assertTrue(sticky_note_table.c.x_position.nullable)
+        self.assertTrue(sticky_note_table.c.y_position.nullable)
         self.assertEqual(sticky_note_table.c.width.default.arg, 320)
         self.assertEqual(sticky_note_table.c.height.default.arg, 220)
         self.assertEqual(sticky_note_table.c.z_index.default.arg, 1)
@@ -164,6 +166,8 @@ class StickyNoteModelAndSchemaTests(unittest.TestCase):
         self.assertEqual(sticky_note.color, "amber")
         self.assertEqual(sticky_note.x_ratio, 0.5)
         self.assertEqual(sticky_note.y_ratio, 0.25)
+        self.assertIsNone(sticky_note.x_position)
+        self.assertIsNone(sticky_note.y_position)
         self.assertEqual(sticky_note.width, 320)
         self.assertEqual(sticky_note.height, 220)
         self.assertEqual(sticky_note.z_index, 1)
@@ -203,6 +207,15 @@ class StickyNoteModelAndSchemaTests(unittest.TestCase):
             carried_note = session.get(models.StickyNote, "legacy-note")
             self.assertIsNotNone(carried_note)
             self.assertEqual(carried_note.content, "Valid note carried through upgrade.")
+            self.assertIsNone(carried_note.x_position)
+            self.assertIsNone(carried_note.y_position)
+
+            upgraded_columns = {
+                column["name"]
+                for column in database.inspect(legacy_engine).get_columns("sticky_notes")
+            }
+            self.assertIn("x_position", upgraded_columns)
+            self.assertIn("y_position", upgraded_columns)
 
             session.add(
                 models.StickyNote(
@@ -391,11 +404,21 @@ class StickyNoteModelAndSchemaTests(unittest.TestCase):
             )
 
     def test_sticky_note_update_accepts_partial_updates(self):
-        sticky_note_update = StickyNoteUpdate(title="Revised title", width=280)
+        sticky_note_update = StickyNoteUpdate(
+            title="Revised title",
+            width=280,
+            x_position=640,
+            y_position=1250,
+        )
 
         self.assertEqual(
             sticky_note_update.model_dump(exclude_unset=True),
-            {"title": "Revised title", "width": 280},
+            {
+                "title": "Revised title",
+                "width": 280,
+                "x_position": 640,
+                "y_position": 1250,
+            },
         )
 
     def test_sticky_note_update_rejects_invalid_layout_values(self):
@@ -415,6 +438,8 @@ class StickyNoteModelAndSchemaTests(unittest.TestCase):
             color="amber",
             x_ratio=0.5,
             y_ratio=0.25,
+            x_position=640,
+            y_position=1250,
             width=320,
             height=220,
             z_index=4,
@@ -428,6 +453,8 @@ class StickyNoteModelAndSchemaTests(unittest.TestCase):
         self.assertEqual(sticky_note.user_id, "user-456")
         self.assertEqual(sticky_note.page_url, "https://biomentor.ai/docs/genetics")
         self.assertEqual(sticky_note.color, "amber")
+        self.assertEqual(sticky_note.x_position, 640)
+        self.assertEqual(sticky_note.y_position, 1250)
         self.assertEqual(sticky_note.z_index, 4)
         self.assertEqual(sticky_note.created_at, created_at)
         self.assertEqual(sticky_note.updated_at, updated_at)
@@ -497,6 +524,8 @@ class StickyNoteRouteTests(unittest.TestCase):
                 "color": "rose",
                 "x_ratio": 0.2,
                 "y_ratio": 0.3,
+                "x_position": 280,
+                "y_position": 1450,
                 "width": 300,
                 "height": 240,
             },
@@ -504,6 +533,8 @@ class StickyNoteRouteTests(unittest.TestCase):
         self.assertEqual(create_response.status_code, 201)
         created_note = create_response.json()
         self.assertEqual(created_note["page_url"], "https://biomentor.ai/classrooms/abc")
+        self.assertEqual(created_note["x_position"], 280)
+        self.assertEqual(created_note["y_position"], 1450)
         self.assertEqual(created_note["z_index"], 1)
 
         other_page_response = self.client.post(
@@ -536,12 +567,20 @@ class StickyNoteRouteTests(unittest.TestCase):
 
         update_response = self.client.patch(
             f"/api/sticky-notes/{created_note['id']}",
-            json={"content": "Updated reminder", "z_index": 4, "color": "mint"},
+            json={
+                "content": "Updated reminder",
+                "z_index": 4,
+                "color": "mint",
+                "x_position": 360,
+                "y_position": 1725,
+            },
         )
         self.assertEqual(update_response.status_code, 200)
         self.assertEqual(update_response.json()["content"], "Updated reminder")
         self.assertEqual(update_response.json()["z_index"], 4)
         self.assertEqual(update_response.json()["color"], "mint")
+        self.assertEqual(update_response.json()["x_position"], 360)
+        self.assertEqual(update_response.json()["y_position"], 1725)
 
         delete_response = self.client.delete(f"/api/sticky-notes/{created_note['id']}")
         self.assertEqual(delete_response.status_code, 204)

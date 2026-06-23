@@ -31,6 +31,17 @@ test('sticky notes preserve saved positions without collision-driven movement', 
   assert.match(layerSource, /const handleResize = \(\) => setViewport\(getViewport\(\)\)/)
 })
 
+test('sticky notes use document coordinates so scrolling does not move them with the viewport', () => {
+  const layerSource = fs.readFileSync(new URL('../components/sticky-notes/StickyNotesLayer.jsx', import.meta.url), 'utf8')
+  assert.match(layerSource, /x_position/)
+  assert.match(layerSource, /y_position/)
+  assert.match(layerSource, /event\.pageX/)
+  assert.match(layerSource, /event\.pageY/)
+  assert.match(layerSource, /className="pointer-events-none absolute inset-x-0 top-0 z-\[90\]"/)
+  assert.match(layerSource, /className=\{`pointer-events-auto absolute/)
+  assert.doesNotMatch(layerSource, /className=\{`pointer-events-auto fixed/)
+})
+
 test('sticky notes layer includes request feedback and optimistic rollback protections', () => {
   const layerSource = fs.readFileSync(new URL('../components/sticky-notes/StickyNotesLayer.jsx', import.meta.url), 'utf8')
   assert.match(layerSource, /const \[statusMessage, setStatusMessage\] = useState\(null\)/)
