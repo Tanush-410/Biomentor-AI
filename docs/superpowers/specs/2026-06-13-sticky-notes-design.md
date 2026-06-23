@@ -21,9 +21,11 @@ The feature should feel embedded into the product rather than like an external w
 - Notes are created from a custom right-click menu inside the app shell
 - Notes are draggable after creation
 - Notes support colorful themes instead of a single default style
-- Layout is responsive:
+- Placement is stable:
   - placement is stored in normalized coordinates
-  - notes auto-clamp and auto-rearrange into visible bounds on resize
+  - notes never auto-rearrange after creation, reload, or resize
+  - overlapping notes are allowed
+  - rendering may clamp a note into the visible viewport without rewriting its saved position
 - Notes persist until the user deletes them
 
 ## Scope
@@ -64,9 +66,9 @@ Sticky notes are personal working memory, not classroom content. No other studen
 
 Creating a note should feel as lightweight as placing a real sticky note on a desk.
 
-### 4. Layout should survive real usage
+### 4. Placement should remain trustworthy
 
-Notes should not disappear off-screen or become unusable on smaller displays. Responsive reflow matters more than preserving exact pixel positions.
+Users should find each note where they placed it. The application must not move notes to avoid overlap. If a smaller viewport would place part of a note off-screen, the rendered position may be temporarily clamped for usability, while the stored position remains unchanged.
 
 ### 5. It should respect core product flows
 
@@ -97,8 +99,9 @@ The sticky note layer should not interfere with quizzes, exams, rich text entry,
 ### Move or delete a note
 
 1. Student drags the note to a new position.
-2. System stores the updated responsive placement.
-3. Student can delete the note permanently when it is no longer needed.
+2. System stores the updated normalized placement.
+3. The note remains in that position across reload, logout, and login.
+4. Student can delete the note permanently when it is no longer needed.
 
 ## Educator flow
 
@@ -313,8 +316,8 @@ Responsibilities:
 - render notes for the current page
 - manage drag interactions
 - clamp note positions into visible content bounds
-- reorder notes visually
-- handle resize-triggered layout correction
+- preserve saved note positions without collision resolution
+- update viewport dimensions without rewriting note coordinates
 
 ### `StickyNoteCard`
 
@@ -339,19 +342,19 @@ Use normalized placement rather than raw pixels:
 
 - note position is stored as ratios relative to the usable content area
 - on load, ratios are converted back into on-screen coordinates
-- on resize, notes are recalculated
-- notes are clamped within the current visible content rectangle
+- on resize, rendered coordinates are recalculated from the same stored ratios
+- notes are visually clamped within the current viewport only when necessary
+- visual clamping must not update the persisted ratios
+- notes may overlap and are never nudged away from their chosen position
 
-## Auto-rearrange rules
+## Stable-position rules
 
-If a restored note would overflow:
-
-1. clamp horizontally
-2. clamp vertically
-3. if overlap becomes excessive, nudge nearby notes downward or sideways using a lightweight collision pass
-4. preserve relative neighborhood as much as possible without losing visibility
-
-This gives a responsive `same page, same rough spot` behavior instead of brittle fixed-position restoration.
+1. Creating a note stores the right-click position.
+2. Reloading notes uses the stored ratios unchanged.
+3. Resizing never mutates note placement.
+4. Dragging is the only interaction that changes placement.
+5. Overlap is allowed and z-order determines which note appears above another.
+6. Temporary viewport clamping affects rendering only.
 
 ## Interaction Rules
 
@@ -364,7 +367,9 @@ This gives a responsive `same page, same rough spot` behavior instead of brittle
 ### Editing
 
 - autosave after short debounce
+- save again when title or body loses focus
 - saving should not require a separate publish action
+- saved text must reload after logout and login
 
 ### Dragging
 
@@ -375,6 +380,8 @@ This gives a responsive `same page, same rough spot` behavior instead of brittle
 ### Delete
 
 - permanent delete
+- remove the note immediately from the page
+- if the backend delete fails, restore the note and show an error
 - lightweight confirmation only if needed by product polish
 
 ## Security and Privacy
@@ -413,14 +420,22 @@ This gives a responsive `same page, same rough spot` behavior instead of brittle
 - create note on current page URL
 - notes reload on revisit
 - drag updates position
-- resize clamps notes into view
+- creation does not run collision resolution
+- reload does not run collision resolution
+- resize does not mutate stored note coordinates
+- overlapping notes remain where placed
+- typing autosaves after a short pause
+- delete removes the note permanently, with rollback on API failure
 - notes remain private by auth identity
 
 ## Manual verification
 
 - create notes on multiple pages and confirm route scoping
 - log out and log back in to confirm persistence
-- open same page on smaller screen width and verify reflow
+- open same page on smaller screen width and verify visual clamping does not overwrite the saved position
+- create overlapping notes and verify neither note moves automatically
+- type a note, log out, log back in, and verify the content and position return
+- delete a note, reload the page, and verify it does not return
 - confirm educator and student each only see their own notes
 
 ## Rollout Notes
@@ -438,5 +453,5 @@ This gives a responsive `same page, same rough spot` behavior instead of brittle
 1. Add backend sticky note model and CRUD endpoints
 2. Add frontend page-scoped note layer in the shared shell
 3. Add right-click context menu and colorful draggable note cards
-4. Add responsive reflow and collision handling
+4. Add exact-position persistence, autosave, and reliable deletion
 5. Run educator and student manual verification across core pages
