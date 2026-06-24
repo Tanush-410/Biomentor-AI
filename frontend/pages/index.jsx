@@ -8,261 +8,319 @@ import {
   MessageSquare,
   School2,
   ShieldCheck,
-  Sparkles
+  Sparkles,
 } from 'lucide-react'
 
 export default function HomePage() {
-  const heroWords = ['Smarter', 'Learning', 'Starts', 'Here.']
-  const flowSteps = [
+  const heroWords = ['AI', 'Learning', 'Operating', 'System.']
+
+  const learningLoops = [
     {
-      index: '01',
+      label: '01',
       title: 'Study from your own material',
-      description: 'Upload PDFs or notes, reopen them offline, and ask AI questions from the same source base.'
+      text: 'Upload PDFs, notes, and classroom material. BioMentor turns them into searchable study context, summaries, quiz practice, and revision paths.',
     },
     {
-      index: '02',
-      title: 'Practice and track performance',
-      description: 'Generate quizzes, review answer quality, and monitor progress across real Bloom-level performance.'
+      label: '02',
+      title: 'Run classroom-ready assessment',
+      text: 'Educators can schedule quizzes, proctored exams, fixed-answer papers, descriptive responses, and certificate-linked course work.',
     },
     {
-      index: '03',
-      title: 'Support classrooms in real time',
-      description: 'Educators run classrooms, publish assessments, respond to messages, and intervene when students need help.'
-    }
+      label: '03',
+      title: 'Support live learning',
+      text: 'Classrooms get live meetings, AI notes, student signals, messages, sticky notes, and intervention workflows in one connected space.',
+    },
+    {
+      label: '04',
+      title: 'Close the loop with proof',
+      text: 'Progress, grading, anticheat evidence, certificates, and teacher review surfaces keep learning outcomes visible and accountable.',
+    },
   ]
 
-  const studentPoints = [
-    'Study from your own material with offline-ready PDFs and AI explanations.',
-    'Practice with quizzes generated from the same source material you are learning from.',
-    'Track performance and return to the exact materials that need more review.'
+  const aiSystems = [
+    {
+      title: 'AI Meeting Assistant',
+      text: 'Joins the live learning flow with meeting notes, recap prompts, and class follow-up ideas.',
+      icon: MessageSquare,
+    },
+    {
+      title: 'AI Educator Copilot',
+      text: 'Helps teachers decide what to assign, who needs attention, and how to respond to classroom patterns.',
+      icon: School2,
+    },
+    {
+      title: 'AI Study Coach',
+      text: 'Guides students through weak areas, upcoming work, and revision paths based on their own material.',
+      icon: Brain,
+    },
+    {
+      title: 'Material Intelligence',
+      text: 'Transforms documents into summaries, concept maps, exam-focused study paths, and grounded answers.',
+      icon: BookOpen,
+    },
   ]
 
-  const educatorPoints = [
-    'Run classroom-ready spaces with materials, announcements, messages, and live coordination.',
-    'Create quizzes manually or from study material, then publish them with schedule and proctoring controls.',
-    'Monitor performance, respond quickly, and step in when learners raise concerns or show risk signals.'
+  const premiumFeatures = [
+    {
+      title: 'Exam Maker',
+      text: 'A teacher-first exam builder with structured paper sections, fixed response boxes, keywords, images, and AI-suggested questions.',
+    },
+    {
+      title: 'Anticheat Bot',
+      text: 'Proctored exam and quiz monitoring with warnings, evidence capture, teacher review, and debarred-case records.',
+    },
+    {
+      title: 'Certifications',
+      text: 'Teachers can attach course links or create course paths, then issue BioMentor-branded certificates when students complete them.',
+    },
+    {
+      title: 'Sticky notes',
+      text: 'Private, colorful notes that stay pinned to the exact page position where students or educators created them.',
+    },
   ]
 
-  const capabilityCards = [
+  const audienceCards = [
     {
-      icon: <BookOpen className="h-5 w-5" />,
-      title: 'Study from your own material',
-      description: 'Turn uploaded PDFs and notes into a reusable study system instead of jumping between disconnected tools.'
+      title: 'For students',
+      text: 'Study material, classroom work, live sessions, proctored attempts, progress, certificates, and private notes all live in one focused workspace.',
+      action: 'Start student mode',
+      href: '/login?mode=student',
     },
     {
-      icon: <School2 className="h-5 w-5" />,
-      title: 'Classroom-ready workflows',
-      description: 'Bring students, educators, materials, and communication into one organized classroom flow.'
+      title: 'For educators',
+      text: 'Create classrooms, schedule exams, launch meetings, review anticheat evidence, grade descriptive answers, and publish certificates.',
+      action: 'Enter educator mode',
+      href: '/login?mode=educator',
     },
-    {
-      icon: <Brain className="h-5 w-5" />,
-      title: 'Proctored quiz delivery',
-      description: 'Publish timed quizzes with answer-key grading, scheduling, and protected attempt rules.'
-    },
-    {
-      icon: <BarChart3 className="h-5 w-5" />,
-      title: 'Progress and intervention',
-      description: 'Move from performance signals to targeted support with progress, alerts, and educator follow-through.'
-    }
   ]
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#fbf5ee_0%,#f7efe4_44%,#f2e2cf_100%)]">
-      <header className="sticky top-0 z-10 border-b border-stone-200/80 bg-[rgba(255,251,247,0.94)] backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-lg font-semibold uppercase tracking-[0.32em] text-[#8a5a36] md:text-xl">BioMentor AI</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight text-slate-950 md:text-4xl">
-              {heroWords.map((word, index) => {
-                const first = word.charAt(0)
-                const rest = word.slice(1)
-                return (
-                  <span key={`${word}-${index}`} className="mr-[0.32em] inline-block">
-                    <span className="text-[#B45309]">{first}</span>
-                    <span className="text-slate-950">{rest}</span>
-                  </span>
-                )
-              })}
-            </h1>
-          </div>
+    <main className="min-h-screen overflow-hidden bg-[#f7efe4] text-[#140f1f]">
+      <section className="relative px-6 py-6 md:px-10 lg:px-16">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(155,95,47,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(45,72,88,0.12),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.55),rgba(239,220,197,0.5))]" />
+        <div className="relative mx-auto max-w-7xl">
+          <header className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/65 bg-white/60 px-5 py-4 shadow-[0_24px_80px_rgba(70,46,28,0.12)] backdrop-blur">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.48em] text-[#9a5f2f]">BioMentor AI</p>
+              <p className="mt-1 text-sm font-bold text-slate-600">The classroom intelligence layer for modern learning.</p>
+            </div>
+            <nav className="flex items-center gap-3">
+              <Link href="/login" className="rounded-full border border-[#e0d2c4] bg-white/75 px-5 py-3 text-sm font-black text-[#2d2118] transition hover:-translate-y-0.5 hover:border-[#9a5f2f]">
+                Login
+              </Link>
+              <Link href="/register" className="rounded-full bg-[#8d572f] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(141,87,47,0.28)] transition hover:-translate-y-0.5 hover:bg-[#6f3f22]">
+                Create Account
+              </Link>
+            </nav>
+          </header>
 
-          <div className="flex flex-wrap gap-3">
-            <Link href="/login" className="btn btn-outline">Login</Link>
-            <Link href="/register" className="btn btn-primary">Create Account</Link>
+          <div className="grid gap-6 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-[#422719] p-7 text-white shadow-[0_34px_90px_rgba(66,39,25,0.32)] md:p-10 lg:min-h-[620px]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_28%,rgba(220,153,91,0.45),transparent_34%),linear-gradient(145deg,rgba(255,255,255,0.08),transparent_45%)]" />
+              <div className="relative z-10 flex h-full flex-col justify-between gap-14">
+                <div>
+                  <p className="section-kicker text-[#f7d5b4]">Built beyond quizzes</p>
+                  <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.92] tracking-[-0.06em] md:text-7xl lg:text-8xl">
+                    {heroWords.map((word) => (
+                      <span key={word} className="mr-4 inline-block">
+                        {word}
+                      </span>
+                    ))}
+                  </h1>
+                  <p className="mt-7 max-w-2xl text-lg font-semibold leading-8 text-[#f6e8d8] md:text-xl">
+                    BioMentor is now the workspace where students study from your own material, educators run classroom-ready workflows, and every proctored quiz, exam, meeting, note, and certificate connects back to learning evidence.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <HeroSignal label="AI stack" value="Coach + Copilot + Meeting Assistant" />
+                  <HeroSignal label="Assessment" value="Quizzes, exams, grading, anticheat" />
+                  <HeroSignal label="Classroom" value="Live sessions, messages, materials" />
+                  <HeroSignal label="Proof" value="Certificates, progress, evidence" />
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/login?mode=student" className="btn bg-[#f4c392] text-[#2d2118] hover:bg-[#ffd7aa]">
+                    Start with BioMentor <ArrowRight size={18} />
+                  </Link>
+                  <Link href="/login?mode=educator" className="btn border border-white/40 bg-white/10 text-white hover:bg-white/20">
+                    Open educator workspace
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-6">
+              <div className="rounded-[2.25rem] border border-[#e6d8ca] bg-white/78 p-7 shadow-[0_24px_70px_rgba(70,46,28,0.1)] md:p-9">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="section-kicker">Product command center</p>
+                  <span className="role-pill bg-[#f1e1cf] text-[#8d572f]">Live app</span>
+                </div>
+                <h2 className="mt-5 max-w-xl text-3xl font-black leading-tight tracking-[-0.04em] md:text-4xl">
+                  One premium platform for learning, assessment, classroom response, and proof.
+                </h2>
+                <div className="mt-7 space-y-4">
+                  {learningLoops.map((step) => (
+                    <FlowStep key={step.label} {...step} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {audienceCards.map((card) => (
+                  <ModeCard key={card.title} {...card} />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      <main className="mx-auto max-w-7xl space-y-10 px-4 py-10">
-        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="card overflow-hidden bg-[linear-gradient(150deg,#332217_0%,#5d3d28_54%,#8a5a36_100%)] p-8 text-white shadow-2xl shadow-stone-200/70">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#f0dcc6] md:text-base">Adaptive Learning Workspace</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-bold leading-tight">
-              Study from your own material, run classroom-ready assessment, and support learning from one connected system.
-            </h2>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-200">
-              BioMentor turns uploaded study material into AI-guided learning for students and classroom-ready assessment, intervention, and support workflows for educators.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/register" className="btn btn-primary">
-                Start with BioMentor
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href="/login?mode=educator" className="btn border border-white/14 bg-white/10 text-white hover:bg-white/16">
-                Enter Educator Mode
-              </Link>
-            </div>
-
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <HeroSignal label="Study" value="AI learning chat + offline material" />
-              <HeroSignal label="Assess" value="Manual and generated classroom quizzes" />
-              <HeroSignal label="Support" value="Progress, messaging, and intervention" />
-            </div>
-          </div>
-
-          <div className="card p-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="section-kicker text-slate-500">Product flow</p>
-                <h3 className="mt-2 text-2xl font-bold text-slate-950">One platform that connects learning, assessment, and classroom response.</h3>
-              </div>
-              <div className="role-pill border-[#d8c1aa] bg-[#f3e6d8] text-[#7a5334]">Live app</div>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {flowSteps.map((step) => (
-                <FlowStep key={step.index} index={step.index} title={step.title} description={step.description} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-2">
-          <ModeCard
-            eyebrow="Student mode"
-            title="An AI learning platform built around the material students already use."
-            description="Students get a calmer revision loop with source-aware explanations, adaptive quiz practice, and progress that stays tied to the exact content they uploaded."
-            accentClass="bg-[linear-gradient(180deg,#fffaf5_0%,#f5e8da_100%)]"
-            points={studentPoints}
-            ctaHref="/login?mode=student"
-            ctaLabel="Open Student Mode"
-            icon={<BookOpen className="h-5 w-5" />}
-          />
-          <ModeCard
-            eyebrow="Educator mode"
-            title="A classroom-ready exam preparation system for educators and teams."
-            description="Educators move from classroom control to quiz delivery, communication, progress review, and intervention without leaving the same workspace."
-            accentClass="bg-[linear-gradient(180deg,#3b281c_0%,#62412b_100%)] text-white border-[#4c3425]"
-            dark
-            points={educatorPoints}
-            ctaHref="/login?mode=educator"
-            ctaLabel="Open Educator Mode"
-            icon={<School2 className="h-5 w-5" />}
-          />
-        </section>
-
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {capabilityCards.map((card) => (
-            <CapabilityCard
-              key={card.title}
-              icon={card.icon}
-              title={card.title}
-              description={card.description}
-            />
-          ))}
-        </section>
-
-        <section className="card p-6">
-          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      <section className="px-6 py-10 md:px-10 lg:px-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="section-kicker text-[#8a5a36]">Platform coverage</p>
-              <h3 className="mt-2 text-3xl font-bold text-slate-950">Built for individual learning, classroom delivery, and academic follow-through.</h3>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                The platform now connects study, assessment, communication, and intervention into one product flow for students, educators, and classroom teams.
-              </p>
+              <p className="section-kicker">AI systems now visible</p>
+              <h2 className="mt-4 max-w-3xl text-4xl font-black leading-tight tracking-[-0.05em] md:text-6xl">
+                The AI is not a side widget. It is the operating layer.
+              </h2>
             </div>
-            <div className="grid gap-3">
-              <ProofRow icon={<MessageSquare className="h-4 w-4" />} text="Learning chat grounded in uploaded study material" />
-              <ProofRow icon={<ShieldCheck className="h-4 w-4" />} text="Classroom messaging, live coordination, and educator alerts" />
-              <ProofRow icon={<BarChart3 className="h-4 w-4" />} text="Manual and generated quizzes with progress-aware follow-through" />
+            <p className="max-w-xl text-lg font-semibold leading-8 text-slate-600">
+              Every major part of the app now has an AI role: teaching decisions, student coaching, material understanding, assessment quality, meeting recaps, and classroom intelligence.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {aiSystems.map((system) => (
+              <AISystemCard key={system.title} {...system} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-10 md:px-10 lg:px-16">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[2.4rem] bg-[#15111d] p-8 text-white shadow-[0_30px_90px_rgba(20,15,31,0.25)] md:p-10">
+            <p className="section-kicker text-[#f2bf8c]">Assessment, proctoring, certificates</p>
+            <h2 className="mt-5 text-4xl font-black leading-tight tracking-[-0.05em] md:text-6xl">
+              From classroom task to verified outcome.
+            </h2>
+            <p className="mt-6 text-lg font-semibold leading-8 text-[#e9dfd4]">
+              BioMentor now supports teacher-built exams, AI-suggested papers, proctored attempts, anticheat review, rubric-backed grading, and completion certificates.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {premiumFeatures.map((feature, index) => (
+              <FeatureBlock key={feature.title} index={index + 1} {...feature} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 pb-16 pt-10 md:px-10 lg:px-16">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] border border-[#e2d2c2] bg-white/80 shadow-[0_28px_90px_rgba(70,46,28,0.12)]">
+          <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="p-8 md:p-10">
+              <p className="section-kicker">Why customers choose it</p>
+              <h2 className="mt-5 text-4xl font-black leading-tight tracking-[-0.05em] md:text-6xl">
+                A school does not need another file locker. It needs a learning brain.
+              </h2>
+              <p className="mt-6 text-lg font-semibold leading-8 text-slate-600">
+                The landing page now reflects what the product has become: a premium, AI-forward classroom platform with real learning workflows instead of isolated tools.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link href="/login?mode=educator" className="btn bg-[#8d572f] text-white hover:bg-[#6f3f22]">
+                  Build a classroom <ArrowRight size={18} />
+                </Link>
+                <Link href="/login?mode=student" className="btn border border-[#d9c8b8] bg-white text-[#2d2118] hover:border-[#9a5f2f]">
+                  Study as a student
+                </Link>
+              </div>
+            </div>
+            <div className="grid gap-px bg-[#e4d3c2] sm:grid-cols-2">
+              <ProofCell title="Material to mastery" text="Upload, understand, practice, revise, and ask grounded questions from the same source base." />
+              <ProofCell title="Teacher command" text="Classwork, meetings, exams, grading, certificates, and interventions stay connected." />
+              <ProofCell title="Protected assessment" text="Fullscreen, camera, tab switching, warnings, and Anticheat Bot evidence support review." />
+              <ProofCell title="Learning memory" text="Sticky notes, progress signals, AI recaps, and classroom intelligence make the product feel alive." />
             </div>
           </div>
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
+    </main>
   )
 }
 
 function HeroSignal({ label, value }) {
   return (
-    <div className="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f0dcc6]">{label}</p>
-      <p className="mt-2 text-xl font-bold text-white">{value}</p>
+    <div className="rounded-[1.5rem] border border-white/15 bg-white/10 p-4 backdrop-blur">
+      <p className="text-[0.65rem] font-black uppercase tracking-[0.34em] text-[#f2bf8c]">{label}</p>
+      <p className="mt-2 text-sm font-black leading-6 text-white">{value}</p>
     </div>
   )
 }
 
-function FlowStep({ index, title, description }) {
+function FlowStep({ label, title, text }) {
   return (
-    <div className="surface-subtle p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8a5a36]">{index}</p>
-      <h4 className="mt-2 text-lg font-bold text-slate-950">{title}</h4>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  )
-}
-
-function CapabilityCard({ icon, title, description }) {
-  return (
-    <div className="card p-5">
-      <div className="inline-flex rounded-2xl bg-[#f2e4d4] p-3 text-[#8a5a36]">
-        {icon}
-      </div>
-      <h3 className="mt-4 text-lg font-bold text-slate-950">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  )
-}
-
-function ModeCard({ eyebrow, title, description, points, ctaHref, ctaLabel, icon, accentClass, dark = false }) {
-  return (
-    <div className={`card p-6 ${accentClass}`}>
-      <div className={`inline-flex rounded-2xl p-3 ${dark ? 'bg-white/10 text-[#f0dcc6]' : 'bg-[#f2e4d4] text-[#8a5a36]'}`}>
-        {icon}
-      </div>
-      <p className={`section-kicker mt-5 ${dark ? 'text-[#f0dcc6]' : 'text-[#8a5a36]'}`}>{eyebrow}</p>
-      <h3 className={`mt-2 text-3xl font-bold ${dark ? 'text-white' : 'text-slate-950'}`}>{title}</h3>
-      <p className={`mt-4 text-sm leading-7 ${dark ? 'text-slate-300' : 'text-slate-600'}`}>{description}</p>
-
-      <div className="mt-6 space-y-3">
-        {points.map((point) => (
-          <div
-            key={point}
-            className={`flex items-start gap-3 rounded-[20px] border px-4 py-3 ${
-              dark ? 'border-white/10 bg-white/6 text-slate-100' : 'border-slate-200 bg-white/75 text-slate-700'
-            }`}
-          >
-            <div className={`mt-1 h-2.5 w-2.5 rounded-full ${dark ? 'bg-[#f0dcc6]' : 'bg-[#8a5a36]'}`} />
-            <p className="text-sm leading-6">{point}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6">
-        <Link href={ctaHref} className={dark ? 'btn border border-white/14 bg-white/10 text-white hover:bg-white/16' : 'btn btn-outline'}>
-          {ctaLabel}
-        </Link>
+    <div className="rounded-[1.55rem] border border-[#eadccd] bg-[#f7efe4]/80 p-5">
+      <div className="flex gap-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-[#8d572f] shadow-sm">{label}</span>
+        <div>
+          <h3 className="text-lg font-black text-[#160f1d]">{title}</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+        </div>
       </div>
     </div>
   )
 }
 
-function ProofRow({ icon, text }) {
+function ModeCard({ title, text, action, href }) {
   return (
-    <div className="surface-quiet flex items-start gap-3 p-4">
-      <div className="rounded-xl bg-slate-100 p-2 text-slate-700">{icon}</div>
-      <p className="text-sm leading-6 text-slate-700">{text}</p>
-    </div>
+    <Link href={href} className="group rounded-[2rem] border border-[#e3d3c4] bg-white/76 p-6 shadow-[0_18px_50px_rgba(70,46,28,0.08)] transition hover:-translate-y-1 hover:border-[#9a5f2f] hover:bg-white">
+      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0ddc8] text-[#8d572f]">
+        <School2 size={22} />
+      </div>
+      <h3 className="text-2xl font-black tracking-[-0.03em]">{title}</h3>
+      <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+      <p className="mt-5 flex items-center gap-2 text-sm font-black text-[#8d572f]">
+        {action} <ArrowRight size={16} className="transition group-hover:translate-x-1" />
+      </p>
+    </Link>
+  )
+}
+
+function AISystemCard({ title, text, icon: Icon }) {
+  return (
+    <article className="rounded-[2rem] border border-[#e3d3c4] bg-white/75 p-6 shadow-[0_18px_55px_rgba(70,46,28,0.08)]">
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2d2118] text-[#f2bf8c]">
+        <Icon size={24} />
+      </div>
+      <h3 className="text-2xl font-black leading-tight tracking-[-0.04em]">{title}</h3>
+      <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+    </article>
+  )
+}
+
+function FeatureBlock({ index, title, text }) {
+  return (
+    <article className="rounded-[2rem] border border-[#e2d2c2] bg-white/78 p-6 shadow-[0_18px_55px_rgba(70,46,28,0.08)]">
+      <p className="mb-5 inline-flex rounded-full bg-[#f0ddc8] px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#8d572f]">
+        {String(index).padStart(2, '0')}
+      </p>
+      <h3 className="text-3xl font-black leading-tight tracking-[-0.05em]">{title}</h3>
+      <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+    </article>
+  )
+}
+
+function ProofCell({ title, text }) {
+  return (
+    <article className="bg-[#fbf7f0] p-7 md:p-8">
+      <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f0ddc8] text-[#8d572f]">
+        {title.includes('Protected') ? <ShieldCheck size={21} /> : title.includes('Teacher') ? <BarChart3 size={21} /> : title.includes('memory') ? <Sparkles size={21} /> : <BookOpen size={21} />}
+      </div>
+      <h3 className="text-2xl font-black tracking-[-0.04em]">{title}</h3>
+      <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+    </article>
   )
 }
