@@ -12,7 +12,12 @@ import {
 } from 'lucide-react'
 
 export default function HomePage() {
-  const heroWords = ['AI', 'Learning', 'Operating', 'System.']
+  const brandWords = [
+    { lead: 'S', rest: 'marter' },
+    { lead: 'L', rest: 'earning' },
+    { lead: 'S', rest: 'tarts' },
+    { lead: 'H', rest: 'ere.' },
+  ]
 
   const learningLoops = [
     {
@@ -95,20 +100,27 @@ export default function HomePage() {
   ]
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7efe4] text-[#140f1f]">
+    <main className="min-h-screen overflow-hidden bg-[#f7efe4] text-[#24150d]">
       <section className="relative px-6 py-6 md:px-10 lg:px-16">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(155,95,47,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(45,72,88,0.12),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.55),rgba(239,220,197,0.5))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(155,95,47,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(141,87,47,0.12),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.55),rgba(239,220,197,0.5))]" />
         <div className="relative mx-auto max-w-7xl">
-          <header className="flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/65 bg-white/60 px-5 py-4 shadow-[0_24px_80px_rgba(70,46,28,0.12)] backdrop-blur">
+          <header className="flex flex-wrap items-center justify-between gap-5 border-b border-[#e4d3c2] bg-[#fffaf3]/76 px-1 py-7 backdrop-blur md:px-0">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.48em] text-[#9a5f2f]">BioMentor AI</p>
-              <p className="mt-1 text-sm font-bold text-slate-600">The classroom intelligence layer for modern learning.</p>
+              <p className="text-sm font-black uppercase tracking-[0.48em] text-[#9a5f2f]">BioMentor AI</p>
+              <h1 className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-4xl font-black leading-none tracking-[-0.06em] text-[#1f160f] md:text-5xl">
+                {brandWords.map((word) => (
+                  <span key={`${word.lead}${word.rest}`}>
+                    <span className="text-[#b45c1b]">{word.lead}</span>
+                    {word.rest}
+                  </span>
+                ))}
+              </h1>
             </div>
             <nav className="flex items-center gap-3">
-              <Link href="/login" className="rounded-full border border-[#e0d2c4] bg-white/75 px-5 py-3 text-sm font-black text-[#2d2118] transition hover:-translate-y-0.5 hover:border-[#9a5f2f]">
+              <Link href="/login" className="rounded-full border border-[#d9c8b8] bg-white/85 px-6 py-3 text-sm font-black text-[#2d2118] transition hover:-translate-y-0.5 hover:border-[#9a5f2f]">
                 Login
               </Link>
-              <Link href="/register" className="rounded-full bg-[#8d572f] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(141,87,47,0.28)] transition hover:-translate-y-0.5 hover:bg-[#6f3f22]">
+              <Link href="/register" className="rounded-full bg-[#8d572f] px-6 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(141,87,47,0.28)] transition hover:-translate-y-0.5 hover:bg-[#6f3f22]">
                 Create Account
               </Link>
             </nav>
@@ -119,13 +131,9 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_28%,rgba(220,153,91,0.45),transparent_34%),linear-gradient(145deg,rgba(255,255,255,0.08),transparent_45%)]" />
               <div className="relative z-10 flex h-full flex-col justify-between gap-14">
                 <div>
-                  <p className="section-kicker text-[#f7d5b4]">Built beyond quizzes</p>
+                  <p className="section-kicker text-[#f7d5b4]">Adaptive learning workspace</p>
                   <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[0.92] tracking-[-0.06em] md:text-7xl lg:text-8xl">
-                    {heroWords.map((word) => (
-                      <span key={word} className="mr-4 inline-block">
-                        {word}
-                      </span>
-                    ))}
+                    Study, assess, meet, certify, and protect learning from one connected system.
                   </h1>
                   <p className="mt-7 max-w-2xl text-lg font-semibold leading-8 text-[#f6e8d8] md:text-xl">
                     BioMentor is now the workspace where students study from your own material, educators run classroom-ready workflows, and every proctored quiz, exam, meeting, note, and certificate connects back to learning evidence.
@@ -185,7 +193,7 @@ export default function HomePage() {
                 The AI is not a side widget. It is the operating layer.
               </h2>
             </div>
-            <p className="max-w-xl text-lg font-semibold leading-8 text-slate-600">
+            <p className="max-w-xl text-lg font-semibold leading-8 text-[#5c4b3e]">
               Every major part of the app now has an AI role: teaching decisions, student coaching, material understanding, assessment quality, meeting recaps, and classroom intelligence.
             </p>
           </div>
@@ -200,7 +208,7 @@ export default function HomePage() {
 
       <section className="px-6 py-10 md:px-10 lg:px-16">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[2.4rem] bg-[#15111d] p-8 text-white shadow-[0_30px_90px_rgba(20,15,31,0.25)] md:p-10">
+          <div className="rounded-[2.4rem] bg-[#3a2418] p-8 text-white shadow-[0_30px_90px_rgba(66,39,25,0.28)] md:p-10">
             <p className="section-kicker text-[#f2bf8c]">Assessment, proctoring, certificates</p>
             <h2 className="mt-5 text-4xl font-black leading-tight tracking-[-0.05em] md:text-6xl">
               From classroom task to verified outcome.
@@ -226,7 +234,7 @@ export default function HomePage() {
               <h2 className="mt-5 text-4xl font-black leading-tight tracking-[-0.05em] md:text-6xl">
                 A school does not need another file locker. It needs a learning brain.
               </h2>
-              <p className="mt-6 text-lg font-semibold leading-8 text-slate-600">
+              <p className="mt-6 text-lg font-semibold leading-8 text-[#5c4b3e]">
                 The landing page now reflects what the product has become: a premium, AI-forward classroom platform with real learning workflows instead of isolated tools.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
@@ -266,8 +274,8 @@ function FlowStep({ label, title, text }) {
       <div className="flex gap-4">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-[#8d572f] shadow-sm">{label}</span>
         <div>
-          <h3 className="text-lg font-black text-[#160f1d]">{title}</h3>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+          <h3 className="text-lg font-black text-[#24150d]">{title}</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#5c4b3e]">{text}</p>
         </div>
       </div>
     </div>
@@ -281,7 +289,7 @@ function ModeCard({ title, text, action, href }) {
         <School2 size={22} />
       </div>
       <h3 className="text-2xl font-black tracking-[-0.03em]">{title}</h3>
-      <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+      <p className="mt-3 text-sm font-semibold leading-6 text-[#5c4b3e]">{text}</p>
       <p className="mt-5 flex items-center gap-2 text-sm font-black text-[#8d572f]">
         {action} <ArrowRight size={16} className="transition group-hover:translate-x-1" />
       </p>
@@ -292,11 +300,11 @@ function ModeCard({ title, text, action, href }) {
 function AISystemCard({ title, text, icon: Icon }) {
   return (
     <article className="rounded-[2rem] border border-[#e3d3c4] bg-white/75 p-6 shadow-[0_18px_55px_rgba(70,46,28,0.08)]">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#2d2118] text-[#f2bf8c]">
+      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#3a2418] text-[#f2bf8c]">
         <Icon size={24} />
       </div>
       <h3 className="text-2xl font-black leading-tight tracking-[-0.04em]">{title}</h3>
-      <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+      <p className="mt-4 text-sm font-semibold leading-6 text-[#5c4b3e]">{text}</p>
     </article>
   )
 }
@@ -308,7 +316,7 @@ function FeatureBlock({ index, title, text }) {
         {String(index).padStart(2, '0')}
       </p>
       <h3 className="text-3xl font-black leading-tight tracking-[-0.05em]">{title}</h3>
-      <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+      <p className="mt-4 text-sm font-semibold leading-6 text-[#5c4b3e]">{text}</p>
     </article>
   )
 }
@@ -320,7 +328,7 @@ function ProofCell({ title, text }) {
         {title.includes('Protected') ? <ShieldCheck size={21} /> : title.includes('Teacher') ? <BarChart3 size={21} /> : title.includes('memory') ? <Sparkles size={21} /> : <BookOpen size={21} />}
       </div>
       <h3 className="text-2xl font-black tracking-[-0.04em]">{title}</h3>
-      <p className="mt-3 text-sm font-semibold leading-6 text-slate-600">{text}</p>
+      <p className="mt-3 text-sm font-semibold leading-6 text-[#5c4b3e]">{text}</p>
     </article>
   )
 }

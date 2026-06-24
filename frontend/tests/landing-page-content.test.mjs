@@ -5,7 +5,11 @@ import fs from 'node:fs'
 test('landing page contains the refreshed product positioning hooks', () => {
   const source = fs.readFileSync(new URL('../pages/index.jsx', import.meta.url), 'utf8')
 
-  assert.match(source, /const heroWords = \['AI', 'Learning', 'Operating', 'System\.'\]/)
+  assert.match(source, /const brandWords = \[/)
+  assert.match(source, /S.+marter/s)
+  assert.match(source, /L.+earning/s)
+  assert.match(source, /S.+tarts/s)
+  assert.match(source, /H.+ere\./s)
   assert.match(source, /study from your own material/i)
   assert.match(source, /classroom-ready/i)
   assert.match(source, /proctored/i)
