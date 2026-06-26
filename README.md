@@ -69,6 +69,146 @@ The project includes:
 - AI-assisted browser-side proctoring warnings and auto-debar after repeated violations
 - circular progress indicators across major student and educator pages
 
+## How to Use BioMentor AI
+
+This guide is the recommended client walkthrough after the app is deployed and the backend health check is passing.
+
+### 1. Create the first accounts
+
+1. Open the deployed frontend URL.
+2. Choose `Create Account`.
+3. Create at least one educator account and one student account.
+4. Sign in through the correct mode on `/login`.
+
+Use educator mode for classroom setup, exams, quizzes, meetings, certifications, and review workflows. Use student mode for studying, joining classrooms, taking assessments, joining meetings, and earning certificates.
+
+### 2. Student workflow
+
+Students should start from the student dashboard and use this flow:
+
+1. Go to `Materials`.
+2. Upload a PDF, TXT, or Markdown file.
+3. Open the uploaded material in the document viewer.
+4. Use `Learning Chat` to ask source-grounded questions.
+5. Use quick checks or generated quizzes to practice from the same material.
+6. Join a classroom with the invite code shared by the educator.
+7. Open classroom `Classwork` to take scheduled quizzes, exams, and certification tasks.
+8. Use private sticky notes by right-clicking any page, writing the note, and leaving it there. Notes stay tied to that exact URL until deleted.
+
+### 3. Educator workflow
+
+Educators should start from educator mode and use this flow:
+
+1. Create or open a classroom.
+2. Copy the classroom invite code and send it to students.
+3. Upload or attach materials for the class.
+4. Use `Quiz Maker` to create manual quizzes or generate quizzes from uploaded material.
+5. Use `Exam Maker` to build structured exam papers, add fixed response boxes, attach images or diagrams, add grading keywords, and schedule the exam.
+6. Use `Live` to schedule or start an in-app WebRTC classroom meeting.
+7. Use `Certification` to create a course track from links or custom tasks, then issue BioMentor-branded certificates when students complete it.
+8. Review student progress, classroom intelligence, proctor events, exam answers, and anti-cheat evidence from the educator review surfaces.
+
+### 4. Classroom workflow
+
+Classrooms are organized into these areas:
+
+- `Stream`: announcements, meeting notices, and class updates.
+- `Classwork`: scheduled quizzes, exams, certificates, and assignments.
+- `People`: enrolled learners and classroom membership.
+- `Messages`: educator-student communication.
+- `Live`: built-in scheduled meetings and live session access.
+
+Students join classrooms with invite codes. Educators control scheduling, publishing, and review.
+
+### 5. Live meeting workflow
+
+The meeting feature uses browser WebRTC for audio/video and FastAPI WebSockets only for signaling. For reliable hosted calls, configure TURN variables in Vercel.
+
+Recommended meeting test:
+
+1. Educator opens a classroom and goes to `Live`.
+2. Educator schedules a meeting or starts an active meeting.
+3. Student opens the same classroom `Live` tab and joins.
+4. Both users allow camera and microphone permissions.
+5. Confirm local video, remote video, and remote audio work on both sides.
+6. Use mute, camera off, leave, and teacher end meeting controls.
+
+If two people cannot see or hear each other on different networks, check that `NEXT_PUBLIC_TURN_URLS`, `NEXT_PUBLIC_TURN_USERNAME`, and `NEXT_PUBLIC_TURN_CREDENTIAL` are set in Vercel and that the frontend was redeployed after changing them.
+
+### 6. Proctored quiz and exam workflow
+
+BioMentor supports protected attempts for classroom quizzes and exams.
+
+Expected student flow:
+
+1. Open the scheduled quiz or exam from classroom `Classwork`.
+2. Grant camera permission when prompted.
+3. Enter fullscreen when required.
+4. Complete the attempt without switching tabs or hiding the camera.
+5. Submit answers before time expires.
+
+Expected educator flow:
+
+1. Open the relevant classroom or educator review page.
+2. Review attempts, warnings, debarred cases, and evidence snapshots.
+3. For descriptive exam answers, use the grading review workspace to compare the student response against teacher keywords and AI grading support.
+4. Make the final teacher decision before treating any anti-cheat event as conclusive.
+
+Important: anti-cheat signals are decision-support evidence. A teacher should review the final case, warning history, and captured evidence before making a final academic decision.
+
+### 7. Certification workflow
+
+Educators can create certification tracks for classroom learning outcomes.
+
+1. Open `Educator > Certification`.
+2. Create a course with teacher-provided links or custom completion tasks.
+3. Assign the course to a classroom or students.
+4. Students complete the required steps.
+5. BioMentor generates a branded certificate with the student name, course name, completion metadata, and platform branding.
+
+### 8. AI workspace workflow
+
+BioMentor's AI tools are designed as visible workspaces, not hidden widgets.
+
+- `Material Intelligence Studio`: turns uploaded content into summaries, concept maps, misconception checks, viva prompts, and study paths.
+- `AI Study Coach`: helps students choose what to revise next.
+- `AI Educator Copilot`: helps teachers decide what to assign, who needs attention, and how to respond.
+- `Classroom AI Board`: shows class-level focus signals and reteach opportunities.
+- `Assessment Intelligence Studio`: reviews quiz quality, release risk, Bloom balance, remediation, and question health.
+- `AI Meeting Assistant`: supports live class notes, follow-up prompts, and recap structure.
+- `AI Proctor Review`: summarizes proctor evidence and review priority for teacher decisions.
+
+### 9. Sticky notes workflow
+
+Sticky notes are private to the signed-in user.
+
+1. Right-click on an authenticated app page.
+2. Add a note.
+3. Drag it to the desired spot.
+4. Type the reminder.
+5. Leave it there to persist across logout/login.
+6. Press delete only when the note should be permanently removed.
+
+Notes are tied to the exact page URL where they were created, so a note on one classroom page will not appear on a different document or classroom route.
+
+### 10. Client handoff checklist
+
+Before a client uses BioMentor in a real class, verify:
+
+- The backend `/health` endpoint returns a healthy response.
+- Render has production `DATABASE_URL`, Supabase keys, `SECRET_KEY`, Groq/Qdrant keys if used, and correct `CORS_ORIGINS`.
+- Vercel has `NEXT_PUBLIC_API_URL` pointing to the Render backend.
+- Vercel has TURN variables for hosted live meetings.
+- Supabase is active and not paused.
+- Login works for both student and educator mode.
+- File upload and document viewing work from the hosted frontend.
+- Classroom invite code join works.
+- A sample quiz can be scheduled by the educator and opened by the student.
+- A sample exam can be scheduled, attempted, and reviewed.
+- A live meeting works between two devices or two different browser profiles.
+- Certification creation and certificate generation work.
+- Sticky notes persist after logout and can be deleted.
+
 ## Recent AI Platform Upgrades
 
 BioMentor AI now exposes its intelligence as explicit product workspaces instead of subtle helper text.
@@ -242,7 +382,7 @@ If you want hosted infra:
 - set `QDRANT_URL`
 - set `QDRANT_API_KEY` if needed
 - tune `TRUSTED_SEARCH_DOMAINS` and `WEB_FALLBACK_TOP_K` if you want different fallback search behavior
-- set `TURN_URL`, `TURN_USERNAME`, and `TURN_CREDENTIAL` for production-grade meeting relay support
+- set frontend TURN variables in Vercel for production-grade meeting relay support
 
 ### Start backend
 
@@ -269,9 +409,11 @@ cp .env.example .env.local
 
 ```env
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_TURN_URLS=
 NEXT_PUBLIC_TURN_URL=
 NEXT_PUBLIC_TURN_USERNAME=
 NEXT_PUBLIC_TURN_CREDENTIAL=
+NEXT_PUBLIC_TURN_PASSWORD=
 ```
 
 ### Start frontend
@@ -351,9 +493,6 @@ DEBUG=false
 CORS_ORIGINS=["https://your-frontend.vercel.app","https://your-custom-domain.com"]
 TRUSTED_SEARCH_DOMAINS=["khanacademy.org","britannica.com","nih.gov","nasa.gov",".edu/"]
 WEB_FALLBACK_TOP_K=4
-TURN_URL=turn:your-turn-host:3478?transport=udp
-TURN_USERNAME=your_turn_username
-TURN_CREDENTIAL=your_turn_password
 ```
 
 After deploy, confirm:
@@ -368,10 +507,12 @@ Set these Vercel environment variables:
 
 ```env
 NEXT_PUBLIC_API_URL=https://your-render-service.onrender.com
-NEXT_PUBLIC_TURN_URL=turn:your-turn-host:3478?transport=udp
+NEXT_PUBLIC_TURN_URLS=stun:stun.relay.metered.ca:80,turn:global.relay.metered.ca:80,turn:global.relay.metered.ca:80?transport=tcp,turn:global.relay.metered.ca:443,turns:global.relay.metered.ca:443?transport=tcp
 NEXT_PUBLIC_TURN_USERNAME=your_turn_username
 NEXT_PUBLIC_TURN_CREDENTIAL=your_turn_password
 ```
+
+`NEXT_PUBLIC_TURN_URL` is still supported for one older single relay URL, but `NEXT_PUBLIC_TURN_URLS` is preferred for Metered or any provider that gives multiple STUN/TURN endpoints. Render does not need these TURN variables for the current meeting implementation because the backend only handles WebSocket signaling; the browser creates the audio/video peer connection directly.
 
 After deploy, test:
 - login
@@ -387,6 +528,7 @@ After deploy, test:
 - Do **not** leave `DEBUG=true`.
 - Set a strong `SECRET_KEY`.
 - Use a real TURN server for reliable classroom calls. STUN-only is not enough for many real-world networks.
+- Put TURN credentials in Vercel as frontend environment variables, then redeploy the frontend so the browser bundle receives them.
 - CORS is now environment-driven through `CORS_ORIGINS`, so Render should allow your Vercel domain once it is added there.
 
 ## Running with Qdrant
@@ -396,9 +538,6 @@ Set in `backend/.env`:
 ```env
 QDRANT_URL=https://your-qdrant-endpoint
 QDRANT_API_KEY=your_qdrant_api_key
-TURN_URL=
-TURN_USERNAME=
-TURN_CREDENTIAL=
 ```
 
 The app is structured to use Qdrant-backed retrieval when available, with safer fallback behavior when vector search is unavailable.

@@ -2,20 +2,54 @@ import { useEffect, useRef, useState } from 'react'
 
 import { createMeetingSignalingClient } from '../lib/meetingSignalingClient'
 
-const getIceServers = () => {
-  const servers = [{ urls: 'stun:stun.l.google.com:19302' }]
-  if (process.env.NEXT_PUBLIC_TURN_URL && process.env.NEXT_PUBLIC_TURN_USERNAME && process.env.NEXT_PUBLIC_TURN_CREDENTIAL) {
-    const turnUrls = String(process.env.NEXT_PUBLIC_TURN_URL)
-      .split(',')
-      .map((value) => value.trim())
+const DEFAULT_STUN_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }]
+
+const splitIceServerUrls = (value) =>
+  String(value || '')
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+
+const normalizeIceServerEntries = (value) => {
+  if (!value) return []
+
+  try {
+    const parsed = JSON.parse(value)
+    const entries = Array.isArray(parsed) ? parsed : [parsed]
+    return entries
+      .map((entry) => {
+        if (typeof entry === 'string') return { urls: entry }
+        if (entry?.urls) return { ...entry }
+        return null
+      })
       .filter(Boolean)
-    servers.push({
-      urls: turnUrls.length > 1 ? turnUrls : turnUrls[0],
-      username: process.env.NEXT_PUBLIC_TURN_USERNAME,
-      credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL
-    })
+  } catch (_error) {
+    return splitIceServerUrls(value).map((url) => ({ urls: url }))
   }
-  return servers
+}
+
+const serverUsesTurnRelay = (server) => {
+  const urls = Array.isArray(server.urls) ? server.urls : [server.urls]
+  return urls.some((url) => /^turns?:/i.test(String(url || '')))
+}
+
+const getIceServers = () => {
+  const username = process.env.NEXT_PUBLIC_TURN_USERNAME
+  const credential = process.env.NEXT_PUBLIC_TURN_CREDENTIAL || process.env.NEXT_PUBLIC_TURN_PASSWORD
+  const configuredIceServers = normalizeIceServerEntries(
+    process.env.NEXT_PUBLIC_TURN_URLS || process.env.NEXT_PUBLIC_TURN_URL
+  )
+
+  const usableConfiguredServers = configuredIceServers
+    .map((server) => {
+      if (!serverUsesTurnRelay(server)) return server
+      if (!username || !credential) return null
+      return { ...server, username, credential }
+    })
+    .filter(Boolean)
+
+  // TURN over TLS, e.g. turns:global.relay.metered.ca:443?transport=tcp, is supported through NEXT_PUBLIC_TURN_URLS.
+  return [...DEFAULT_STUN_SERVERS, ...usableConfiguredServers]
 }
 
 export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
@@ -107,8 +141,11 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
       }
 
       peer.ontrack = (event) => {
-        const [stream] = event.streams
-        if (!stream) return
+        const [providedStream] = event.streams || []
+        const stream = providedStream || remoteStreamsRef.current.get(targetUserId) || new MediaStream()
+        if (!providedStream && event.track && !stream.getTracks().some((track) => track.id === event.track.id)) {
+          stream.addTrack(event.track)
+        }
         remoteStreamsRef.current.set(targetUserId, stream)
         setRemoteParticipants((current) => {
           const others = current.filter((participant) => participant.userId !== targetUserId)

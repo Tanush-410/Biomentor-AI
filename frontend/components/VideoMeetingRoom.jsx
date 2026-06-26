@@ -69,10 +69,12 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
   const transcriptClientRef = useRef(null)
   const audioTranscriberRef = useRef(null)
   const refreshTimeoutRef = useRef(null)
+  const turnUrlsConfigured = Boolean(process.env.NEXT_PUBLIC_TURN_URLS || process.env.NEXT_PUBLIC_TURN_URL)
+  const turnCredentialConfigured = Boolean(process.env.NEXT_PUBLIC_TURN_CREDENTIAL || process.env.NEXT_PUBLIC_TURN_PASSWORD)
   const turnRelayConfigured = Boolean(
-    process.env.NEXT_PUBLIC_TURN_URL
+    turnUrlsConfigured
       && process.env.NEXT_PUBLIC_TURN_USERNAME
-      && process.env.NEXT_PUBLIC_TURN_CREDENTIAL
+      && turnCredentialConfigured
   )
   const relayAdvisory =
     isHostedFrontend() && !turnRelayConfigured

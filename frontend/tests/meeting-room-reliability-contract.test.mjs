@@ -52,3 +52,24 @@ test("VideoMeetingRoom surfaces hosted TURN relay guidance when real-time media 
   assert.match(source, /TURN/i);
   assert.match(source, /relay/i);
 });
+
+test("useWebRTCMeeting accepts production TURN URL lists and password aliases", () => {
+  const source = readFromRepo("hooks/useWebRTCMeeting.js");
+  assert.match(source, /NEXT_PUBLIC_TURN_URLS/);
+  assert.match(source, /NEXT_PUBLIC_TURN_PASSWORD/);
+  assert.match(source, /normalizeIceServerEntries/);
+  assert.match(source, /turns:/);
+});
+
+test("useWebRTCMeeting keeps remote media when browsers deliver tracks without streams", () => {
+  const source = readFromRepo("hooks/useWebRTCMeeting.js");
+  assert.match(source, /new MediaStream/);
+  assert.match(source, /event\.track/);
+  assert.match(source, /addTrack/);
+});
+
+test("VideoMeetingRoom treats either TURN URL env shape as hosted relay configured", () => {
+  const source = readFromRepo("components/VideoMeetingRoom.jsx");
+  assert.match(source, /NEXT_PUBLIC_TURN_URLS/);
+  assert.match(source, /NEXT_PUBLIC_TURN_URL/);
+});
