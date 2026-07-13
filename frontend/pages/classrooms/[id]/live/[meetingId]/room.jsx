@@ -113,9 +113,9 @@ export default function DedicatedMeetingRoomPage() {
 
   if (loading && !classroom) {
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#fbf5ee_0%,#f7efe4_42%,#f3e6d6_100%)] px-4 py-6 md:px-8">
-        <div className="mx-auto max-w-[1600px] rounded-[32px] border border-[rgba(138,90,54,0.14)] bg-[rgba(255,251,247,0.94)] p-10 shadow-[0_24px_80px_rgba(69,39,21,0.12)]">
-          <p className="section-kicker text-[#8a5a36]">Meeting room</p>
+      <main className="min-h-screen bg-[linear-gradient(180deg,#fafafa_0%,#f4f4f5_42%,#e4e4e7_100%)] px-4 py-6 md:px-8">
+        <div className="mx-auto max-w-[1600px] rounded-[32px] border border-[rgba(0,0,0,0.14)] bg-[rgba(255,255,255,0.94)] p-10 shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
+          <p className="section-kicker text-[#18181b]">Meeting room</p>
           <h1 className="mt-3 text-4xl font-bold text-slate-950">Loading dedicated room...</h1>
         </div>
       </main>
@@ -123,17 +123,17 @@ export default function DedicatedMeetingRoomPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#fbf5ee_0%,#f7efe4_42%,#f3e6d6_100%)] px-4 py-5 md:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#fafafa_0%,#f4f4f5_42%,#e4e4e7_100%)] px-4 py-5 md:px-8">
       <div className="mx-auto max-w-[1600px] space-y-6">
-        <section className="rounded-[32px] border border-[rgba(138,90,54,0.14)] bg-[rgba(255,251,247,0.94)] shadow-[0_24px_80px_rgba(69,39,21,0.12)] backdrop-blur-xl">
-          <div className="flex flex-col gap-6 border-b border-[rgba(138,90,54,0.12)] px-6 py-6 lg:flex-row lg:items-start lg:justify-between">
+        <section className="rounded-[32px] border border-[rgba(0,0,0,0.14)] bg-[rgba(255,255,255,0.94)] shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-xl">
+          <div className="flex flex-col gap-6 border-b border-[rgba(0,0,0,0.12)] px-6 py-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
-              <Link href={`/classrooms/${classroomId}/live`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#8a5a36] transition hover:text-[#6d472d]">
+              <Link href={`/classrooms/${classroomId}/live`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#18181b] transition hover:text-[#3f3f46]">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Live Lobby
               </Link>
               <div>
-                <p className="section-kicker text-[#8a5a36]">Dedicated meeting room</p>
+                <p className="section-kicker text-[#18181b]">Dedicated meeting room</p>
                 <h1 className="mt-2 text-4xl font-bold text-slate-950">{meeting?.title || 'Class Meeting'}</h1>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
                   {meeting?.description || 'Meet away from the classroom dashboard so everyone can focus on the live session.'}
@@ -142,16 +142,16 @@ export default function DedicatedMeetingRoomPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[24px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Classroom</p>
+              <div className="rounded-[24px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Classroom</p>
                 <p className="mt-3 text-base font-semibold text-slate-950">{classroom?.name || 'Classroom'}</p>
               </div>
-              <div className="rounded-[24px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Schedule</p>
+              <div className="rounded-[24px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Schedule</p>
                 <p className="mt-3 text-sm font-semibold leading-6 text-slate-950">{formatSchedule(meeting)}</p>
               </div>
-              <div className="rounded-[24px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Status</p>
+              <div className="rounded-[24px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Status</p>
                 <p className="mt-3 text-base font-semibold capitalize text-slate-950">{meeting?.status || 'connecting'}</p>
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function DedicatedMeetingRoomPage() {
 
           {error ? (
             <div className="px-6 pt-6">
-              <div className="rounded-[20px] border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>
+              <div className="rounded-[20px] border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>
             </div>
           ) : null}
 
@@ -178,35 +178,35 @@ export default function DedicatedMeetingRoomPage() {
             </div>
 
             <aside className="space-y-5">
-              <div className="rounded-[28px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] p-5 shadow-[0_20px_50px_rgba(69,39,21,0.06)]">
+              <div className="rounded-[28px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.06)]">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-[#f5ebdf] p-3 text-[#8a5a36]">
+                  <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#18181b]">
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="section-kicker text-[#8a5a36]">AI meeting assistant</p>
+                    <p className="section-kicker text-[#18181b]">AI meeting assistant</p>
                     <h2 className="mt-2 text-2xl font-bold text-slate-950">Ready for notes, recaps, and follow-up study tools.</h2>
                   </div>
                 </div>
                 <div className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
-                  <div className="rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 px-4 py-4">
+                  <div className="rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4">
                     <p className="font-semibold text-slate-950">Live Notes</p>
                     <p className="mt-2">This dedicated panel is where transcript-powered notes and summaries can slot in next.</p>
                   </div>
-                  <div className="rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 px-4 py-4">
+                  <div className="rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4">
                     <p className="font-semibold text-slate-950">Action Items</p>
                     <p className="mt-2">Capture post-class tasks, revision pointers, and key doubts without cluttering the video stage.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] p-5 shadow-[0_20px_50px_rgba(69,39,21,0.06)]">
+              <div className="rounded-[28px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.06)]">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-[#f5ebdf] p-3 text-[#8a5a36]">
+                  <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#18181b]">
                     <Bot className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="section-kicker text-[#8a5a36]">Helpful tools</p>
+                    <p className="section-kicker text-[#18181b]">Helpful tools</p>
                     <h2 className="mt-2 text-2xl font-bold text-slate-950">Keep the class moving while the meeting is live.</h2>
                   </div>
                 </div>
@@ -217,9 +217,9 @@ export default function DedicatedMeetingRoomPage() {
                       <Link
                         key={action.label}
                         href={action.href}
-                        className="flex items-start gap-3 rounded-[22px] border border-[rgba(138,90,54,0.12)] bg-white/80 px-4 py-4 transition hover:border-[#c59a73] hover:bg-white"
+                        className="flex items-start gap-3 rounded-[22px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4 transition hover:border-[#71717a] hover:bg-white"
                       >
-                        <div className="rounded-2xl bg-[#f5ebdf] p-3 text-[#8a5a36]">
+                        <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#18181b]">
                           <Icon className="h-4 w-4" />
                         </div>
                         <div>
@@ -232,23 +232,23 @@ export default function DedicatedMeetingRoomPage() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] p-5 shadow-[0_20px_50px_rgba(69,39,21,0.06)]">
+              <div className="rounded-[28px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.06)]">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-[#f5ebdf] p-3 text-[#8a5a36]">
+                  <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#18181b]">
                     <ClipboardList className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="section-kicker text-[#8a5a36]">Session context</p>
+                    <p className="section-kicker text-[#18181b]">Session context</p>
                     <h2 className="mt-2 text-2xl font-bold text-slate-950">What this meeting is anchored to.</h2>
                   </div>
                 </div>
                 <div className="mt-5 space-y-4 text-sm leading-6 text-slate-600">
-                  <p className="rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 px-4 py-4">
-                    <CalendarDays className="mb-2 h-4 w-4 text-[#8a5a36]" />
+                  <p className="rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4">
+                    <CalendarDays className="mb-2 h-4 w-4 text-[#18181b]" />
                     {formatSchedule(meeting)}
                   </p>
-                  <p className="rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 px-4 py-4">
-                    <Users className="mb-2 h-4 w-4 text-[#8a5a36]" />
+                  <p className="rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4">
+                    <Users className="mb-2 h-4 w-4 text-[#18181b]" />
                     Teachers and students can stay in the room while hopping back to classwork and messages through the tool panel.
                   </p>
                 </div>

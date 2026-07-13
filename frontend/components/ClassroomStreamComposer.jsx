@@ -21,7 +21,7 @@ export default function ClassroomStreamComposer({ onSubmit, isSubmitting = false
 
   return (
     <form onSubmit={handleSubmit} className="card p-6">
-      <p className="section-kicker text-[#8a5a36]">Public post</p>
+      <p className="section-kicker text-[#18181b]">Public post</p>
       <h3 className="mt-2 text-2xl font-bold text-slate-950">Share something with the whole class.</h3>
       <div className="mt-5 grid gap-4 md:grid-cols-[1fr_220px]">
         <input

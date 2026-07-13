@@ -119,7 +119,7 @@ export default function ClassroomLivePage() {
           <MeetingScheduler onSubmit={handleSchedule} submitting={submitting} />
         ) : (
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Student live flow</p>
+            <p className="section-kicker text-[#18181b]">Student live flow</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Join directly from your classroom.</h3>
             <div className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
               <div className="surface-subtle p-4">
@@ -144,16 +144,16 @@ export default function ClassroomLivePage() {
               return (
                 <section
                   key={meeting.id}
-                  className="rounded-[28px] border border-[rgba(138,90,54,0.12)] bg-[#fff8f0] p-6 shadow-[0_16px_40px_rgba(69,39,21,0.05)]"
+                  className="rounded-[28px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] p-6 shadow-[0_16px_40px_rgba(0,0,0,0.05)]"
                 >
-                  <p className="section-kicker text-[#8a5a36]">Meeting recap</p>
+                  <p className="section-kicker text-[#18181b]">Meeting recap</p>
                   <h3 className="mt-2 text-2xl font-bold text-slate-950">{meeting.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-600">
                     {recap?.summary || 'Summary will appear after the meeting wrap-up.'}
                   </p>
                   {(recap?.study_recap || []).length ? (
-                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
-                      <p className="section-kicker text-[#8a5a36]">Study recap</p>
+                    <div className="mt-5 rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#18181b]">Study recap</p>
                       <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                         {recap.study_recap.map((item) => (
                           <li key={`${meeting.id}-study-${item}`}>• {item}</li>
@@ -162,8 +162,8 @@ export default function ClassroomLivePage() {
                     </div>
                   ) : null}
                   {(recap?.action_items || []).length ? (
-                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
-                      <p className="section-kicker text-[#8a5a36]">Action items</p>
+                    <div className="mt-5 rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#18181b]">Action items</p>
                       <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                         {recap.action_items.map((item) => (
                           <li key={`${meeting.id}-action-${item}`}>• {item}</li>
@@ -172,8 +172,8 @@ export default function ClassroomLivePage() {
                     </div>
                   ) : null}
                   {(recap?.unresolved_questions || []).length ? (
-                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
-                      <p className="section-kicker text-[#8a5a36]">Unresolved questions</p>
+                    <div className="mt-5 rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#18181b]">Unresolved questions</p>
                       <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                         {recap.unresolved_questions.map((item) => (
                           <li key={`${meeting.id}-question-${item}`}>• {item}</li>
@@ -182,8 +182,8 @@ export default function ClassroomLivePage() {
                     </div>
                   ) : null}
                   {(recap?.next_class_moves || []).length ? (
-                    <div className="mt-5 rounded-[20px] border border-[rgba(138,90,54,0.12)] bg-white/80 p-4">
-                      <p className="section-kicker text-[#8a5a36]">Next class moves</p>
+                    <div className="mt-5 rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 p-4">
+                      <p className="section-kicker text-[#18181b]">Next class moves</p>
                       <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                         {recap.next_class_moves.map((item) => (
                           <li key={`${meeting.id}-next-${item}`}>• {item}</li>

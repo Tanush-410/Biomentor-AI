@@ -341,14 +341,14 @@ export default function StudyDocumentPage() {
 
               <div className="flex flex-wrap gap-3 text-sm">
                 <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-full ${
-                  isOffline ? 'bg-[#ead4bb] text-[#6a4328]' : 'bg-[#efe1d1] text-[#6d472d]'
+                  isOffline ? 'bg-[#e4e4e7] text-[#18181b]' : 'bg-[#f4f4f5] text-[#3f3f46]'
                 }`}>
                   {isOffline ? <WifiOff className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
                   {isOffline ? 'You are offline' : 'Online'}
                 </span>
                 {isPdf && (
                   <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-full ${
-                    isOfflineReady ? 'bg-[#dcc3aa] text-[#553724]' : 'bg-[#f1e8dd] text-[#695343]'
+                    isOfflineReady ? 'bg-[#d4d4d8] text-[#18181b]' : 'bg-[#f4f4f5] text-[#3f3f46]'
                   }`}>
                     <Download className="w-4 h-4" />
                     {isOfflineReady ? 'Available offline' : 'Not saved offline yet'}
@@ -369,14 +369,14 @@ export default function StudyDocumentPage() {
                     Jumping to page {initialPage}
                   </span>
                   {initialPage > 1 && (
-                    <button onClick={() => openPage(1)} className="rounded-full border border-[#d7c1ab] px-3 py-1 font-semibold text-[#6b4a32] transition hover:bg-[#f7efe4]">
+                    <button onClick={() => openPage(1)} className="rounded-full border border-[#d4d4d8] px-3 py-1 font-semibold text-[#27272a] transition hover:bg-[#f4f4f5]">
                       Return to page 1
                     </button>
                   )}
                 </div>
 
                 {fileError && (
-                  <div className="mb-4 rounded-lg border border-[#cfb08d] bg-[#f6eadb] px-4 py-3 text-[#7b5637] text-sm">
+                  <div className="mb-4 rounded-lg border border-[#d4d4d8] bg-[#f4f4f5] px-4 py-3 text-[#3f3f46] text-sm">
                     {fileError}
                   </div>
                 )}
@@ -388,7 +388,7 @@ export default function StudyDocumentPage() {
                     className="w-full h-[72vh] rounded-xl border border-slate-200 bg-white"
                   />
                 ) : (
-                    <div className="rounded-xl border border-dashed border-[#d8c7b7] bg-[#f7f0e7] p-10 text-center text-[#715a48]">
+                    <div className="rounded-xl border border-dashed border-[#d4d4d8] bg-[#fafafa] p-10 text-center text-[#52525b]">
                       {isOffline
                         ? 'This PDF has not been saved offline yet. Reconnect once and click "Save for Offline".'
                         : 'Loading the PDF viewer...'}
@@ -412,7 +412,7 @@ export default function StudyDocumentPage() {
                 <div className="card p-8">
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <h3 className="text-xl font-bold">Concept Map</h3>
-                    <span className="rounded-full bg-[#e9d8c5] px-3 py-1 text-sm font-semibold text-[#6d472d]">
+                    <span className="rounded-full bg-[#e4e4e7] px-3 py-1 text-sm font-semibold text-[#3f3f46]">
                       {insights.total_chunks} study chunks
                     </span>
                   </div>
@@ -421,7 +421,7 @@ export default function StudyDocumentPage() {
                       {insights.concepts.map((concept) => (
                         <span
                           key={concept.label}
-                          className="rounded-full border border-[#d6b99f] bg-[#f3e6d8] px-4 py-2 text-sm font-semibold text-[#6b452d]"
+                          className="rounded-full border border-[#d4d4d8] bg-[#e4e4e7] px-4 py-2 text-sm font-semibold text-[#27272a]"
                         >
                           {concept.label}
                         </span>
@@ -440,11 +440,11 @@ export default function StudyDocumentPage() {
                         <button
                           key={`${page.document_id}-${page.page_number}`}
                           onClick={() => openPage(page.page_number)}
-                          className="rounded-2xl border border-[#d9c8b7] bg-[#f8f1e8] p-5 text-left transition hover:border-[#b98b63] hover:bg-[#fbf6f1]"
+                          className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-5 text-left transition hover:border-[#71717a] hover:bg-[#f4f4f5]"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="text-sm font-semibold uppercase tracking-wide text-[#815333]">
+                              <p className="text-sm font-semibold uppercase tracking-wide text-[#27272a]">
                                 Page {page.page_number}
                               </p>
                               <p className="text-sm text-slate-500">{page.chunk_count} supporting chunks</p>
@@ -468,7 +468,7 @@ export default function StudyDocumentPage() {
               <section id="material-intelligence-workspace" className="card p-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-3xl">
-                    <p className="section-kicker text-[#8a5a36]">AI Study Engine</p>
+                    <p className="section-kicker text-[#18181b]">AI Study Engine</p>
                     <h3 className="mt-2 text-3xl font-bold text-slate-950">Material Intelligence Workspace</h3>
                     <p className="mt-3 text-base leading-7 text-slate-600">
                       Break this document into concepts, traps, viva prompts, and the best order to study it before you jump into questions.

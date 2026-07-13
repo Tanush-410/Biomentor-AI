@@ -12,17 +12,25 @@ import {
 import { clamp } from '../../lib/stickyNotesLayout'
 
 const NOTE_COLORS = [
-  { id: 'amber', label: 'Amber', classes: 'from-amber-100 via-[#f8ddb3] to-[#f1c88a] border-[#d4a25c] text-[#53361b]' },
-  { id: 'rose', label: 'Rose', classes: 'from-rose-100 via-[#f7c9d3] to-[#ef9db1] border-[#d46f88] text-[#5d2133]' },
-  { id: 'mint', label: 'Mint', classes: 'from-emerald-100 via-[#c8f3dd] to-[#94e7bf] border-[#58b486] text-[#164733]' },
-  { id: 'sky', label: 'Sky', classes: 'from-sky-100 via-[#cbe7fb] to-[#97cff5] border-[#5a9ece] text-[#173d5c]' },
-  { id: 'violet', label: 'Violet', classes: 'from-violet-100 via-[#e1d4fb] to-[#c1aaf5] border-[#8a73ca] text-[#3d2c63]' },
+  { id: 'white', label: 'White', classes: 'from-white via-zinc-50 to-zinc-100 border-zinc-300 text-zinc-950' },
+  { id: 'silver', label: 'Silver', classes: 'from-zinc-100 via-zinc-200 to-zinc-300 border-zinc-400 text-zinc-950' },
+  { id: 'graphite', label: 'Graphite', classes: 'from-zinc-800 via-zinc-900 to-black border-zinc-700 text-zinc-50' },
+  { id: 'paper', label: 'Paper', classes: 'from-stone-50 via-zinc-50 to-white border-zinc-200 text-zinc-950' },
+  { id: 'ink', label: 'Ink', classes: 'from-black via-zinc-950 to-zinc-900 border-zinc-700 text-white' },
 ]
+
+const LEGACY_NOTE_COLOR_FALLBACKS = {
+  amber: 'white',
+  rose: 'paper',
+  mint: 'silver',
+  sky: 'silver',
+  violet: 'graphite',
+}
 
 const DEFAULT_NOTE = {
   title: '',
   content: '',
-  color: 'amber',
+  color: 'white',
   width: 320,
   height: 220,
 }
@@ -30,7 +38,8 @@ const DEFAULT_NOTE = {
 const PROTECTED_PATHS = ['/', '/login', '/register', '/forgot-password']
 
 function colorClasses(color) {
-  return NOTE_COLORS.find((entry) => entry.id === color)?.classes || NOTE_COLORS[0].classes
+  const normalizedColor = LEGACY_NOTE_COLOR_FALLBACKS[color] || color
+  return NOTE_COLORS.find((entry) => entry.id === normalizedColor)?.classes || NOTE_COLORS[0].classes
 }
 
 function getViewport() {
@@ -476,10 +485,10 @@ export default function StickyNotesLayer() {
           data-sticky-note-root="true"
           className={`fixed right-4 top-4 z-[320] rounded-2xl border px-4 py-3 text-sm font-semibold shadow-xl backdrop-blur ${
             statusTone === 'error'
-              ? 'border-rose-300 bg-white/95 text-rose-700'
+              ? 'border-zinc-400 bg-white/95 text-zinc-900'
               : statusTone === 'success'
-                ? 'border-emerald-300 bg-white/95 text-emerald-700'
-                : 'border-stone-200 bg-white/95 text-stone-700'
+                ? 'border-zinc-300 bg-white/95 text-zinc-900'
+                : 'border-zinc-200 bg-white/95 text-zinc-700'
           }`}
         >
           {statusMessage}
@@ -495,9 +504,9 @@ export default function StickyNotesLayer() {
               key={note.id}
               data-sticky-note-root="true"
               style={style}
-              className={`pointer-events-auto absolute overflow-hidden rounded-[24px] border bg-gradient-to-br shadow-[0_24px_60px_rgba(74,44,20,0.18)] transition ${
+              className={`pointer-events-auto absolute overflow-hidden rounded-[24px] border bg-gradient-to-br shadow-[0_24px_60px_rgba(0,0,0,0.18)] transition ${
                 colorClasses(note.color)
-              } ${isActive ? 'ring-2 ring-white/70' : ''}`}
+              } ${isActive ? 'ring-2 ring-black/30' : ''}`}
               onMouseDown={() => {
                 setActiveNoteId(note.id)
                 handleBringToFront(note.id)
@@ -566,17 +575,19 @@ export default function StickyNotesLayer() {
                         type="button"
                         aria-label={`Set note color to ${entry.label}`}
                         className={`h-4 w-4 rounded-full border border-black/10 transition ${
-                          note.color === entry.id ? 'scale-110 ring-2 ring-white' : ''
+                          (LEGACY_NOTE_COLOR_FALLBACKS[note.color] || note.color) === entry.id
+                            ? 'scale-110 ring-2 ring-black/30'
+                            : ''
                         } ${
-                          entry.id === 'amber'
-                            ? 'bg-amber-300'
-                            : entry.id === 'rose'
-                              ? 'bg-rose-300'
-                              : entry.id === 'mint'
-                                ? 'bg-emerald-300'
-                                : entry.id === 'sky'
-                                  ? 'bg-sky-300'
-                                  : 'bg-violet-300'
+                          entry.id === 'white'
+                            ? 'bg-white'
+                            : entry.id === 'silver'
+                              ? 'bg-zinc-300'
+                              : entry.id === 'graphite'
+                                ? 'bg-zinc-800'
+                                : entry.id === 'paper'
+                                  ? 'bg-zinc-100'
+                                  : 'bg-black'
                         }`}
                         onClick={() => void handlePatchNote(note.id, { color: entry.id })}
                       />
@@ -600,16 +611,16 @@ export default function StickyNotesLayer() {
             top: contextMenu.y,
             zIndex: 300,
           }}
-          className="fixed rounded-[20px] border border-stone-200 bg-white/95 p-3 shadow-2xl backdrop-blur"
+          className="fixed rounded-[20px] border border-zinc-200 bg-white/95 p-3 shadow-2xl backdrop-blur"
         >
-          <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-stone-500">
+          <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
             <div className="flex items-center gap-2">
               <Pin className="h-3.5 w-3.5" />
               Sticky notes
             </div>
             <button
               type="button"
-              className="rounded-full p-1 text-stone-400 transition hover:bg-stone-100 hover:text-stone-700"
+              className="rounded-full p-1 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700"
               onClick={() => setContextMenu(null)}
               aria-label="Close sticky notes menu"
             >
@@ -618,7 +629,7 @@ export default function StickyNotesLayer() {
           </div>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-2xl bg-[#7c4d2a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#63391d] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             onClick={() => void handleCreateNote()}
             disabled={isSaving}
           >

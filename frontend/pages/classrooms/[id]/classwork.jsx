@@ -147,7 +147,7 @@ export default function ClassroomClassworkPage() {
         <div className="space-y-6">
           <ClassroomIntelligencePanel intelligence={intelligence} role={user?.role} variant="classwork" />
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Classwork board</p>
+            <p className="section-kicker text-[#18181b]">Classwork board</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Materials, tasks, quizzes, and due dates.</h3>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Keep study resources, assignments, and quiz references organized in one focused classwork space.
@@ -158,17 +158,17 @@ export default function ClassroomClassworkPage() {
             <div className="card p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Materials</p>
+                  <p className="section-kicker text-[#18181b]">Materials</p>
                   <h4 className="mt-2 text-xl font-bold text-slate-950">Shared study resources</h4>
                 </div>
-                <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{materials.length}</div>
+                <div className="rounded-full bg-[#e4e4e7] px-3 py-2 text-sm font-semibold text-[#3f3f46]">{materials.length}</div>
               </div>
               <div className="mt-5 space-y-4">
                 {materials.length === 0 ? (
                   <div className="surface-subtle p-4 text-sm text-slate-600">No classroom materials yet.</div>
                 ) : (
                   materials.map((material) => (
-                    <Link key={material.id} href={`/document/${material.document_id}`} className="surface-quiet block p-4 transition hover:border-[#d6b393]">
+                    <Link key={material.id} href={`/document/${material.document_id}`} className="surface-quiet block p-4 transition hover:border-[#a1a1aa]">
                       <p className="text-sm font-semibold text-slate-950">{material.title}</p>
                       <p className="mt-1 text-sm text-slate-600">{material.file_name}</p>
                       {material.description && <p className="mt-3 text-sm leading-6 text-slate-600">{material.description}</p>}
@@ -181,10 +181,10 @@ export default function ClassroomClassworkPage() {
             <div className="card p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Assignments</p>
+                  <p className="section-kicker text-[#18181b]">Assignments</p>
                   <h4 className="mt-2 text-xl font-bold text-slate-950">Tasks and quizzes</h4>
                 </div>
-                <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{assignments.length}</div>
+                <div className="rounded-full bg-[#e4e4e7] px-3 py-2 text-sm font-semibold text-[#3f3f46]">{assignments.length}</div>
               </div>
               <div className="mt-5 space-y-4">
                 {assignments.length === 0 ? (
@@ -193,10 +193,10 @@ export default function ClassroomClassworkPage() {
                   assignments.map((assignment) => (
                     <div key={assignment.id} className="surface-quiet p-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{assignment.assignment_type}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{assignment.assignment_type}</span>
                         {assignment.due_at && (
                           <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-                            <CalendarDays className="h-4 w-4 text-[#8a5a36]" />
+                            <CalendarDays className="h-4 w-4 text-[#18181b]" />
                             {new Date(assignment.due_at).toLocaleString()}
                           </span>
                         )}
@@ -204,7 +204,7 @@ export default function ClassroomClassworkPage() {
                       <h5 className="mt-4 text-lg font-semibold text-slate-950">{assignment.title}</h5>
                       {assignment.description && <p className="mt-2 text-sm leading-6 text-slate-600">{assignment.description}</p>}
                       {assignment.document && (
-                        <Link href={`/document/${assignment.document.id}`} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#6d472d]">
+                        <Link href={`/document/${assignment.document.id}`} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#3f3f46]">
                           <FileText className="h-4 w-4" />
                           Open linked material
                         </Link>
@@ -219,10 +219,10 @@ export default function ClassroomClassworkPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Published quizzes</p>
+                <p className="section-kicker text-[#18181b]">Published quizzes</p>
                 <h4 className="mt-2 text-xl font-bold text-slate-950">Scheduled and proctored classroom assessments</h4>
               </div>
-              <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{quizzes.length}</div>
+              <div className="rounded-full bg-[#e4e4e7] px-3 py-2 text-sm font-semibold text-[#3f3f46]">{quizzes.length}</div>
             </div>
             <div className="mt-5 space-y-4">
               {quizzes.length === 0 ? (
@@ -231,14 +231,14 @@ export default function ClassroomClassworkPage() {
                 quizzes.map((quiz) => (
                   <div key={quiz.id} className="surface-quiet p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{quiz.availability_state}</span>
+                      <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{quiz.availability_state}</span>
                       <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-                        <CalendarDays className="h-4 w-4 text-[#8a5a36]" />
+                        <CalendarDays className="h-4 w-4 text-[#18181b]" />
                         {quiz.available_from ? new Date(quiz.available_from).toLocaleString() : 'Available now'}
                       </span>
                       {quiz.proctoring_enabled && (
                         <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-                          <Camera className="h-4 w-4 text-[#8a5a36]" />
+                          <Camera className="h-4 w-4 text-[#18181b]" />
                           Proctored
                         </span>
                       )}
@@ -264,10 +264,10 @@ export default function ClassroomClassworkPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Certification paths</p>
+                <p className="section-kicker text-[#18181b]">Certification paths</p>
                 <h4 className="mt-2 text-xl font-bold text-slate-950">Completion tracks and classroom certificates</h4>
               </div>
-              <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{certifications.length}</div>
+              <div className="rounded-full bg-[#e4e4e7] px-3 py-2 text-sm font-semibold text-[#3f3f46]">{certifications.length}</div>
             </div>
             <div className="mt-5 space-y-4">
               {certifications.length === 0 ? (
@@ -278,8 +278,8 @@ export default function ClassroomClassworkPage() {
                 certifications.map((certification) => (
                   <div key={certification.id} className="surface-quiet p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{certification.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE track'}</span>
-                      <span className="role-pill border-[#d8c1aa] bg-white text-slate-600">{certification.status}</span>
+                      <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{certification.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE track'}</span>
+                      <span className="role-pill border-[#d4d4d8] bg-white text-slate-600">{certification.status}</span>
                       {certification.viewer_progress?.status ? (
                         <span className="inline-flex items-center gap-2 text-sm text-slate-600">
                           {Math.round(certification.viewer_progress.completion_percentage || 0)}% complete
@@ -318,10 +318,10 @@ export default function ClassroomClassworkPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Published exams</p>
+                <p className="section-kicker text-[#18181b]">Published exams</p>
                 <h4 className="mt-2 text-xl font-bold text-slate-950">Mixed-response protected assessments</h4>
               </div>
-              <div className="rounded-full bg-[#f5ebdf] px-3 py-2 text-sm font-semibold text-[#6d472d]">{exams.length}</div>
+              <div className="rounded-full bg-[#e4e4e7] px-3 py-2 text-sm font-semibold text-[#3f3f46]">{exams.length}</div>
             </div>
             <div className="mt-5 space-y-4">
               {exams.length === 0 ? (
@@ -330,14 +330,14 @@ export default function ClassroomClassworkPage() {
                 exams.map((exam) => (
                   <div key={exam.id} className="surface-quiet p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{exam.status}</span>
+                      <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{exam.status}</span>
                       <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-                        <CalendarDays className="h-4 w-4 text-[#8a5a36]" />
+                        <CalendarDays className="h-4 w-4 text-[#18181b]" />
                         {exam.available_from ? new Date(exam.available_from).toLocaleString() : 'Available now'}
                       </span>
                       {exam.proctoring_enabled && (
                         <span className="inline-flex items-center gap-2 text-sm text-slate-600">
-                          <Camera className="h-4 w-4 text-[#8a5a36]" />
+                          <Camera className="h-4 w-4 text-[#18181b]" />
                           Proctored
                         </span>
                       )}
@@ -377,9 +377,9 @@ export default function ClassroomClassworkPage() {
           <div className="space-y-6">
             <form onSubmit={handleShareMaterial} className="card p-6">
               <div className="flex items-center gap-3">
-                <PlusCircle className="h-5 w-5 text-[#8a5a36]" />
+                <PlusCircle className="h-5 w-5 text-[#18181b]" />
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Share material</p>
+                  <p className="section-kicker text-[#18181b]">Share material</p>
                   <h3 className="text-2xl font-bold text-slate-950">Add a resource</h3>
                 </div>
               </div>
@@ -397,7 +397,7 @@ export default function ClassroomClassworkPage() {
             </form>
 
             <form onSubmit={handleCreateAssignment} className="card p-6">
-              <p className="section-kicker text-[#8a5a36]">Add classwork</p>
+              <p className="section-kicker text-[#18181b]">Add classwork</p>
               <h3 className="mt-2 text-2xl font-bold text-slate-950">Create a task or quiz prompt.</h3>
               <div className="mt-5 space-y-4">
                 <input value={assignmentForm.title} onChange={(event) => setAssignmentForm((current) => ({ ...current, title: event.target.value }))} className="input" placeholder="Task title" required />

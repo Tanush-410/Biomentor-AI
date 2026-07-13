@@ -192,8 +192,8 @@ export default function LearningChatPage() {
             dailyGoal={chatCoach?.checkpoint_goal}
           >
             {(chatCoach?.follow_up_prompts || []).length > 0 ? (
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Suggested follow-up prompts</p>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Suggested follow-up prompts</p>
                 <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                   {chatCoach.follow_up_prompts.map((prompt, index) => (
                     <p key={`${prompt}-${index}`}>• {prompt}</p>
@@ -203,7 +203,7 @@ export default function LearningChatPage() {
             ) : null}
             {chatCoach?.quick_check_guidance ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Quick Check timing</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Quick Check timing</p>
                 <p className="mt-2">{chatCoach.quick_check_guidance}</p>
               </div>
             ) : null}
@@ -211,25 +211,25 @@ export default function LearningChatPage() {
         </div>
 
         <div id="chat-transcript" className="card p-0 overflow-hidden">
-          <div className="h-[60vh] overflow-y-auto px-6 py-6 bg-gradient-to-b from-[#fffaf5] to-[#f5ebdf]">
+          <div className="h-[60vh] overflow-y-auto px-6 py-6 bg-gradient-to-b from-[#fafafa] to-[#e4e4e7]">
             <div className="space-y-5">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-3xl min-w-0 rounded-2xl px-5 py-4 shadow-sm ${
                     message.role === 'user'
-                      ? 'bg-[#8a5a36] text-white'
-                      : 'bg-[#fffaf5] border border-stone-200 text-slate-900'
+                      ? 'bg-[#18181b] text-white'
+                      : 'bg-[#fafafa] border border-zinc-200 text-slate-900'
                   }`}>
                     <div className="flex items-start gap-3">
                       {message.role === 'assistant' && (
-                        <div className="mt-0.5 rounded-full bg-[#f2e4d4] p-2 text-[#8a5a36]">
+                        <div className="mt-0.5 rounded-full bg-[#f4f4f5] p-2 text-[#18181b]">
                           <Bot className="w-4 h-4" />
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="whitespace-pre-wrap break-words leading-7">{message.content}</p>
                         {message.role === 'assistant' && message.answerOrigin ? (
-                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">
+                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">
                             {message.sourceBadge || (message.answerOrigin === 'material'
                               ? 'Answered from your material'
                               : message.answerOrigin === 'trusted_web'
@@ -238,7 +238,7 @@ export default function LearningChatPage() {
                           </p>
                         ) : null}
                         {message.role === 'assistant' && message.confidenceReason ? (
-                          <p className={`mt-2 text-sm leading-6 ${message.confidenceLabel === 'low' ? 'text-amber-800' : 'text-slate-600'}`}>
+                          <p className={`mt-2 text-sm leading-6 ${message.confidenceLabel === 'low' ? 'text-zinc-800' : 'text-slate-600'}`}>
                             {message.confidenceReason}
                           </p>
                         ) : null}
@@ -252,16 +252,16 @@ export default function LearningChatPage() {
                                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                     {source.page_number ? <span>Page {source.page_number}</span> : null}
                                     {source.source_type && source.source_type !== 'material' ? (
-                                      <span className="rounded-full bg-[#f2e4d4] px-2 py-0.5 font-semibold text-[#8a5a36]">
+                                      <span className="rounded-full bg-[#f4f4f5] px-2 py-0.5 font-semibold text-[#18181b]">
                                         {source.source_type === 'trusted_web' ? 'Trusted Web' : 'Web'}
                                       </span>
                                     ) : null}
                                     {source.document_id ? (
-                                      <Link href={`/document/${source.document_id}?page=${source.page_number || 1}`} className="font-semibold text-[#8a5a36] hover:text-[#6d472d]">
+                                      <Link href={`/document/${source.document_id}?page=${source.page_number || 1}`} className="font-semibold text-[#18181b] hover:text-[#3f3f46]">
                                         Open source
                                       </Link>
                                     ) : source.url ? (
-                                      <a href={source.url} target="_blank" rel="noreferrer" className="font-semibold text-[#8a5a36] hover:text-[#6d472d]">
+                                      <a href={source.url} target="_blank" rel="noreferrer" className="font-semibold text-[#18181b] hover:text-[#3f3f46]">
                                         Open source
                                       </a>
                                     ) : null}

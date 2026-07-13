@@ -211,7 +211,7 @@ export default function CollaborationHubPage() {
       description="Teachers and students can launch live sessions, run polls and quick checks, ask questions, and let the AI hub surface shared biology learning gaps."
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-6">
@@ -322,7 +322,7 @@ export default function CollaborationHubPage() {
                     key={session.id}
                     onClick={() => openSession(session.id)}
                     className={`w-full rounded-2xl border p-4 text-left transition ${
-                      activeSession?.id === session.id ? 'border-[#b9895d] bg-[#f5ebdf]' : 'border-slate-200 bg-white hover:border-stone-300'
+                      activeSession?.id === session.id ? 'border-[#52525b] bg-[#e4e4e7]' : 'border-slate-200 bg-white hover:border-zinc-300'
                     }`}
                   >
                     <p className="text-lg font-bold text-slate-950">{session.title}</p>
@@ -348,7 +348,7 @@ export default function CollaborationHubPage() {
                     <h2 className="text-2xl font-bold text-slate-950">{activeSession.title}</h2>
                     <p className="mt-2 text-sm text-slate-600">{activeSession.agenda || 'No agenda added yet.'}</p>
                   </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#f2e4d4] px-4 py-2 text-sm font-semibold text-[#8a5a36]">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#f4f4f5] px-4 py-2 text-sm font-semibold text-[#18181b]">
                     <Users className="h-4 w-4" />
                     {activeSession.participants?.length || 0} participants
                   </div>
@@ -356,7 +356,7 @@ export default function CollaborationHubPage() {
 
                 <div className="mt-6 h-[420px] space-y-3 overflow-y-auto rounded-3xl bg-slate-50 p-4">
                   {events.map((event) => (
-                    <div key={event.id} className={`rounded-2xl px-4 py-3 ${event.user_name === 'AI Collaboration Hub' ? 'bg-[#f2e4d4] text-slate-900' : 'bg-white text-slate-900 shadow-sm'}`}>
+                    <div key={event.id} className={`rounded-2xl px-4 py-3 ${event.user_name === 'AI Collaboration Hub' ? 'bg-[#f4f4f5] text-slate-900' : 'bg-white text-slate-900 shadow-sm'}`}>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{event.user_name} • {event.event_type}</p>
                       <p className="mt-2 text-sm leading-6">{event.content}</p>
                       {(event.event_type === 'poll' || event.event_type === 'quiz_prompt') && (
@@ -436,7 +436,7 @@ function StructuredEventCard({ event, isEducator, userId, onRespond }) {
             onClick={() => !hasResponded && onRespond(event.id, option)}
             disabled={hasResponded}
             className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
-              hasResponded ? 'border-slate-200 bg-white text-slate-500' : 'border-slate-300 bg-white text-slate-900 hover:border-[#8a5a36]'
+              hasResponded ? 'border-slate-200 bg-white text-slate-500' : 'border-slate-300 bg-white text-slate-900 hover:border-[#18181b]'
             }`}
           >
             <div className="flex items-center justify-between gap-4">
@@ -450,14 +450,14 @@ function StructuredEventCard({ event, isEducator, userId, onRespond }) {
       </div>
 
       {hasResponded && (
-        <div className="inline-flex items-center gap-2 rounded-full bg-[#ead8c6] px-3 py-2 text-sm font-semibold text-[#6d472d]">
+        <div className="inline-flex items-center gap-2 rounded-full bg-[#d4d4d8] px-3 py-2 text-sm font-semibold text-[#3f3f46]">
           <CheckCircle2 className="h-4 w-4" />
           Response recorded
         </div>
       )}
 
       {!isPoll && isEducator && metadata.answer_key && (
-        <div className="rounded-xl bg-[#f2e4d4] px-4 py-3 text-sm text-slate-800">
+        <div className="rounded-xl bg-[#f4f4f5] px-4 py-3 text-sm text-slate-800">
           Correct answer: <strong>{metadata.answer_key}</strong>
           {metadata.explanation ? <span className="block mt-2">{metadata.explanation}</span> : null}
         </div>

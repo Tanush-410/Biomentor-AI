@@ -10,11 +10,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: colors.blue,
-        secondary: colors.purple,
-        success: colors.green,
-        warning: colors.amber,
-        error: colors.red,
+        primary: colors.zinc,
+        secondary: colors.neutral,
+        success: colors.zinc,
+        warning: colors.stone,
+        error: colors.zinc,
       }
     },
   },

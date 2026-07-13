@@ -13,11 +13,11 @@ import { requestBackendJson } from '../lib/backendApi'
 
 const LEVEL_COLORS = {
   1: 'stroke-slate-500',
-  2: 'stroke-[#c9a27c]',
-  3: 'stroke-[#b9895d]',
-  4: 'stroke-[#d5b08b]',
-  5: 'stroke-[#8a5a36]',
-  6: 'stroke-[#5f4028]'
+  2: 'stroke-[#71717a]',
+  3: 'stroke-[#52525b]',
+  4: 'stroke-[#a1a1aa]',
+  5: 'stroke-[#18181b]',
+  6: 'stroke-[#18181b]'
 }
 
 export default function ProgressPage() {
@@ -115,7 +115,7 @@ export default function ProgressPage() {
       }
     >
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+          <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">
             {error}
           </div>
         )}
@@ -164,9 +164,9 @@ export default function ProgressPage() {
                         stroke={8}
                         label="Average score"
                         caption={`${item.count} answers recorded`}
-                        progressClassName={LEVEL_COLORS[item.level] || 'stroke-[#8a5a36]'}
-                        trackClassName="stroke-[#eee4da]"
-                        tone="text-[#8a5a36]"
+                        progressClassName={LEVEL_COLORS[item.level] || 'stroke-[#18181b]'}
+                        trackClassName="stroke-[#d4d4d8]"
+                        tone="text-[#18181b]"
                       />
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export default function ProgressPage() {
                 <div className="space-y-4">
                   {(certificates?.earned_certifications || []).length > 0 ? (
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Earned certificates</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Earned certificates</p>
                       {certificates.earned_certifications.map((item) => (
                         <div key={item.id} className="rounded-xl border border-slate-200 p-4">
                           <p className="font-semibold text-slate-900">{item.title}</p>
@@ -203,7 +203,7 @@ export default function ProgressPage() {
 
                   {(certificates?.active_certifications || []).length > 0 ? (
                     <div className="space-y-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Active certification tracks</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Active certification tracks</p>
                       {certificates.active_certifications.map((item) => (
                         <div key={item.id} className="rounded-xl border border-slate-200 p-4">
                           <p className="font-semibold text-slate-900">{item.title}</p>
@@ -242,18 +242,18 @@ export default function ProgressPage() {
                 {coachProgress ? (
                   <>
                     {coachProgress?.checkpoint_goal ? (
-                      <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Checkpoint goal</p>
+                      <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Checkpoint goal</p>
                         <p className="mt-3 text-base font-bold text-slate-950">{coachProgress.checkpoint_goal.label}</p>
                         <p className="mt-2 text-sm leading-6 text-slate-600">{coachProgress.checkpoint_goal.reason}</p>
                       </div>
                     ) : null}
                     {(coachProgress.practice_order || []).length > 0 ? (
-                      <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Recommended practice order</p>
+                      <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Recommended practice order</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {coachProgress.practice_order.map((item) => (
-                            <span key={item} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                            <span key={item} className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
                               {item}
                             </span>
                           ))}
@@ -323,7 +323,7 @@ export default function ProgressPage() {
 function SummaryCard({ icon, label, value }) {
   return (
     <div className="card p-6">
-      <div className="inline-flex items-center gap-2 rounded-full bg-[#f2e4d4] px-3 py-1 text-[#8a5a36] text-sm font-semibold">
+      <div className="inline-flex items-center gap-2 rounded-full bg-[#f4f4f5] px-3 py-1 text-[#18181b] text-sm font-semibold">
         {icon}
         {label}
       </div>

@@ -78,7 +78,7 @@ export default function StudentAnalyticsPage() {
       description="Inspect Bloom’s mastery, identify gap alerts, and assign tailored reinforcement lessons."
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-[#d7b697] bg-[#f6eadb] px-4 py-3 text-[#7a5232]">{error}</div>}
+      {error && <div className="rounded-xl border border-[#d4d4d8] bg-[#f4f4f5] px-4 py-3 text-[#27272a]">{error}</div>}
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="card p-6">
@@ -97,9 +97,9 @@ export default function StudentAnalyticsPage() {
                     stroke={8}
                     label="Mastery"
                     caption={`${item.count} answers`}
-                    progressClassName="stroke-[#845232]"
-                    trackClassName="stroke-[#eee4da]"
-                    tone="text-[#845232]"
+                    progressClassName="stroke-[#27272a]"
+                    trackClassName="stroke-[#d4d4d8]"
+                    tone="text-[#27272a]"
                   />
                 </div>
               </div>

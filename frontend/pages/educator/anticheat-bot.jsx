@@ -162,8 +162,8 @@ export default function EducatorAnticheatBotPage() {
       }
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
-      {actionMessage && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">{actionMessage}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
+      {actionMessage && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-700">{actionMessage}</div>}
 
       <AISpotlightBanner
         eyebrow="Integrity AI Surface"
@@ -178,7 +178,7 @@ export default function EducatorAnticheatBotPage() {
       <section className="card p-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div>
-            <p className="section-kicker text-[#8a5a36]">Review scope</p>
+            <p className="section-kicker text-[#18181b]">Review scope</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-950">Anti-cheat teacher review queue</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Choose a classroom to inspect the final review cases. Each case shows the assessment type, the reason the attempt ended, and the newest evidence still worth checking.
@@ -206,8 +206,8 @@ export default function EducatorAnticheatBotPage() {
             cases.map((item) => (
               <article key={item.id} className="card p-6">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{item.assessment_type}</span>
-                  <span className="role-pill border-[#efc9c6] bg-[#fff3f1] text-[#a54a43]">{item.status}</span>
+                  <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{item.assessment_type}</span>
+                  <span className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">{item.status}</span>
                 </div>
                 <h3 className="mt-4 text-2xl font-bold text-slate-950">{item.student_name || item.student_id}</h3>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
@@ -219,8 +219,8 @@ export default function EducatorAnticheatBotPage() {
                   <InfoTile label="Review" value={item.teacher_review_required ? 'Required' : 'Resolved'} />
                 </div>
                 {item.signal_summary ? (
-                  <div className="mt-4 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">AI case reading</p>
+                  <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">AI case reading</p>
                     <div className="mt-3 grid gap-3 md:grid-cols-3">
                       <InfoTile label="Hard-rule signals" value={String(item.signal_summary.hard_rule_count || 0)} />
                       <InfoTile label="Heuristic signals" value={String(item.signal_summary.heuristic_count || 0)} />
@@ -231,8 +231,8 @@ export default function EducatorAnticheatBotPage() {
                 ) : null}
                 <div className="mt-5 grid gap-4 md:grid-cols-3">
                   {(item.evidence_snapshots || []).map((snapshot) => (
-                    <div key={snapshot.id} className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                      <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">
+                    <div key={snapshot.id} className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                      <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">
                         <Camera className="h-3.5 w-3.5" />
                         Evidence
                       </div>
@@ -244,12 +244,12 @@ export default function EducatorAnticheatBotPage() {
                           snapshot={snapshot}
                         />
                       ) : (
-                        <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#ddc3ad] bg-white text-sm text-slate-500">
+                        <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#d4d4d8] bg-white text-sm text-slate-500">
                           Snapshot stored without image
                         </div>
                       )}
                       <p className="mt-3 text-sm font-semibold text-slate-900">{snapshot.violation_type}</p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#8a5a36]">
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#18181b]">
                         {snapshot.signal_family?.replace('_', ' ')}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">{snapshot.captured_at}</p>
@@ -300,28 +300,28 @@ export default function EducatorAnticheatBotPage() {
 
         <aside className="space-y-5">
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Selected case</p>
+            <p className="section-kicker text-[#18181b]">Selected case</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher action desk</h3>
             {caseLoading ? (
-              <div className="mt-4 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4 text-sm text-slate-600">Loading selected case...</div>
+              <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">Loading selected case...</div>
             ) : !activeCase ? (
-              <div className="mt-4 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4 text-sm text-slate-600">Choose a case from the review queue to inspect its evidence and final reason in one place.</div>
+              <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">Choose a case from the review queue to inspect its evidence and final reason in one place.</div>
             ) : (
               <div className="mt-4 space-y-4">
-                <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Student</p>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Student</p>
                   <p className="mt-2 text-lg font-bold text-slate-950">{activeCase.student_name || activeCase.student_id}</p>
                 </div>
-                <div className="rounded-2xl border border-[#ead8c6] bg-white p-4">
-                  <p className="section-kicker text-[#8a5a36]">Case decision summary</p>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-white p-4">
+                  <p className="section-kicker text-[#18181b]">Case decision summary</p>
                   <div className="mt-3 grid gap-3">
-                    <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+                    <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                       <p className="text-sm font-semibold text-slate-950">Teacher review required</p>
                       <p className="mt-2 text-sm text-slate-600">
                         {activeCase.teacher_review_required ? 'Yes, this case still needs an educator decision.' : 'No, this case has already been resolved.'}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+                    <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                       <p className="text-sm font-semibold text-slate-950">Assessment path</p>
                       <p className="mt-2 text-sm text-slate-600">
                         {activeCase.assessment_type === 'exam'
@@ -330,17 +330,17 @@ export default function EducatorAnticheatBotPage() {
                       </p>
                     </div>
                     {activeCase.signal_summary ? (
-                      <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+                      <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                         <p className="text-sm font-semibold text-slate-950">Signal mix</p>
                         <p className="mt-2 text-sm text-slate-600">{activeCase.signal_summary.teacher_note}</p>
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#8a5a36]">
-                          <span className="rounded-full border border-[#ddc3ad] bg-white px-3 py-1">
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#18181b]">
+                          <span className="rounded-full border border-[#d4d4d8] bg-white px-3 py-1">
                             Hard-rule {activeCase.signal_summary.hard_rule_count || 0}
                           </span>
-                          <span className="rounded-full border border-[#ddc3ad] bg-white px-3 py-1">
+                          <span className="rounded-full border border-[#d4d4d8] bg-white px-3 py-1">
                             Heuristic {activeCase.signal_summary.heuristic_count || 0}
                           </span>
-                          <span className="rounded-full border border-[#ddc3ad] bg-white px-3 py-1">
+                          <span className="rounded-full border border-[#d4d4d8] bg-white px-3 py-1">
                             Snapshots {activeCase.signal_summary.camera_evidence_count || 0}
                           </span>
                         </div>
@@ -348,8 +348,8 @@ export default function EducatorAnticheatBotPage() {
                     ) : null}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Final reason</p>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Final reason</p>
                   <p className="mt-2 text-sm leading-7 text-slate-700">{activeCase.final_case_reason || 'teacher review required'}</p>
                   {activeCase.final_recommendation ? (
                     <p className="mt-3 text-sm font-semibold text-slate-900">{activeCase.final_recommendation}</p>
@@ -357,15 +357,15 @@ export default function EducatorAnticheatBotPage() {
                   {activeCase.last_three_reasons?.length ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {activeCase.last_three_reasons.map((reason) => (
-                        <span key={reason} className="rounded-full border border-[#ddc3ad] bg-white px-3 py-1 text-xs font-semibold text-[#8a5a36]">
+                        <span key={reason} className="rounded-full border border-[#d4d4d8] bg-white px-3 py-1 text-xs font-semibold text-[#18181b]">
                           {reason.replaceAll('_', ' ')}
                         </span>
                       ))}
                     </div>
                   ) : null}
                 </div>
-                <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Warning count</p>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Warning count</p>
                   <p className="mt-2 text-lg font-bold text-slate-950">{activeCase.latest_warning_count || 0}</p>
                 </div>
                 {activeCase.assessment_type === 'exam' && activeCase.assessment_id && (
@@ -407,18 +407,18 @@ export default function EducatorAnticheatBotPage() {
           </div>
 
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Review intent</p>
+            <p className="section-kicker text-[#18181b]">Review intent</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Why this desk exists</h3>
             <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">Only the final case is elevated here, so teachers are not buried under every minor event.</div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">The product keeps the last three snapshots because that is usually enough to validate the final call quickly.</div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">Both quizzes and exams can feed this desk as protected assessments expand.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Only the final case is elevated here, so teachers are not buried under every minor event.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">The product keeps the last three snapshots because that is usually enough to validate the final call quickly.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Both quizzes and exams can feed this desk as protected assessments expand.</div>
             </div>
           </div>
 
           <div className="card p-6">
             <div className="inline-flex items-center gap-3">
-              <ShieldAlert className="h-5 w-5 text-[#8a5a36]" />
+              <ShieldAlert className="h-5 w-5 text-[#18181b]" />
               <h3 className="text-xl font-bold text-slate-950">Case handling rule</h3>
             </div>
             <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -433,8 +433,8 @@ export default function EducatorAnticheatBotPage() {
 
 function InfoTile({ label, value }) {
   return (
-    <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">{label}</p>
+    <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">{label}</p>
       <p className="mt-2 text-lg font-bold text-slate-950">{value}</p>
     </div>
   )
@@ -493,14 +493,14 @@ function ProtectedEvidenceImage({ token, cache, setCache, snapshot }) {
 
   if (status === 'failed') {
     return (
-      <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#ddc3ad] bg-white text-sm text-slate-500">
+      <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#d4d4d8] bg-white text-sm text-slate-500">
         Could not load the evidence image yet
       </div>
     )
   }
 
   return (
-    <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#ddc3ad] bg-white text-sm text-slate-500">
+    <div className="mt-3 flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#d4d4d8] bg-white text-sm text-slate-500">
       Loading evidence image...
     </div>
   )

@@ -106,8 +106,8 @@ export default function ClassroomsHomePage() {
     >
       {(error || success) && (
         <div className="space-y-3">
-          {error && <div className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
-          {success && <div className="rounded-[18px] border border-[#d8c1aa] bg-[#f5ebdf] px-4 py-3 text-[#6d472d]">{success}</div>}
+          {error && <div className="rounded-[18px] border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
+          {success && <div className="rounded-[18px] border border-[#d4d4d8] bg-[#e4e4e7] px-4 py-3 text-[#3f3f46]">{success}</div>}
         </div>
       )}
 
@@ -116,13 +116,13 @@ export default function ClassroomsHomePage() {
           <div className="card p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Classroom list</p>
+                <p className="section-kicker text-[#18181b]">Classroom list</p>
                 <h2 className="mt-2 text-3xl font-bold text-slate-950">Choose where you want to work.</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
                   Enter through your class list first, then open a dedicated workspace for announcements, classwork, people, messages, and live sessions.
                 </p>
               </div>
-              <div className="rounded-full bg-[#f5ebdf] px-4 py-2 text-sm font-semibold text-[#6d472d]">
+              <div className="rounded-full bg-[#e4e4e7] px-4 py-2 text-sm font-semibold text-[#3f3f46]">
                 {classrooms.length} classroom{classrooms.length === 1 ? '' : 's'}
               </div>
             </div>
@@ -138,11 +138,11 @@ export default function ClassroomsHomePage() {
         <div className="space-y-6">
           <div className="card p-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-[#f5ebdf] p-3 text-[#6d472d]">
+              <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#3f3f46]">
                 {role === 'student' ? <UserPlus className="h-5 w-5" /> : <PlusCircle className="h-5 w-5" />}
               </div>
               <div>
-                <p className="section-kicker text-[#8a5a36]">{role === 'student' ? 'Join' : 'Create'}</p>
+                <p className="section-kicker text-[#18181b]">{role === 'student' ? 'Join' : 'Create'}</p>
                 <h3 className="text-2xl font-bold text-slate-950">{role === 'student' ? 'Enter a class invite code' : 'Start a new classroom'}</h3>
               </div>
             </div>
@@ -191,11 +191,11 @@ export default function ClassroomsHomePage() {
 
           <div className="card p-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-[#f5ebdf] p-3 text-[#6d472d]">
+              <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#3f3f46]">
                 <Bell className="h-5 w-5" />
               </div>
               <div>
-                <p className="section-kicker text-[#8a5a36]">Notifications</p>
+                <p className="section-kicker text-[#18181b]">Notifications</p>
                 <h3 className="text-2xl font-bold text-slate-950">Classroom activity</h3>
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function ClassroomsHomePage() {
                   <div key={notification.id} className="surface-quiet p-4">
                     <p className="text-sm font-semibold text-slate-950">{notification.title}</p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{notification.body}</p>
-                    <p className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#8a5a36]">
+                    <p className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#18181b]">
                       <School2 className="h-3.5 w-3.5" />
                       {notification.classroom_name || 'Classroom'} • {new Date(notification.created_at).toLocaleString()}
                     </p>

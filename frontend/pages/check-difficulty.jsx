@@ -8,12 +8,12 @@ import { useAuth } from '../context/AuthContext'
 import { requestBackendJson } from '../lib/backendApi'
 
 const BLOOM_LEVELS = [
-  { level: 1, name: 'Remember', tone: 'border-stone-200 bg-stone-50 text-stone-700' },
-  { level: 2, name: 'Understand', tone: 'border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]' },
-  { level: 3, name: 'Apply', tone: 'border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]' },
-  { level: 4, name: 'Analyze', tone: 'border-[#d9b998] bg-[#f4e2d0] text-[#7a5334]' },
-  { level: 5, name: 'Evaluate', tone: 'border-[#c89a70] bg-[#efdfce] text-[#6d472d]' },
-  { level: 6, name: 'Create', tone: 'border-[#b9895d] bg-[#e7d1ba] text-[#5f4028]' }
+  { level: 1, name: 'Remember', tone: 'border-zinc-200 bg-zinc-50 text-zinc-700' },
+  { level: 2, name: 'Understand', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]' },
+  { level: 3, name: 'Apply', tone: 'border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]' },
+  { level: 4, name: 'Analyze', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#27272a]' },
+  { level: 5, name: 'Evaluate', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#3f3f46]' },
+  { level: 6, name: 'Create', tone: 'border-[#52525b] bg-[#f4f4f5] text-[#18181b]' }
 ]
 
 export default function CheckDifficultyPage() {
@@ -160,7 +160,7 @@ export default function CheckDifficultyPage() {
     >
       <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
         <div className="card p-6">
-          <p className="section-kicker text-[#8a5a36]">Question input</p>
+          <p className="section-kicker text-[#18181b]">Question input</p>
           <h2 className="mt-2 text-2xl font-bold text-slate-950">Paste one question and decide how far you want to take it.</h2>
           <p className="mt-3 text-sm leading-7 text-slate-600">
             Start with identification, branch into all Bloom variants, or generate one exact target-level rewrite for a focused classroom need.
@@ -179,7 +179,7 @@ export default function CheckDifficultyPage() {
             </div>
 
             {error && (
-              <div className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-[18px] border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-900">
                 {error}
               </div>
             )}
@@ -255,10 +255,10 @@ export default function CheckDifficultyPage() {
           <div className="card p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Targeted rewrite</p>
+                <p className="section-kicker text-[#18181b]">Targeted rewrite</p>
                 <h2 className="mt-2 text-2xl font-bold text-slate-950">Generate one exact level on purpose.</h2>
               </div>
-              <Sparkles className="mt-1 h-5 w-5 text-[#8a5a36]" />
+              <Sparkles className="mt-1 h-5 w-5 text-[#18181b]" />
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -269,7 +269,7 @@ export default function CheckDifficultyPage() {
                     key={item.level}
                     onClick={() => setTargetLevel(item.level)}
                     className={`rounded-[18px] border px-4 py-4 text-left transition ${
-                      active ? `${item.tone} ring-2 ring-offset-2 ring-[#d8c1aa]` : `${item.tone} opacity-85 hover:opacity-100`
+                      active ? `${item.tone} ring-2 ring-offset-2 ring-[#d4d4d8]` : `${item.tone} opacity-85 hover:opacity-100`
                     }`}
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.2em]">Level {item.level}</p>

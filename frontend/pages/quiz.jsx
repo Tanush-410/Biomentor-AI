@@ -63,7 +63,7 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f7efe4] via-[#fbf7f1] to-[#ede0d0]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f4f4f5] via-[#f4f4f5] to-[#ede0d0]">
       {/* Header */}
       <header className="sticky top-0 border-b border-[#dccabc] bg-[#fbf6f0]/90 backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -114,7 +114,7 @@ export default function QuizPage() {
               <button
                 onClick={handleIdentifyLevel}
                 disabled={!question || analyzing}
-                className="flex-1 rounded-lg bg-[#8a5a36] py-3 font-semibold text-white transition hover:bg-[#76482b] disabled:bg-[#c7b5a5] flex items-center justify-center gap-2"
+                className="flex-1 rounded-lg bg-[#18181b] py-3 font-semibold text-white transition hover:bg-[#76482b] disabled:bg-[#c7b5a5] flex items-center justify-center gap-2"
               >
                 <Lightbulb className="w-5 h-5" />
                 {analyzing ? 'Analyzing...' : 'Identify Question Level'}
@@ -147,7 +147,7 @@ export default function QuizPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-slate-200 rounded-full h-2">
                     <div 
-                      className="h-2 rounded-full bg-[#8a5a36]" 
+                      className="h-2 rounded-full bg-[#18181b]" 
                       style={{width: `${(analyzeResult.confidence || 0.7) * 100}%`}}
                     ></div>
                   </div>
@@ -179,34 +179,34 @@ export default function QuizPage() {
               <div key={idx} className="card p-6 border-2 border-slate-200">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="flex-1">
-                    <h4 className="font-bold text-lg text-[#7c4f30] mb-1">
+                    <h4 className="font-bold text-lg text-[#18181b] mb-1">
                       {variant.bloom_level_name} (Level {variant.bloom_level})
                     </h4>
                     <p className="text-sm text-slate-600">{variant.reasoning}</p>
                   </div>
                   {variant.bloom_level < bloomLevel && (
-                    <ArrowDown className="w-5 h-5 text-[#7a4c2d] flex-shrink-0" />
+                    <ArrowDown className="w-5 h-5 text-[#18181b] flex-shrink-0" />
                   )}
                   {variant.bloom_level > bloomLevel && (
-                    <ArrowUp className="w-5 h-5 text-[#aa6e42] flex-shrink-0" />
+                    <ArrowUp className="w-5 h-5 text-[#52525b] flex-shrink-0" />
                   )}
                 </div>
-                <p className="rounded-lg bg-[#fbf6ef] p-4 text-base">{variant.text}</p>
+                <p className="rounded-lg bg-[#f4f4f5] p-4 text-base">{variant.text}</p>
               </div>
             ))}
           </div>
         )}
 
         {/* Bloom's Reference */}
-        <div className="card mt-12 border border-[#d8c0a6] bg-[#f8efe3] p-6">
+        <div className="card mt-12 border border-[#d4d4d8] bg-[#fafafa] p-6">
           <h3 className="font-bold text-lg mb-4">Bloom&apos;s Taxonomy Levels</h3>
           <div className="grid md:grid-cols-2 gap-4 text-sm">
-            <div><strong className="text-[#7a4d2f]">Level 1 - Remember:</strong> Recall facts and definitions</div>
-            <div><strong className="text-[#7a4d2f]">Level 2 - Understand:</strong> Explain concepts and ideas</div>
-            <div><strong className="text-[#7a4d2f]">Level 3 - Apply:</strong> Use procedures and techniques</div>
-            <div><strong className="text-[#7a4d2f]">Level 4 - Analyze:</strong> Break into components</div>
-            <div><strong className="text-[#7a4d2f]">Level 5 - Evaluate:</strong> Make judgments and decisions</div>
-            <div><strong className="text-[#7a4d2f]">Level 6 - Create:</strong> Design and formulate new ideas</div>
+            <div><strong className="text-[#18181b]">Level 1 - Remember:</strong> Recall facts and definitions</div>
+            <div><strong className="text-[#18181b]">Level 2 - Understand:</strong> Explain concepts and ideas</div>
+            <div><strong className="text-[#18181b]">Level 3 - Apply:</strong> Use procedures and techniques</div>
+            <div><strong className="text-[#18181b]">Level 4 - Analyze:</strong> Break into components</div>
+            <div><strong className="text-[#18181b]">Level 5 - Evaluate:</strong> Make judgments and decisions</div>
+            <div><strong className="text-[#18181b]">Level 6 - Create:</strong> Design and formulate new ideas</div>
           </div>
         </div>
       </main>

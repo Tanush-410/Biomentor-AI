@@ -12,13 +12,13 @@ export default function AISpotlightBanner({
   status
 }) {
   return (
-    <section className="card relative overflow-hidden border-[#e3cfbb] bg-[radial-gradient(circle_at_top_right,_rgba(191,140,96,0.18),_transparent_32%),linear-gradient(145deg,#fffaf3_0%,#f8efe3_45%,#fffdf9_100%)] p-8 shadow-lg shadow-stone-200/40">
-      <div className="absolute right-0 top-0 h-36 w-36 rounded-full bg-[#d8b18c]/20 blur-3xl" />
-      <div className="absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-[#f3e2d0] blur-3xl" />
+    <section className="card relative overflow-hidden border-[#d4d4d8] bg-[radial-gradient(circle_at_top_right,_rgba(0,0,0,0.08),_transparent_32%),linear-gradient(145deg,#fafafa_0%,#f4f4f5_45%,#ffffff_100%)] p-8 shadow-lg shadow-zinc-200/40">
+      <div className="absolute right-0 top-0 h-36 w-36 rounded-full bg-[#d4d4d8]/30 blur-3xl" />
+      <div className="absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-[#e4e4e7] blur-3xl" />
 
       <div className="relative flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d8c1aa] bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4d4d8] bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">
             <Sparkles className="h-3.5 w-3.5" />
             {eyebrow}
           </div>
@@ -32,7 +32,7 @@ export default function AISpotlightBanner({
               {highlights.map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-[#e3cfbb] bg-white/80 px-3 py-1 text-sm font-semibold text-[#6d472d]"
+                  className="rounded-full border border-[#d4d4d8] bg-white/80 px-3 py-1 text-sm font-semibold text-[#3f3f46]"
                 >
                   {item}
                 </span>
@@ -43,8 +43,8 @@ export default function AISpotlightBanner({
 
         <div className="min-w-0 xl:max-w-sm">
           {status ? (
-            <div className="rounded-[24px] border border-[#e3cfbb] bg-white/80 p-4 text-sm leading-6 text-slate-700">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Why this matters</p>
+            <div className="rounded-[24px] border border-[#d4d4d8] bg-white/80 p-4 text-sm leading-6 text-slate-700">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Why this matters</p>
               <p className="mt-3">{status}</p>
             </div>
           ) : null}

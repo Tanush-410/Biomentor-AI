@@ -32,13 +32,13 @@ function VideoTile({ title, stream, muted = false }) {
   }, [muted, stream])
 
   return (
-    <div className="surface-quiet overflow-hidden rounded-[28px] border border-[rgba(138,90,54,0.18)]">
-      <div className="aspect-video bg-[#2f2016]">
+    <div className="surface-quiet overflow-hidden rounded-[28px] border border-[rgba(0,0,0,0.18)]">
+      <div className="aspect-video bg-[#09090b]">
         <video ref={ref} autoPlay playsInline muted={muted} className="h-full w-full object-cover" />
       </div>
       <div className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-900">
         <span>{title}</span>
-        <Video className="h-4 w-4 text-[#8a5a36]" />
+        <Video className="h-4 w-4 text-[#18181b]" />
       </div>
     </div>
   )
@@ -188,9 +188,9 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
 
   return (
     <div className="space-y-6">
-      {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div> : null}
-      {relayAdvisory ? <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{relayAdvisory}</div> : null}
-      {assistantError ? <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{assistantError}</div> : null}
+      {error ? <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div> : null}
+      {relayAdvisory ? <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-800">{relayAdvisory}</div> : null}
+      {assistantError ? <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-800">{assistantError}</div> : null}
 
       <AISpotlightBanner
         eyebrow="Live AI Surface"
@@ -204,7 +204,7 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
 
       {isTeacher ? (
         <div id="meeting-copilot" className="card p-6">
-          <p className="section-kicker text-[#8a5a36]">Meeting Copilot</p>
+          <p className="section-kicker text-[#18181b]">Meeting Copilot</p>
           <h3 className="mt-2 text-2xl font-bold text-slate-950">Live teacher guidance during the session.</h3>
           <p className="mt-3 text-sm leading-7 text-slate-600">
             VYDRA CORE is reading transcript snippets and your explicit meeting flags to suggest what to reteach, what students are still unsure about, and what should happen after the room ends.
@@ -222,7 +222,7 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
           <div className="grid gap-5 xl:grid-cols-2">
             <VideoTile title={`${user?.full_name || 'You'} (You)`} stream={localStream} muted />
             {remoteParticipants.length === 0 ? (
-              <div className="surface-subtle flex aspect-video items-center justify-center rounded-[28px] border border-dashed border-[rgba(138,90,54,0.25)] text-sm text-slate-600">
+              <div className="surface-subtle flex aspect-video items-center justify-center rounded-[28px] border border-dashed border-[rgba(0,0,0,0.25)] text-sm text-slate-600">
                 Waiting for other participants to join...
               </div>
             ) : (

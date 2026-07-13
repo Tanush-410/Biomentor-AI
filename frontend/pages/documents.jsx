@@ -195,17 +195,17 @@ export default function DocumentsPage() {
       }
     >
         <section className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
-          <div className="card p-8 bg-[linear-gradient(145deg,#3a2719_0%,#5f4028_56%,#8a5a36_100%)] text-white">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#f0dcc6] mb-3">Upload once, learn anywhere</p>
+          <div className="card p-8 bg-[linear-gradient(145deg,#09090b_0%,#27272a_56%,#52525b_100%)] text-white">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#fafafa] mb-3">Upload once, learn anywhere</p>
             <h2 className="text-4xl font-bold leading-tight mb-4">
               Open your uploaded material, save it offline, and turn it into quizzes from the same screen.
             </h2>
-            <p className="text-stone-100/90 text-lg mb-6">
+            <p className="text-zinc-100/90 text-lg mb-6">
               This page now replaces the broken demo actions with the real study flow: upload, open, offline view, quiz, and delete.
             </p>
 
             <div className="flex flex-col gap-4">
-              <label className="inline-flex w-fit cursor-pointer items-center gap-3 rounded-xl bg-[#fff7ef] px-5 py-3 font-semibold text-[#6d472d] shadow-lg">
+              <label className="inline-flex w-fit cursor-pointer items-center gap-3 rounded-xl bg-[#fafafa] px-5 py-3 font-semibold text-[#3f3f46] shadow-lg">
                 <Upload className="w-5 h-5" />
                 {uploading ? 'Uploading...' : 'Upload Material'}
                 <input type="file" className="hidden" accept=".pdf,.txt,.md" onChange={handleFileUpload} disabled={uploading} />
@@ -215,7 +215,7 @@ export default function DocumentsPage() {
                 <select
                   value={uploadOptions.storageMode}
                   onChange={(e) => setUploadOptions((current) => ({ ...current, storageMode: e.target.value }))}
-                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white focus:border-[#f0dcc6] focus:outline-none"
+                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white focus:border-[#fafafa] focus:outline-none"
                 >
                   <option value="full" className="text-slate-900">Full upload with offline PDF viewer</option>
                   <option value="text_only" className="text-slate-900">Low-data text-only study mode</option>
@@ -224,11 +224,11 @@ export default function DocumentsPage() {
                   value={uploadOptions.selectedPages}
                   onChange={(e) => setUploadOptions((current) => ({ ...current, selectedPages: e.target.value }))}
                   placeholder="Optional pages: 1-5,8,10-12"
-                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-[#f0dcc6]/70 focus:border-[#f0dcc6] focus:outline-none"
+                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-[#fafafa]/70 focus:border-[#fafafa] focus:outline-none"
                 />
               </div>
             </div>
-            <p className="mt-4 text-sm text-stone-100/80">
+            <p className="mt-4 text-sm text-zinc-100/80">
               Supported: PDF, TXT, Markdown. Choose <strong>text-only</strong> or specific page ranges when you want lighter processing and smaller stored material.
             </p>
           </div>
@@ -248,8 +248,8 @@ export default function DocumentsPage() {
 
         {(error || success) && (
           <div className="space-y-3">
-            {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
-            {success && <div className="rounded-xl border border-[#d8c1aa] bg-[#f5ebdf] px-4 py-3 text-[#6d472d]">{success}</div>}
+            {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
+            {success && <div className="rounded-xl border border-[#d4d4d8] bg-[#e4e4e7] px-4 py-3 text-[#3f3f46]">{success}</div>}
           </div>
         )}
 
@@ -295,19 +295,19 @@ export default function DocumentsPage() {
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                           {doc.processing_status || 'completed'}
                         </span>
-                        <span className="rounded-full bg-[#f2e4d4] px-3 py-1 text-xs font-semibold text-[#8a5a36]">
+                        <span className="rounded-full bg-[#f4f4f5] px-3 py-1 text-xs font-semibold text-[#18181b]">
                           {doc.storage_mode === 'text_only' ? 'Text-only low-data mode' : 'Full study mode'}
                         </span>
                         {Array.isArray(doc.selected_pages) && doc.selected_pages.length > 0 && (
-                          <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-700">
+                          <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-700">
                             Pages {doc.selected_pages.slice(0, 5).join(', ')}{doc.selected_pages.length > 5 ? '…' : ''}
                           </span>
                         )}
                         {doc.file_name?.toLowerCase().endsWith('.pdf') && (
                           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
                             offlineStatus[doc.id]
-                              ? 'bg-[#ead8c6] text-[#6d472d]'
-                              : 'bg-[#f3e6d6] text-[#8a5a36]'
+                              ? 'bg-[#d4d4d8] text-[#3f3f46]'
+                              : 'bg-[#e4e4e7] text-[#18181b]'
                           }`}>
                             {offlineStatus[doc.id] ? 'Offline ready' : 'Offline not saved yet'}
                           </span>
@@ -359,7 +359,7 @@ export default function DocumentsPage() {
                     <div>
                       <h3 className="text-lg font-bold text-slate-950">{item.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
-                      <p className="mt-3 text-sm font-medium text-[#6d472d]">{item.suggested_action}</p>
+                      <p className="mt-3 text-sm font-medium text-[#3f3f46]">{item.suggested_action}</p>
                     </div>
                     <Link href={`/document/${item.document_id}`} className="btn btn-outline shrink-0">
                       Open Material
@@ -374,7 +374,7 @@ export default function DocumentsPage() {
         <section id="material-intelligence-studio" className="card p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="section-kicker text-[#8a5a36]">Material Intelligence Studio</p>
+              <p className="section-kicker text-[#18181b]">Material Intelligence Studio</p>
               <h2 className="text-3xl font-bold text-slate-950">Material Intelligence Preview, now upgraded into a full study workspace.</h2>
               <p className="mt-2 max-w-3xl text-slate-600">
                 See what this material is really about before opening it: the strongest concepts, likely traps, viva prompts, and the best path to study it.

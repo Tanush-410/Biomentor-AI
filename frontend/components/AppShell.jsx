@@ -102,8 +102,8 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
           compact ? 'justify-center px-3 py-3' : 'gap-3 px-4 py-3'
         } ${
           active
-            ? 'bg-[#eadac9] text-[#4d3220] shadow-md shadow-stone-950/10'
-            : 'text-stone-300 hover:bg-[#3b2b20] hover:text-[#f6ecdf]'
+            ? 'bg-white text-black shadow-md shadow-black/10'
+            : 'text-zinc-300 hover:bg-white/10 hover:text-white'
         }`}
       >
         <Icon className="h-4 w-4 shrink-0" />
@@ -113,11 +113,11 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
   }
 
   return (
-    <div className={`min-h-screen bg-[linear-gradient(180deg,#fbf5ee_0%,#f7efe4_42%,#f3e6d6_100%)] md:grid ${sidebarWidthClass}`}>
+    <div className={`min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f4f4f5_42%,#e4e4e7_100%)] md:grid ${sidebarWidthClass}`}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <button
         onClick={() => setIsMobileMenuOpen(true)}
-        className="fixed left-4 top-4 z-40 inline-flex items-center justify-center rounded-2xl border border-stone-200 bg-[rgba(255,251,247,0.96)] p-3 text-stone-900 shadow-lg md:hidden"
+        className="fixed left-4 top-4 z-40 inline-flex items-center justify-center rounded-2xl border border-zinc-200 bg-white/95 p-3 text-zinc-950 shadow-lg shadow-black/10 md:hidden"
         aria-label="Open navigation"
       >
         <Menu className="h-5 w-5" />
@@ -130,16 +130,16 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
             className="absolute inset-0 bg-slate-950/50"
             aria-label="Close navigation overlay"
           />
-          <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#2f2218] text-stone-100 shadow-2xl">
-            <div className="flex items-start justify-between border-b border-[#4a3829] px-6 py-6">
+          <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-black text-zinc-100 shadow-2xl">
+            <div className="flex items-start justify-between border-b border-white/10 px-6 py-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d5b08b]">VYDRA CORE</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-400">VYDRA CORE</p>
                 <h2 className="mt-3 text-2xl font-bold text-white">{workspaceTitle}</h2>
-                <p className="mt-3 text-xs uppercase tracking-[0.24em] text-stone-400">{roleLabel}</p>
+                <p className="mt-3 text-xs uppercase tracking-[0.24em] text-zinc-500">{roleLabel}</p>
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="rounded-xl border border-[#5a4737] p-2 text-stone-200 transition hover:bg-[#3b2b20]"
+                className="rounded-xl border border-white/10 p-2 text-zinc-200 transition hover:bg-white/10"
                 aria-label="Close navigation"
               >
                 <X className="h-4 w-4" />
@@ -152,10 +152,10 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
               </div>
             </nav>
 
-            <div className="border-t border-[#4a3829] p-4">
+            <div className="border-t border-white/10 p-4">
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#5a4737] px-4 py-3 text-sm font-semibold text-stone-100 transition hover:border-[#8d6b51] hover:bg-[#3b2b20]"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:border-white/30 hover:bg-white/10"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -165,27 +165,27 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
         </div>
       )}
 
-      <aside className="hidden border-r border-[#d8c5b2] bg-[#2f2218] text-stone-100 md:flex md:min-h-screen md:flex-col">
-        <div className={`border-b border-[#4a3829] py-6 ${isCollapsed ? 'px-3' : 'px-6'}`}>
+      <aside className="hidden border-r border-zinc-800 bg-black text-zinc-100 md:flex md:min-h-screen md:flex-col">
+        <div className={`border-b border-white/10 py-6 ${isCollapsed ? 'px-3' : 'px-6'}`}>
           <div className={`flex ${isCollapsed ? 'justify-center' : 'items-start justify-between gap-3'}`}>
             <div className={isCollapsed ? 'hidden' : 'block'}>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d5b08b]">VYDRA CORE</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-400">VYDRA CORE</p>
               <h2 className="mt-3 text-2xl font-bold text-white">{workspaceTitle}</h2>
-              <p className="mt-2 text-sm leading-6 text-stone-400">{roleSupportCopy}</p>
-              <div className="role-pill mt-4 border-[#b28a67]/30 bg-[#8a5a36]/18 text-[#e9cfb5]">
+              <p className="mt-2 text-sm leading-6 text-zinc-400">{roleSupportCopy}</p>
+              <div className="role-pill mt-4 border-white/10 bg-white/10 text-zinc-200">
                 {roleLabel}
               </div>
             </div>
 
             {isCollapsed && (
-              <div className="rounded-2xl bg-[#8a5a36]/16 px-3 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#e9cfb5]">
-                BM
+              <div className="rounded-2xl bg-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-zinc-200">
+                VC
               </div>
             )}
 
             <button
               onClick={() => setIsCollapsed((current) => !current)}
-              className={`rounded-xl border border-[#5a4737] p-2 text-stone-200 transition hover:bg-[#3b2b20] ${
+              className={`rounded-xl border border-white/10 p-2 text-zinc-200 transition hover:bg-white/10 ${
                 isCollapsed ? 'absolute left-1/2 -translate-x-1/2 opacity-0 pointer-events-none' : ''
               }`}
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -198,7 +198,7 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => setIsCollapsed(false)}
-                className="rounded-xl border border-[#5a4737] p-2 text-stone-200 transition hover:bg-[#3b2b20]"
+                className="rounded-xl border border-white/10 p-2 text-zinc-200 transition hover:bg-white/10"
                 aria-label="Expand sidebar"
               >
                 <PanelLeftOpen className="h-4 w-4" />
@@ -214,9 +214,9 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
         </nav>
 
         {!isCollapsed && (
-          <div className="mx-4 mb-4 rounded-[24px] border border-white/8 bg-white/5 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-400">Workspace Focus</p>
-            <p className="mt-3 text-sm leading-6 text-stone-300">
+          <div className="mx-4 mb-4 rounded-[24px] border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">Workspace Focus</p>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">
               {user?.role === 'student'
                 ? 'Keep materials, chat, quizzes, and progress moving in a single guided loop.'
                 : 'Move from alerts to intervention with fewer clicks and clearer next actions.'}
@@ -224,11 +224,11 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
           </div>
         )}
 
-        <div className={`border-t border-[#4a3829] p-4 ${isCollapsed ? 'px-3' : ''}`}>
+        <div className={`border-t border-white/10 p-4 ${isCollapsed ? 'px-3' : ''}`}>
           <button
             onClick={handleLogout}
             title="Logout"
-            className={`flex w-full items-center rounded-2xl border border-[#5a4737] text-sm font-semibold text-stone-100 transition hover:border-[#8d6b51] hover:bg-[#3b2b20] ${
+            className={`flex w-full items-center rounded-2xl border border-white/10 text-sm font-semibold text-zinc-100 transition hover:border-white/30 hover:bg-white/10 ${
               isCollapsed ? 'justify-center px-3 py-3' : 'justify-center gap-2 px-4 py-3'
             }`}
           >
@@ -240,14 +240,14 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
 
       <div className="min-w-0">
         <main id="main-content" className={`mx-auto max-w-[92rem] px-4 pb-8 pt-24 sm:px-6 md:pt-8 lg:px-8 ${contentClassName}`}>
-          <section className="relative mb-8 overflow-hidden rounded-[28px] border border-stone-200/90 bg-[linear-gradient(145deg,rgba(255,251,247,0.98),rgba(248,239,228,0.96),rgba(244,232,217,0.9))] p-6 shadow-lg shadow-stone-200/60 sm:p-8">
-            <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-[#dfc0a1]/22 blur-3xl" />
-            <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-[#c89a70]/14 blur-3xl" />
+          <section className="relative mb-8 overflow-hidden rounded-[28px] border border-zinc-200/90 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(244,244,245,0.96),rgba(228,228,231,0.9))] p-6 shadow-lg shadow-black/5 sm:p-8">
+            <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-zinc-300/30 blur-3xl" />
+            <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-black/5 blur-3xl" />
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
-                <p className="section-kicker text-[#8a5a36]">{eyebrow}</p>
-                <h1 className="mt-2 text-3xl font-bold text-slate-950 sm:text-4xl">{title}</h1>
-                {description && <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">{description}</p>}
+                <p className="section-kicker text-zinc-500">{eyebrow}</p>
+                <h1 className="mt-2 text-3xl font-bold text-zinc-950 sm:text-4xl">{title}</h1>
+                {description && <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-600 sm:text-base">{description}</p>}
               </div>
               {actions && <div className="flex shrink-0 flex-wrap gap-3">{actions}</div>}
             </div>

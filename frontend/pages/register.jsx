@@ -67,21 +67,21 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(145deg,_#fbf5ee,_#f7efe4_45%,_#efdfce)] px-6 py-10">
+    <div className="min-h-screen bg-[linear-gradient(145deg,_#ffffff,_#f4f4f5_45%,_#e4e4e7)] px-6 py-10 text-zinc-950">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-500">VYDRA CORE</p>
             <h1 className="mt-2 text-4xl font-bold text-slate-950">Create your workspace</h1>
           </div>
-          <Link href="/login" className="rounded-full border border-stone-300 bg-[rgba(255,251,247,0.9)] px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-[#8a5a36] hover:text-[#8a5a36]">
+          <Link href="/login" className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-black hover:bg-black hover:text-white">
             Back to login
           </Link>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr]">
-          <section className="rounded-[32px] bg-[linear-gradient(180deg,#39281c_0%,#5f4028_100%)] p-8 text-white shadow-xl shadow-stone-200/50">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#f0dcc6]">Role Selection</p>
+          <section className="rounded-[32px] bg-[linear-gradient(180deg,#09090b_0%,#27272a_100%)] p-8 text-white shadow-xl shadow-zinc-300/40">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-300">Role Selection</p>
             <h2 className="mt-4 text-3xl font-bold">Pick the mode you want to grow into.</h2>
             <div className="mt-8 space-y-4">
               {ROLE_OPTIONS.map((option) => {
@@ -93,7 +93,7 @@ export default function Register() {
                     onClick={() => setFormData((prev) => ({ ...prev, role: option.value }))}
                     className={`w-full rounded-[24px] border p-5 text-left transition ${
                       active
-                        ? 'border-[#f0dcc6] bg-white/10'
+                        ? 'border-white bg-white/12'
                         : 'border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10'
                     }`}
                   >
@@ -105,7 +105,7 @@ export default function Register() {
             </div>
           </section>
 
-          <section className="rounded-[32px] border border-stone-200/80 bg-[rgba(255,251,247,0.94)] p-8 shadow-xl shadow-stone-200/60">
+          <section className="rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-200/70">
             <h2 className="text-2xl font-bold text-slate-950">Account details</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {formData.role === 'student'
@@ -115,7 +115,7 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-4">
               {error && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-2xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-900">
                   {error}
                 </div>
               )}
@@ -193,7 +193,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#6d472d] via-[#8a5a36] to-[#b9895d] px-5 py-3 font-semibold text-[#fffaf5] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+                className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? 'Creating account...' : `Create ${formData.role === 'student' ? 'Student' : 'Educator'} Account`}
               </button>

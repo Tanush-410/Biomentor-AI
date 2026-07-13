@@ -511,12 +511,12 @@ export default function EducatorExamMakerPage() {
       }
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
       {success && (
-        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800">
+        <div className="rounded-3xl border border-zinc-300 bg-zinc-100 px-5 py-4 text-zinc-800">
           <p className="font-semibold">Exam scheduled in {selectedClassroom?.name || 'the classroom'}.</p>
           <p className="mt-1 text-sm">Students will see it in classwork and the anti-cheat bot will capture review evidence if a protected attempt ends automatically.</p>
-          <Link href={`/classrooms/${success.classroom_id}/exam/${success.id}`} className="mt-3 inline-flex text-sm font-semibold text-emerald-900">Open exam detail</Link>
+          <Link href={`/classrooms/${success.classroom_id}/exam/${success.id}`} className="mt-3 inline-flex text-sm font-semibold text-zinc-900">Open exam detail</Link>
         </div>
       )}
 
@@ -535,14 +535,14 @@ export default function EducatorExamMakerPage() {
           <section className="card p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Exam command</p>
+                <p className="section-kicker text-[#18181b]">Exam command</p>
                 <h2 className="mt-2 text-3xl font-bold text-slate-950">Schedule a proctored classroom exam</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
                   Pick the classroom, define the schedule, then mix descriptive fixed-answer boxes with objective questions and grading keywords for AI-assisted review.
                 </p>
               </div>
-              <div className="rounded-3xl border border-[#e7d3bf] bg-[#fff9f2] px-4 py-3 text-right">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#8a5a36]">Draft total</p>
+              <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-right">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#18181b]">Draft total</p>
                 <p className="mt-2 text-3xl font-bold text-slate-950">{totalMarks}</p>
                 <p className="text-sm text-slate-600">marks</p>
               </div>
@@ -583,7 +583,7 @@ export default function EducatorExamMakerPage() {
           <section className="card p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Document layout</p>
+                <p className="section-kicker text-[#18181b]">Document layout</p>
                 <h3 className="mt-2 text-2xl font-bold text-slate-950">Mini word-style exam blocks</h3>
               </div>
               <button type="button" onClick={addBlock} className="btn btn-outline inline-flex items-center gap-2">
@@ -592,10 +592,10 @@ export default function EducatorExamMakerPage() {
               </button>
             </div>
 
-            <div className="mt-5 rounded-[28px] border border-dashed border-[#d7c2ae] bg-white p-5">
+            <div className="mt-5 rounded-[28px] border border-dashed border-[#d4d4d8] bg-white p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Block library</p>
+                  <p className="section-kicker text-[#18181b]">Block library</p>
                   <h4 className="mt-2 text-xl font-bold text-slate-950">Quick insert the paper structure</h4>
                   <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
                     Drop in common exam pieces first, then refine them. This keeps the paper editor feeling more document-like instead of making you author every block from zero.
@@ -621,14 +621,14 @@ export default function EducatorExamMakerPage() {
                     setDraggedBlockId('')
                   }}
                   onDragEnd={() => setDraggedBlockId('')}
-                  className={`rounded-3xl border bg-[#fff9f2] p-5 transition ${
-                    draggedBlockId === block.local_id ? 'border-[#9b6a43] shadow-lg' : 'border-[#ead8c6]'
+                  className={`rounded-3xl border bg-[#fafafa] p-5 transition ${
+                    draggedBlockId === block.local_id ? 'border-[#52525b] shadow-lg' : 'border-[#d4d4d8]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="inline-flex flex-wrap items-center gap-3">
-                      <div className="rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-[#8a5a36]">Block {index + 1}</div>
-                      <div className="rounded-2xl border border-dashed border-[#d7c2ae] bg-[#fffdf9] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">
+                      <div className="rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-[#18181b]">Block {index + 1}</div>
+                      <div className="rounded-2xl border border-dashed border-[#d4d4d8] bg-[#ffffff] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">
                         Drag to reorder
                       </div>
                       <select
@@ -642,13 +642,13 @@ export default function EducatorExamMakerPage() {
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => moveBlockByOffset(block.local_id, -1)} className="rounded-2xl border border-[#e6d1bc] px-3 py-2 text-sm font-semibold text-[#8a5a36] transition hover:bg-white">
+                      <button type="button" onClick={() => moveBlockByOffset(block.local_id, -1)} className="rounded-2xl border border-[#d4d4d8] px-3 py-2 text-sm font-semibold text-[#18181b] transition hover:bg-white">
                         Up
                       </button>
-                      <button type="button" onClick={() => moveBlockByOffset(block.local_id, 1)} className="rounded-2xl border border-[#e6d1bc] px-3 py-2 text-sm font-semibold text-[#8a5a36] transition hover:bg-white">
+                      <button type="button" onClick={() => moveBlockByOffset(block.local_id, 1)} className="rounded-2xl border border-[#d4d4d8] px-3 py-2 text-sm font-semibold text-[#18181b] transition hover:bg-white">
                         Down
                       </button>
-                      <button type="button" onClick={() => removeBlock(block.local_id)} className="rounded-2xl border border-[#e6d1bc] p-3 text-[#8a5a36] transition hover:bg-white">
+                      <button type="button" onClick={() => removeBlock(block.local_id)} className="rounded-2xl border border-[#d4d4d8] p-3 text-[#18181b] transition hover:bg-white">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -674,7 +674,7 @@ export default function EducatorExamMakerPage() {
                             type="file"
                             accept="image/*"
                             onChange={(event) => handleBlockImageUpload(block.local_id, event.target.files?.[0] || null)}
-                            className="input cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-[#7c4f30] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                            className="input cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-[#18181b] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
                           />
                         </label>
                         <label className="space-y-2">
@@ -749,7 +749,7 @@ export default function EducatorExamMakerPage() {
                           <option value="examiner">Examiner note</option>
                         </select>
                       </label>
-                      <label className="flex items-center gap-3 rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">
+                      <label className="flex items-center gap-3 rounded-2xl border border-[#d4d4d8] bg-white px-4 py-3">
                         <input
                           type="checkbox"
                           checked={Boolean(block.content?.layout?.page_break_before)}
@@ -764,8 +764,8 @@ export default function EducatorExamMakerPage() {
                       </label>
                     </div>
                     {block.block_type === 'image' && block.content?.image_url && (
-                      <div className="overflow-hidden rounded-3xl border border-[#ead8c6] bg-white p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Preview image</p>
+                      <div className="overflow-hidden rounded-3xl border border-[#d4d4d8] bg-white p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Preview image</p>
                         <img src={block.content.image_url} alt={block.content.caption || block.title || 'Exam diagram preview'} className="mt-4 max-h-72 w-full rounded-2xl object-contain" />
                       </div>
                     )}
@@ -778,20 +778,20 @@ export default function EducatorExamMakerPage() {
           <section className="card p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Document preview</p>
+                <p className="section-kicker text-[#18181b]">Document preview</p>
                 <h3 className="mt-2 text-2xl font-bold text-slate-950">Preview the teacher-facing paper layout</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   This preview mirrors the authored order so the paper feels more like a real exam document instead of a hidden JSON draft.
                 </p>
               </div>
-              <div className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3 text-sm font-semibold text-[#8a5a36]">
+              <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-sm font-semibold text-[#18181b]">
                 {form.blocks.length} layout blocks
               </div>
             </div>
 
-            <div className="mt-6 space-y-4 rounded-[32px] border border-[#ead8c6] bg-white p-6 shadow-[0_20px_60px_rgba(83,50,24,0.06)]">
-              <div className="border-b border-dashed border-[#ead8c6] pb-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Exam paper</p>
+            <div className="mt-6 space-y-4 rounded-[32px] border border-[#d4d4d8] bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.06)]">
+              <div className="border-b border-dashed border-[#d4d4d8] pb-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Exam paper</p>
                 <h4 className="mt-3 text-3xl font-bold text-slate-950">{form.title || 'Untitled classroom exam'}</h4>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
                   {form.instructions || 'Student instructions will appear here once you write them.'}
@@ -801,17 +801,17 @@ export default function EducatorExamMakerPage() {
               {form.blocks.map((block, index) => (
                 <div
                   key={`preview-${block.local_id}`}
-                  className={`rounded-3xl border border-[#f0dfce] p-5 ${
+                  className={`rounded-3xl border border-[#d4d4d8] p-5 ${
                     block.content?.layout?.tone === 'highlight'
-                      ? 'bg-[#fff7ef]'
+                      ? 'bg-[#fafafa]'
                       : block.content?.layout?.tone === 'examiner'
-                        ? 'bg-[#f6efe9]'
-                        : 'bg-[#fffdfb]'
+                        ? 'bg-[#e4e4e7]'
+                        : 'bg-white'
                   }`}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="role-pill border-[#ead8c6] bg-white text-[#6d472d]">{block.block_type}</span>
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">
+                    <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{block.block_type}</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">
                       {block.content?.layout?.page_break_before ? 'Page break before block' : `Block ${index + 1}`}
                     </span>
                   </div>
@@ -827,15 +827,15 @@ export default function EducatorExamMakerPage() {
                 </div>
               ))}
 
-              <div className="rounded-3xl border border-dashed border-[#dcc4ae] bg-[#fff9f2] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Question flow</p>
+              <div className="rounded-3xl border border-dashed border-[#d4d4d8] bg-[#fafafa] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Question flow</p>
                 <div className="mt-4 space-y-4">
                   {form.questions.map((question, index) => (
-                    <div key={`question-preview-${question.local_id}`} className="rounded-2xl border border-[#ead8c6] bg-white p-4">
+                    <div key={`question-preview-${question.local_id}`} className="rounded-2xl border border-[#d4d4d8] bg-white p-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="role-pill border-[#ead8c6] bg-[#fff9f2] text-[#6d472d]">Q{index + 1}</span>
-                        <span className="role-pill border-[#ead8c6] bg-white text-[#6d472d]">{question.question_type}</span>
-                        <span className="role-pill border-[#ead8c6] bg-white text-[#6d472d]">{question.response_mode}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-[#fafafa] text-[#3f3f46]">Q{index + 1}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{question.question_type}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{question.response_mode}</span>
                       </div>
                       <p className="mt-3 text-base font-semibold text-slate-950">{question.prompt || 'Question prompt preview'}</p>
                       <p className="mt-2 text-sm text-slate-600">
@@ -846,23 +846,23 @@ export default function EducatorExamMakerPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-dashed border-[#dcc4ae] bg-[#fff9f2] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Answer box preview</p>
+              <div className="rounded-3xl border border-dashed border-[#d4d4d8] bg-[#fafafa] p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Answer box preview</p>
                 {!answerBoxPreviewQuestion ? (
-                  <div className="mt-4 rounded-2xl border border-[#ead8c6] bg-white p-4 text-sm text-slate-600">
+                  <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-white p-4 text-sm text-slate-600">
                     Add at least one question to preview the fixed response box layout.
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-3xl border border-[#ead8c6] bg-white p-5">
+                  <div className="mt-4 rounded-3xl border border-[#d4d4d8] bg-white p-5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="role-pill border-[#ead8c6] bg-[#fff9f2] text-[#6d472d]">{answerBoxPreviewQuestion.response_mode}</span>
-                      <span className="role-pill border-[#ead8c6] bg-white text-[#6d472d]">{answerBoxPreviewQuestion.question_type}</span>
+                      <span className="role-pill border-[#d4d4d8] bg-[#fafafa] text-[#3f3f46]">{answerBoxPreviewQuestion.response_mode}</span>
+                      <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{answerBoxPreviewQuestion.question_type}</span>
                     </div>
                     <p className="mt-3 text-base font-semibold text-slate-950">
                       {answerBoxPreviewQuestion.prompt || 'The selected question prompt will preview here.'}
                     </p>
                     <div
-                      className="mt-4 rounded-2xl border border-dashed border-[#d7c2ae] bg-[#fffdf9] p-4 text-sm text-slate-500"
+                      className="mt-4 rounded-2xl border border-dashed border-[#d4d4d8] bg-[#ffffff] p-4 text-sm text-slate-500"
                       style={{ minHeight: `${Math.max(Number(answerBoxPreviewQuestion.response_config?.rows || 6), 3) * 28}px` }}
                     >
                       {answerBoxPreviewQuestion.response_mode === 'typed_or_image'
@@ -880,7 +880,7 @@ export default function EducatorExamMakerPage() {
           <section id="exam-question-studio" className="card p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Question studio</p>
+                <p className="section-kicker text-[#18181b]">Question studio</p>
                 <h3 className="mt-2 text-2xl font-bold text-slate-950">Fixed response boxes with AI grading cues</h3>
               </div>
               <button type="button" onClick={addQuestion} className="btn btn-primary inline-flex items-center gap-2">
@@ -891,13 +891,13 @@ export default function EducatorExamMakerPage() {
 
             <div className="mt-5 space-y-5">
               {form.questions.map((question, index) => (
-                <div key={question.local_id} className="rounded-[28px] border border-[#ead8c6] bg-white p-5 shadow-sm">
+                <div key={question.local_id} className="rounded-[28px] border border-[#d4d4d8] bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Question {index + 1}</p>
+                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#18181b]">Question {index + 1}</p>
                       <p className="mt-1 text-sm text-slate-600">Teachers choose the answer mode per question and define grading keywords for AI review.</p>
                     </div>
-                    <button type="button" onClick={() => removeQuestion(question.local_id)} className="rounded-2xl border border-[#e6d1bc] p-3 text-[#8a5a36] transition hover:bg-[#fff7ef]">
+                    <button type="button" onClick={() => removeQuestion(question.local_id)} className="rounded-2xl border border-[#d4d4d8] p-3 text-[#18181b] transition hover:bg-[#fafafa]">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -971,7 +971,7 @@ export default function EducatorExamMakerPage() {
 
         <div className="space-y-6">
           <section className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">AI suggestion mode</p>
+            <p className="section-kicker text-[#18181b]">AI suggestion mode</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Material-backed question drafting</h3>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               In AI-assisted mode, the linked materials define what the suggestion layer should pull from when generating draft prompts for the teacher to refine.
@@ -988,7 +988,7 @@ export default function EducatorExamMakerPage() {
                 {drafting ? 'Generating draft...' : 'Generate AI Draft'}
               </button>
               {form.authoring_mode !== 'ai_assisted' && (
-                <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3 text-sm text-slate-600">
+                <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-sm text-slate-600">
                   Switch authoring mode to AI-assisted to populate the paper from linked material.
                 </div>
               )}
@@ -1003,14 +1003,14 @@ export default function EducatorExamMakerPage() {
             )}
 
             <div className="mt-5 space-y-3">
-              <label className="flex items-start gap-3 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+              <label className="flex items-start gap-3 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 <input type="radio" name="generation_scope" checked={form.generation_scope === 'selected_materials'} onChange={() => updateForm('generation_scope', 'selected_materials')} className="mt-1" />
                 <div>
                   <p className="font-semibold text-slate-950">Use selected materials only</p>
                   <p className="mt-1 text-sm text-slate-600">Best when this exam should stay tightly aligned to the exact revision pack.</p>
                 </div>
               </label>
-              <label className="flex items-start gap-3 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+              <label className="flex items-start gap-3 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 <input type="radio" name="generation_scope" checked={form.generation_scope === 'classroom_materials'} onChange={() => updateForm('generation_scope', 'classroom_materials')} className="mt-1" />
                 <div>
                   <p className="font-semibold text-slate-950">Use all classroom materials</p>
@@ -1021,10 +1021,10 @@ export default function EducatorExamMakerPage() {
 
             <div className="mt-5 space-y-3">
               {documents.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#d7c2ae] bg-[#fff9f2] p-4 text-sm text-slate-600">Upload materials first so AI-assisted exam suggestions can target them.</div>
+                <div className="rounded-2xl border border-dashed border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">Upload materials first so AI-assisted exam suggestions can target them.</div>
               ) : (
                 documents.map((document) => (
-                  <label key={document.id} className="flex items-start gap-3 rounded-2xl border border-[#ead8c6] bg-white p-4">
+                  <label key={document.id} className="flex items-start gap-3 rounded-2xl border border-[#d4d4d8] bg-white p-4">
                     <input type="checkbox" checked={form.linked_material_ids.includes(document.id)} onChange={() => toggleLinkedMaterial(document.id)} className="mt-1" />
                     <div>
                       <p className="font-semibold text-slate-950">{document.title}</p>
@@ -1037,23 +1037,23 @@ export default function EducatorExamMakerPage() {
           </section>
 
           <section id="anticheat-policy" className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Anticheat policy</p>
+            <p className="section-kicker text-[#18181b]">Anticheat policy</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher-review endings, not silent failures</h3>
             <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 Major warnings capture a snapshot and append it to the anti-cheat case.
               </div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 If the attempt is ended automatically, the final outcome becomes teacher review required.
               </div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 The anti-cheat bot keeps the final debarred case plus the last three evidence snapshots.
               </div>
             </div>
           </section>
 
           <section className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Exam readiness</p>
+            <p className="section-kicker text-[#18181b]">Exam readiness</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">What this draft will publish</h3>
             <div className="mt-5 grid gap-3">
               <SummaryRow icon={PenSquare} label="Questions" value={`${form.questions.length} authored`} />
@@ -1075,9 +1075,9 @@ export default function EducatorExamMakerPage() {
 
 function SummaryRow({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3">
+    <div className="flex items-center justify-between rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3">
       <div className="inline-flex items-center gap-3 text-sm font-semibold text-slate-900">
-        <Icon className="h-4 w-4 text-[#8a5a36]" />
+        <Icon className="h-4 w-4 text-[#18181b]" />
         {label}
       </div>
       <span className="text-sm text-slate-600">{value}</span>

@@ -135,7 +135,7 @@ export default function CommunicationHubPage() {
       description="Watch student difficulty signals arrive in real time, shift between complaint triage and messages, and send updates from one cleaner response workspace."
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-red-700 break-words">{error}</div>}
+      {error && <div className="rounded-[18px] border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900 break-words">{error}</div>}
 
       <AISpotlightBanner
         eyebrow="Communication AI Surface"
@@ -158,8 +158,8 @@ export default function CommunicationHubPage() {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 md:w-[260px] md:min-w-[260px]">
-              <InboxMetric label="Complaints" value={complaints.length} accent="border-[#d9b998] bg-[#f4e2d0] text-[#7a5334]" />
-              <InboxMetric label="Messages" value={messages.length} accent="border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]" />
+              <InboxMetric label="Complaints" value={complaints.length} accent="border-[#d4d4d8] bg-[#f4f4f5] text-[#27272a]" />
+              <InboxMetric label="Messages" value={messages.length} accent="border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]" />
             </div>
           </div>
 
@@ -191,7 +191,7 @@ export default function CommunicationHubPage() {
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="role-pill border-[#d9b998] bg-[#f4e2d0] text-[#7a5334]">
+                        <span className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#27272a]">
                           {complaint.priority} priority
                         </span>
                         <span className="role-pill border-slate-200 bg-slate-50 text-slate-600">
@@ -218,7 +218,7 @@ export default function CommunicationHubPage() {
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                        <span className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
                           {message.direction === 'received' ? 'Inbox' : 'Sent'}
                         </span>
                         <span className="role-pill border-slate-200 bg-slate-50 text-slate-600">
@@ -243,10 +243,10 @@ export default function CommunicationHubPage() {
               title="Educator Command Center"
               summary={(copilot?.queue_summary || []).join(' ')}
             >
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4 text-sm leading-6 text-slate-700">
-                <p className="font-semibold text-[#8a5a36]">Draft reason</p>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm leading-6 text-slate-700">
+                <p className="font-semibold text-[#18181b]">Draft reason</p>
                 <p className="mt-1">Each draft explains why the copilot chose that response strategy before you send anything.</p>
-                <p className="mt-3 font-semibold text-[#8a5a36]">Escalation signal</p>
+                <p className="mt-3 font-semibold text-[#18181b]">Escalation signal</p>
                 <p className="mt-1">You can quickly see whether the issue looks private, repeatable, or likely to need class-wide clarification.</p>
               </div>
               {(copilot?.drafts || []).length === 0 ? (
@@ -262,7 +262,7 @@ export default function CommunicationHubPage() {
           </div>
 
           <div id="compose-response" className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Compose update</p>
+            <p className="section-kicker text-[#18181b]">Compose update</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Send a class-wide or targeted response.</h2>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <input

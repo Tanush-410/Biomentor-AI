@@ -59,9 +59,9 @@ export default function ClassroomPeoplePage() {
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="card p-6">
           <div className="flex items-center gap-3">
-            <School2 className="h-5 w-5 text-[#8a5a36]" />
+            <School2 className="h-5 w-5 text-[#18181b]" />
             <div>
-              <p className="section-kicker text-[#8a5a36]">Educators</p>
+              <p className="section-kicker text-[#18181b]">Educators</p>
               <h3 className="text-2xl font-bold text-slate-950">Who leads this classroom</h3>
             </div>
           </div>
@@ -77,9 +77,9 @@ export default function ClassroomPeoplePage() {
 
         <div className="card p-6">
           <div className="flex items-center gap-3">
-            <GraduationCap className="h-5 w-5 text-[#8a5a36]" />
+            <GraduationCap className="h-5 w-5 text-[#18181b]" />
             <div>
-              <p className="section-kicker text-[#8a5a36]">Students</p>
+              <p className="section-kicker text-[#18181b]">Students</p>
               <h3 className="text-2xl font-bold text-slate-950">Class roster</h3>
             </div>
           </div>

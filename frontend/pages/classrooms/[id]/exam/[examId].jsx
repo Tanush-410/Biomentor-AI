@@ -592,39 +592,39 @@ export default function ClassroomExamPage() {
           <div className="card p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Classroom exam</p>
+                <p className="section-kicker text-[#18181b]">Classroom exam</p>
                 <h1 className="mt-2 text-4xl font-bold text-slate-950">{exam?.title || 'Exam workspace'}</h1>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{exam?.description || exam?.instructions || 'Open the scheduled exam, answer each question in the fixed response area, and submit before the timer closes.'}</p>
               </div>
-              <div className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3 text-right">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Attempt status</p>
+              <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-right">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Attempt status</p>
                 <p className="mt-2 text-2xl font-bold text-slate-950">{attemptState === 'active' ? 'Live' : attemptState === 'submitted' ? 'Submitted' : attemptState === 'terminated' ? 'Ended' : 'Ready'}</p>
               </div>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-600">
-              <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{exam?.exam_mode || 'mixed'}</span>
+              <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{exam?.exam_mode || 'mixed'}</span>
               <span>{exam?.questions?.length || 0} questions</span>
               <span>{exam?.duration_minutes || 60} min</span>
               <span>{exam?.total_marks || 0} marks</span>
-              {exam?.proctoring_enabled && <span className="inline-flex items-center gap-2"><Shield className="h-4 w-4 text-[#8a5a36]" />Protected attempt</span>}
+              {exam?.proctoring_enabled && <span className="inline-flex items-center gap-2"><Shield className="h-4 w-4 text-[#18181b]" />Protected attempt</span>}
             </div>
           </div>
 
           {isEducator && (
             <div className="card p-6">
-              <p className="section-kicker text-[#8a5a36]">Educator view</p>
+              <p className="section-kicker text-[#18181b]">Educator view</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">Authored exam detail</h2>
               <div className="mt-5 space-y-4">
                 {(orderedQuestions || []).map((question, index) => (
-                  <div key={question.id} className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Question {index + 1}</p>
+                  <div key={question.id} className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Question {index + 1}</p>
                     <h3 className="mt-3 text-xl font-bold text-slate-950">{question.prompt}</h3>
                     <p className="mt-3 text-sm text-slate-600">Response mode: {question.response_mode} · Marks: {question.marks}</p>
                     {(question.grading_keywords || []).length > 0 && (
                       <div className="mt-4 flex flex-wrap gap-2">
                         {question.grading_keywords.map((keyword) => (
-                          <span key={keyword} className="role-pill border-[#d8c1aa] bg-white text-[#6d472d]">{keyword}</span>
+                          <span key={keyword} className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{keyword}</span>
                         ))}
                       </div>
                     )}
@@ -649,25 +649,25 @@ export default function ClassroomExamPage() {
 
               {attemptState === 'active' && (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3">
                     <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-                      <Clock3 className="h-4 w-4 text-[#8a5a36]" />
+                      <Clock3 className="h-4 w-4 text-[#18181b]" />
                       Time remaining: {Math.floor(timeRemaining / 60)}m {String(timeRemaining % 60).padStart(2, '0')}s
                     </div>
                     <div className="text-sm text-slate-600">{totalAnswered}/{orderedQuestions.length} answered · {warningCount}/3 warnings</div>
                   </div>
 
                   {latestWarning && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <div className="rounded-2xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-800">
                       {latestWarning}
                     </div>
                   )}
 
                   <div className="space-y-5">
                     {orderedQuestions.map((question, index) => (
-                      <div key={question.id} className="rounded-[28px] border border-[#ead8c6] bg-white p-5">
+                      <div key={question.id} className="rounded-[28px] border border-[#d4d4d8] bg-white p-5">
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">Question {index + 1}</span>
+                          <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">Question {index + 1}</span>
                           <span className="text-sm text-slate-600">{question.marks} marks</span>
                           <span className="text-sm text-slate-600">{question.response_mode}</span>
                         </div>
@@ -676,7 +676,7 @@ export default function ClassroomExamPage() {
                         {question.question_type === 'mcq' ? (
                           <div className="mt-4 space-y-3">
                             {(question.options || []).map((option) => (
-                              <label key={option.id} className="flex items-center gap-3 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3">
+                              <label key={option.id} className="flex items-center gap-3 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3">
                                 <input
                                   type="radio"
                                   name={`question-${question.id}`}
@@ -699,8 +699,8 @@ export default function ClassroomExamPage() {
                               />
                             )}
                             {question.response_mode !== 'typed' && (
-                              <label className="block rounded-2xl border border-dashed border-[#d8c1aa] bg-[#fff9f2] p-4">
-                                <div className="inline-flex items-center gap-2 text-sm font-semibold text-[#8a5a36]">
+                              <label className="block rounded-2xl border border-dashed border-[#d4d4d8] bg-[#fafafa] p-4">
+                                <div className="inline-flex items-center gap-2 text-sm font-semibold text-[#18181b]">
                                   <FileImage className="h-4 w-4" />
                                   Upload handwritten or diagram response
                                 </div>
@@ -724,7 +724,7 @@ export default function ClassroomExamPage() {
 
               {attemptState === 'submitted' && (
                 <div className="space-y-5 text-center">
-                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-zinc-100 text-zinc-700">
                     <CheckCircle className="h-8 w-8" />
                   </div>
                   <div>
@@ -738,7 +738,7 @@ export default function ClassroomExamPage() {
 
               {attemptState === 'terminated' && (
                 <div className="space-y-5 text-center">
-                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-700">
+                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-zinc-200 text-zinc-900">
                     <AlertTriangle className="h-8 w-8" />
                   </div>
                   <div>
@@ -755,30 +755,30 @@ export default function ClassroomExamPage() {
 
         <aside className="space-y-6">
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Attempt guard</p>
+            <p className="section-kicker text-[#18181b]">Attempt guard</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Camera preview</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Protected exams keep the camera and microphone open while the attempt is active. Leaving fullscreen or the tab ends the attempt automatically.
             </p>
-            <div className="mt-5 overflow-hidden rounded-[28px] border border-[#ead8c6] bg-[#2d2119]">
+            <div className="mt-5 overflow-hidden rounded-[28px] border border-[#d4d4d8] bg-[#09090b]">
               <video ref={videoRef} autoPlay muted playsInline className="h-[260px] w-full object-cover" />
             </div>
-            {cameraError && <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{cameraError}</div>}
+            {cameraError && <div className="mt-4 rounded-2xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-900">{cameraError}</div>}
             {exam?.proctoring_enabled && (
-              <div className="mt-4 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3 text-sm text-slate-600">
+              <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-sm text-slate-600">
                 Anti-cheat warnings recorded: <span className="font-semibold text-slate-900">{warningCount}</span> / 3
               </div>
             )}
           </div>
 
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Answer mode</p>
+            <p className="section-kicker text-[#18181b]">Answer mode</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Fixed response boxes</h2>
             <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">Teachers choose the response mode per question.</div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">Descriptive answers stay inside fixed boxes for cleaner grading review.</div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">Image answers can be attached for handwritten work or diagrams.</div>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">While the attempt stays active, typed and selected answers autosave locally on this device.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Teachers choose the response mode per question.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Descriptive answers stay inside fixed boxes for cleaner grading review.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Image answers can be attached for handwritten work or diagrams.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">While the attempt stays active, typed and selected answers autosave locally on this device.</div>
             </div>
           </div>
 

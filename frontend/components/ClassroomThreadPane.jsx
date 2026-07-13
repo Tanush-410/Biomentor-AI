@@ -34,8 +34,8 @@ export default function ClassroomThreadPane({
   return (
     <section className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
       <div className="card flex min-h-[560px] flex-col p-4">
-        <div className="border-b border-stone-200/80 pb-4">
-          <p className="section-kicker text-[#8a5a36]">Private contacts</p>
+        <div className="border-b border-zinc-200/80 pb-4">
+          <p className="section-kicker text-[#18181b]">Private contacts</p>
           <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher-student threads</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {role === 'student'
@@ -76,12 +76,12 @@ export default function ClassroomThreadPane({
                   onClick={() => onSelectThread(thread.id)}
                   className={`w-full rounded-[22px] border p-4 text-left transition ${
                     active
-                      ? 'border-[#c49a76] bg-[#f5ebdf]'
-                      : 'border-stone-200 bg-[#fffaf5] hover:border-[#d6b393]'
+                      ? 'border-[#c49a76] bg-[#e4e4e7]'
+                      : 'border-zinc-200 bg-[#fafafa] hover:border-[#a1a1aa]'
                   }`}
                 >
                   <p className="text-sm font-semibold text-slate-950">{counterparty?.full_name || 'Conversation'}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[#8a5a36]">{counterparty?.role || 'Thread'}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.22em] text-[#18181b]">{counterparty?.role || 'Thread'}</p>
                   <p className="mt-3 text-xs text-slate-500">
                     {thread.last_message_at ? new Date(thread.last_message_at).toLocaleString() : 'No activity yet'}
                   </p>
@@ -93,7 +93,7 @@ export default function ClassroomThreadPane({
       </div>
 
       <div className="card flex min-h-[560px] flex-col p-0">
-        <div className="border-b border-stone-200/80 px-6 py-5">
+        <div className="border-b border-zinc-200/80 px-6 py-5">
           <p className="text-sm font-semibold text-slate-950">
             {activeThread
               ? `${role === 'student' ? activeThread.teacher?.full_name : activeThread.student?.full_name || 'Selected thread'}`
@@ -117,8 +117,8 @@ export default function ClassroomThreadPane({
                 key={message.id}
                 className={`max-w-[85%] rounded-[24px] px-4 py-3 ${
                   message.sender?.role === role
-                    ? 'ml-auto bg-[#8a5a36] text-[#fff7ef]'
-                    : 'bg-[#f5ebdf] text-slate-900'
+                    ? 'ml-auto bg-[#18181b] text-[#fafafa]'
+                    : 'bg-[#e4e4e7] text-slate-900'
                 }`}
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-75">{message.sender?.name}</p>
@@ -129,7 +129,7 @@ export default function ClassroomThreadPane({
           )}
         </div>
 
-        <form onSubmit={handleSend} className="border-t border-stone-200/80 px-5 py-4">
+        <form onSubmit={handleSend} className="border-t border-zinc-200/80 px-5 py-4">
           <div className="flex gap-3">
             <textarea
               value={draft}

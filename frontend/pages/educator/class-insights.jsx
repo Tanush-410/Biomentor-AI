@@ -91,9 +91,9 @@ export default function ClassInsightsPage() {
                       stroke={8}
                       label="Topic mastery"
                       caption={`${item.students_measured} students`}
-                      progressClassName="stroke-[#8a5a36]"
-                      trackClassName="stroke-[#eee4da]"
-                      tone="text-[#8a5a36]"
+                      progressClassName="stroke-[#18181b]"
+                      trackClassName="stroke-[#d4d4d8]"
+                      tone="text-[#18181b]"
                     />
                   </div>
                 </div>
@@ -107,10 +107,10 @@ export default function ClassInsightsPage() {
             title="Educator Command Center"
             summary={copilot?.overview_summary}
           >
-            <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4 text-sm leading-6 text-slate-700">
-              <p className="font-semibold text-[#8a5a36]">Teaching move</p>
+            <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm leading-6 text-slate-700">
+              <p className="font-semibold text-[#18181b]">Teaching move</p>
               <p className="mt-1">The copilot explains the exact reteach move it recommends for each weak topic.</p>
-              <p className="mt-3 font-semibold text-[#8a5a36]">Review sequence</p>
+              <p className="mt-3 font-semibold text-[#18181b]">Review sequence</p>
               <p className="mt-1">Group-review suggestions now include a clearer sequence for how the educator should run the reteach cycle.</p>
             </div>
             {(copilot?.trend_explanations || []).length === 0 ? (
@@ -124,7 +124,7 @@ export default function ClassInsightsPage() {
             )}
             {(copilot?.group_review_recommendations || []).length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Group review recommendations</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Group review recommendations</p>
                 {copilot.group_review_recommendations.map((item, index) => (
                   <CopilotRecommendationCard key={`recommendation-${item.topic}-${index}`} item={item} data-confidence-reason={item.confidence_reason || ''} />
                 ))}

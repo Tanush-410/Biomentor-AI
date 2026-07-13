@@ -7,7 +7,7 @@ function FocusTopics({ topics }) {
   return (
     <div className="flex flex-wrap gap-2">
       {topics.map((topic) => (
-        <span key={topic} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+        <span key={topic} className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
           {topic}
         </span>
       ))}
@@ -17,7 +17,7 @@ function FocusTopics({ topics }) {
 
 function ActionCard({ action, ctaLabel = 'Open' }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
       <h4 className="break-words text-base font-bold text-slate-950">{action.label}</h4>
       <p className="mt-2 break-words text-sm leading-6 text-slate-600">{action.reason}</p>
       {action.target_url ? (
@@ -33,10 +33,10 @@ function ActionCard({ action, ctaLabel = 'Open' }) {
 
 function FocusGroupCard({ group }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h4 className="min-w-0 break-words text-base font-bold text-slate-950">{group.label}</h4>
-        <span className="rounded-full bg-[#f5ebdf] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">
+        <span className="rounded-full bg-[#e4e4e7] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">
           {group.learner_count} learners
         </span>
       </div>
@@ -49,19 +49,19 @@ function BriefCard({ brief }) {
   if (!brief) return null
 
   return (
-    <div className="min-w-0 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-5">
-      <p className="section-kicker text-[#8a5a36]">Teacher brief</p>
+    <div className="min-w-0 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-5">
+      <p className="section-kicker text-[#18181b]">Teacher brief</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Now</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Now</p>
           <p className="mt-2 break-words text-sm leading-6 text-slate-700">{brief.now}</p>
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Next</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Next</p>
           <p className="mt-2 break-words text-sm leading-6 text-slate-700">{brief.next}</p>
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Later</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Later</p>
           <p className="mt-2 break-words text-sm leading-6 text-slate-700">{brief.later}</p>
         </div>
       </div>
@@ -71,8 +71,8 @@ function BriefCard({ brief }) {
 
 function ReteachRecommendationCard({ item }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
-      <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">{item.topic}</p>
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
+      <p className="break-words text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">{item.topic}</p>
       <p className="mt-2 break-words text-sm leading-6 text-slate-600">{item.reason}</p>
       <p className="mt-3 break-words text-sm font-semibold leading-6 text-slate-900">{item.recommended_move}</p>
     </div>
@@ -81,9 +81,9 @@ function ReteachRecommendationCard({ item }) {
 
 function SignalCard({ signal }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-4">
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">{signal.severity} signal</span>
+        <span className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">{signal.severity} signal</span>
       </div>
       <h4 className="mt-3 break-words text-base font-bold text-slate-950">{signal.title}</h4>
       <p className="mt-2 break-words text-sm leading-6 text-slate-600">{signal.detail}</p>
@@ -102,8 +102,8 @@ function TextBulletSection({ title, items }) {
   if (!items?.length) return null
 
   return (
-    <div className="min-w-0 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-5">
-      <p className="section-kicker text-[#8a5a36]">{title}</p>
+    <div className="min-w-0 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-5">
+      <p className="section-kicker text-[#18181b]">{title}</p>
       <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
         {items.map((item, index) => (
           <li key={`${item}-${index}`} className="break-words">• {item}</li>
@@ -115,8 +115,8 @@ function TextBulletSection({ title, items }) {
 
 function FocusReasonCard({ title, heading, reason }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5">
-      <p className="section-kicker text-[#8a5a36]">{title}</p>
+    <div className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-5">
+      <p className="section-kicker text-[#18181b]">{title}</p>
       <h4 className="mt-2 break-words text-xl font-bold text-slate-950">{heading}</h4>
       <p className="mt-2 break-words text-sm leading-6 text-slate-600">{reason}</p>
     </div>
@@ -142,12 +142,12 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
     <div className="card min-w-0 p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-4xl min-w-0">
-          <p className="section-kicker text-[#8a5a36]">{eyebrow}</p>
+          <p className="section-kicker text-[#18181b]">{eyebrow}</p>
           <h3 className="mt-2 break-words text-3xl font-bold text-slate-950">{title}</h3>
           <p className="mt-3 break-words text-sm leading-7 text-slate-600">{subtitle}</p>
           <p className="mt-4 break-words text-sm leading-7 text-slate-700">{summary}</p>
           {confidenceReason ? (
-            <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-[#8a5a36]">{confidenceReason}</p>
+            <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-[#18181b]">{confidenceReason}</p>
           ) : null}
         </div>
         <FocusTopics topics={(isTeacher ? teacherView?.focus_topics : studentView?.focus_topics) || []} />
@@ -159,12 +159,12 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
             <BriefCard brief={teacherView?.teacher_brief} />
 
             <div>
-              <p className="section-kicker text-[#8a5a36]">Class patterns</p>
+              <p className="section-kicker text-[#18181b]">Class patterns</p>
               <TextBulletSection title="Signal summary" items={teacherView?.class_pattern_summary || []} />
             </div>
 
             <div>
-              <p className="section-kicker text-[#8a5a36]">Reteach recommendations</p>
+              <p className="section-kicker text-[#18181b]">Reteach recommendations</p>
               <div className="mt-3 grid gap-3">
                 {(teacherView?.reteach_recommendations || []).map((item, index) => (
                   <ReteachRecommendationCard key={`${item.topic}-${index}`} item={item} />
@@ -173,7 +173,7 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
             </div>
 
             <div>
-              <p className="section-kicker text-[#8a5a36]">Recommended next steps</p>
+              <p className="section-kicker text-[#18181b]">Recommended next steps</p>
               <div className="mt-3 grid gap-3">
                 {(teacherView?.recommended_actions || []).map((action, index) => (
                   <ActionCard key={`${action.label}-${index}`} action={action} />
@@ -186,7 +186,7 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
 
           <div className="space-y-6">
             <div>
-              <p className="section-kicker text-[#8a5a36]">Student focus groups</p>
+              <p className="section-kicker text-[#18181b]">Student focus groups</p>
               <div className="mt-3 grid gap-3">
                 {(teacherView?.student_focus_groups || []).length ? (
                   teacherView.student_focus_groups.map((group, index) => (
@@ -199,7 +199,7 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
             </div>
 
             <div>
-              <p className="section-kicker text-[#8a5a36]">Attention signals</p>
+              <p className="section-kicker text-[#18181b]">Attention signals</p>
               <div className="mt-3 grid gap-3">
                 {(teacherView?.attention_signals || []).length ? (
                   teacherView.attention_signals.map((signal, index) => (
@@ -216,7 +216,7 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
         <div className={`mt-6 grid gap-6 ${variant === 'classwork' ? '2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]' : ''}`}>
           <div className="space-y-6">
             <div>
-              <p className="section-kicker text-[#8a5a36]">Study targets</p>
+              <p className="section-kicker text-[#18181b]">Study targets</p>
               <div className="mt-3 grid gap-3">
                 {(studentView?.study_targets || []).map((action, index) => (
                   <ActionCard key={`${action.label}-${index}`} action={action} ctaLabel="Open" />
@@ -225,7 +225,7 @@ export default function ClassroomIntelligencePanel({ intelligence, role = 'stude
             </div>
 
             <div>
-              <p className="section-kicker text-[#8a5a36]">Next best moves</p>
+              <p className="section-kicker text-[#18181b]">Next best moves</p>
               <div className="mt-3 grid gap-3">
                 {(studentView?.next_steps || []).map((action, index) => (
                   <ActionCard key={`${action.label}-${index}`} action={action} ctaLabel="Go" />

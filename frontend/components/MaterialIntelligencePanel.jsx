@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 function EmptyState({ text }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#d8c3af] bg-[#fcf6ef] p-4 text-sm leading-6 text-[#6f533d]">
+    <div className="rounded-2xl border border-dashed border-[#d4d4d8] bg-[#fafafa] p-4 text-sm leading-6 text-[#52525b]">
       {text}
     </div>
   )
@@ -11,8 +11,8 @@ function EmptyState({ text }) {
 
 function SectionCard({ kicker, title, children, className = '' }) {
   return (
-    <section className={`min-w-0 rounded-[28px] border border-[#eadccd] bg-white p-5 ${className}`}>
-      {kicker ? <p className="section-kicker text-[#8a5a36]">{kicker}</p> : null}
+    <section className={`min-w-0 rounded-[28px] border border-[#d4d4d8] bg-white p-5 ${className}`}>
+      {kicker ? <p className="section-kicker text-[#18181b]">{kicker}</p> : null}
       {title ? <h4 className="mt-2 break-words text-xl font-bold text-slate-950">{title}</h4> : null}
       <div className="mt-4">{children}</div>
     </section>
@@ -41,11 +41,11 @@ export default function MaterialIntelligencePanel({
     <div className="card min-w-0 overflow-hidden p-6 md:p-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="max-w-3xl min-w-0">
-          <p className="section-kicker text-[#8a5a36]">AI Material Intelligence</p>
+          <p className="section-kicker text-[#18181b]">AI Material Intelligence</p>
           <h3 className="mt-3 break-words text-3xl font-bold text-slate-950">{title}</h3>
           <p className="mt-3 break-words text-base leading-7 text-slate-600">{intelligence.summary}</p>
           {intelligence.confidence_reason ? (
-            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">
+            <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">
               {intelligence.confidence_reason}
             </p>
           ) : null}
@@ -61,17 +61,17 @@ export default function MaterialIntelligencePanel({
       <div className="mt-8 grid gap-6 2xl:grid-cols-[1.2fr_0.8fr]">
         <SectionCard kicker="Layered Summary" title="Learn it at the depth you need">
           <div className="grid gap-4">
-            <div className="rounded-2xl border border-[#eadccd] bg-[#fffaf3] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Quick</p>
+            <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Quick</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">{layered.quick || intelligence.summary}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Standard</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Standard</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">{layered.standard || intelligence.summary}</p>
             </div>
-            <div className="rounded-2xl border border-[#d9c3ab] bg-[#f8ecdf] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Exam Focus</p>
-              <p className="mt-2 text-sm leading-6 text-[#6d472d]">{layered.exam_focus || intelligence.summary}</p>
+            <div className="rounded-2xl border border-[#d4d4d8] bg-[#f4f4f5] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Exam Focus</p>
+              <p className="mt-2 text-sm leading-6 text-[#3f3f46]">{layered.exam_focus || intelligence.summary}</p>
             </div>
           </div>
         </SectionCard>
@@ -83,7 +83,7 @@ export default function MaterialIntelligencePanel({
                 {studyPath.map((step, index) => (
                   <div key={`${step.label}-${index}`} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex items-start gap-3">
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8a5a36] text-sm font-bold text-white">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#18181b] text-sm font-bold text-white">
                         {index + 1}
                       </span>
                       <div className="min-w-0">
@@ -101,7 +101,7 @@ export default function MaterialIntelligencePanel({
 
           {intelligence.prerequisite_warning ? (
             <SectionCard kicker="Prerequisite Warning" title="Study this with context">
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] px-4 py-4 text-sm leading-6 text-[#6d472d]">
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-4 text-sm leading-6 text-[#3f3f46]">
                 {intelligence.prerequisite_warning}
               </div>
             </SectionCard>
@@ -117,7 +117,7 @@ export default function MaterialIntelligencePanel({
                 <div key={node.label} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-wrap items-center gap-3">
                     <h5 className="text-base font-bold text-slate-950">{node.label}</h5>
-                    <span className="rounded-full bg-[#f3e6d8] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#8a5a36]">
+                    <span className="rounded-full bg-[#e4e4e7] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#18181b]">
                       {node.importance}
                     </span>
                   </div>
@@ -125,7 +125,7 @@ export default function MaterialIntelligencePanel({
                   <div className="mt-2 flex flex-wrap gap-2">
                     {(node.connects_to || []).length ? (
                       node.connects_to.map((item) => (
-                        <span key={`${node.label}-${item}`} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                        <span key={`${node.label}-${item}`} className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
                           {item}
                         </span>
                       ))
@@ -145,13 +145,13 @@ export default function MaterialIntelligencePanel({
           {traps.length ? (
             <div className="space-y-3">
               {traps.map((item, index) => (
-                <div key={`${item.concept}-${index}`} className="rounded-2xl border border-[#e2d0bf] bg-[#fffaf4] p-4">
+                <div key={`${item.concept}-${index}`} className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                   <h5 className="text-base font-bold text-slate-950">{item.concept}</h5>
                   <p className="mt-3 text-sm leading-6 text-slate-700">
-                    <span className="font-semibold text-[#8a5a36]">Trap:</span> {item.trap}
+                    <span className="font-semibold text-[#18181b]">Trap:</span> {item.trap}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">
-                    <span className="font-semibold text-[#8a5a36]">Correction:</span> {item.correction}
+                    <span className="font-semibold text-[#18181b]">Correction:</span> {item.correction}
                   </p>
                 </div>
               ))}
@@ -181,7 +181,7 @@ export default function MaterialIntelligencePanel({
         <SectionCard kicker="Revision Tools" title="Flashcards, glossary, and next prompts">
           <div className="space-y-5">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Revision bullets</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#18181b]">Revision bullets</p>
               <div className="mt-3 space-y-3">
                 {revisionBullets.length ? (
                   revisionBullets.map((item, index) => (
@@ -196,7 +196,7 @@ export default function MaterialIntelligencePanel({
             </div>
 
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Glossary</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#18181b]">Glossary</p>
               <div className="mt-3 grid gap-3">
                 {glossary.length ? (
                   glossary.map((item) => (
@@ -212,7 +212,7 @@ export default function MaterialIntelligencePanel({
             </div>
 
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Quick flashcards</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#18181b]">Quick flashcards</p>
               <div className="mt-3 grid gap-3">
                 {flashcards.length ? (
                   flashcards.map((card, index) => (
@@ -228,11 +228,11 @@ export default function MaterialIntelligencePanel({
             </div>
 
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Follow-up prompts</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#18181b]">Follow-up prompts</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {followUps.length ? (
                   followUps.map((prompt) => (
-                    <span key={prompt} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                    <span key={prompt} className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
                       {prompt}
                     </span>
                   ))

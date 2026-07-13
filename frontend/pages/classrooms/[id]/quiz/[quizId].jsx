@@ -495,23 +495,23 @@ export default function ClassroomQuizPage() {
         <div className="space-y-6">
           <div className="card p-7">
             <div className="flex flex-wrap items-center gap-3">
-              <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{availabilityLabel}</span>
-              {quiz?.proctoring_enabled && <span className="role-pill border-[#d9b38f] bg-[#fff3e7] text-[#8a5a36]">Camera-proctored</span>}
+              <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{availabilityLabel}</span>
+              {quiz?.proctoring_enabled && <span className="role-pill border-[#a1a1aa] bg-[#f4f4f5] text-[#18181b]">Camera-proctored</span>}
             </div>
             <h2 className="mt-4 text-3xl font-bold text-slate-950">{quiz?.title || 'Classroom quiz'}</h2>
             {quiz?.description && <p className="mt-3 text-sm leading-7 text-slate-600">{quiz.description}</p>}
 
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               <div className="surface-subtle p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Questions</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Questions</p>
                 <p className="mt-2 text-2xl font-bold text-slate-950">{quiz?.num_questions || 0}</p>
               </div>
               <div className="surface-subtle p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Duration</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Duration</p>
                 <p className="mt-2 text-2xl font-bold text-slate-950">{quiz?.duration_minutes || 0} min</p>
               </div>
               <div className="surface-subtle p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Material</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#18181b]">Material</p>
                 <p className="mt-2 text-base font-semibold text-slate-950">{quiz?.document?.title || 'Mixed class material'}</p>
               </div>
             </div>
@@ -540,16 +540,16 @@ export default function ClassroomQuizPage() {
                 You must stay in fullscreen, keep this tab visible, and keep your camera on while the quiz is active. Breaking a proctoring rule ends the quiz automatically.
               </p>
               {attempt?.status === 'submitted' && canBeginQuiz && (
-                <div className="mt-4 rounded-xl border border-[#d8c1aa] bg-[#f7ecdf] px-4 py-3 text-[#6d472d]">
+                <div className="mt-4 rounded-xl border border-[#d4d4d8] bg-[#f4f4f5] px-4 py-3 text-[#3f3f46]">
                   Your previous attempt has already been submitted. Because this quiz is still open, you can start a fresh monitored attempt.
                 </div>
               )}
               {attempt?.status === 'terminated' && canBeginQuiz && (
-                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+                <div className="mt-4 rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-800">
                   A previous attempt was terminated. You can start a fresh monitored attempt while this quiz is still open.
                 </div>
               )}
-              {cameraError && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{cameraError}</div>}
+              {cameraError && <div className="mt-4 rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-800">{cameraError}</div>}
               <div className="mt-6 flex flex-wrap gap-3">
                 <button type="button" className="btn btn-primary" onClick={handleStart} disabled={starting || !canBeginQuiz}>
                   {starting ? 'Starting...' : attempt?.status === 'in_progress' ? 'Resume Classroom Quiz' : attempt?.status ? 'Start New Attempt' : 'Start Classroom Quiz'}
@@ -563,19 +563,19 @@ export default function ClassroomQuizPage() {
             <div className="card p-8">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Proctored attempt</p>
+                  <p className="section-kicker text-[#18181b]">Proctored attempt</p>
                   <h3 className="mt-2 text-2xl font-bold text-slate-950">Question {currentIndex + 1} of {questions.length}</h3>
                 </div>
-                <div className="rounded-full bg-[#f5ebdf] px-4 py-2 font-semibold text-[#6d472d]">{formatTime(timeRemaining)}</div>
+                <div className="rounded-full bg-[#e4e4e7] px-4 py-2 font-semibold text-[#3f3f46]">{formatTime(timeRemaining)}</div>
               </div>
 
-              <div className="mb-6 w-full rounded-full bg-stone-200 h-2">
-                <div className="h-2 rounded-full bg-gradient-to-r from-[#7c4f30] to-[#c59a73] transition-all" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
+              <div className="mb-6 w-full rounded-full bg-zinc-200 h-2">
+                <div className="h-2 rounded-full bg-gradient-to-r from-[#18181b] to-[#71717a] transition-all" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
               </div>
 
               <h4 className="text-xl font-bold text-slate-950">{activeQuestion.text}</h4>
               {activeQuestion.source_excerpt && (
-                <div className="mt-4 rounded-2xl border border-[#d6b89c] bg-[#f7ecdf] px-4 py-3 text-sm text-[#6b452c]">
+                <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#f4f4f5] px-4 py-3 text-sm text-[#3f3f46]">
                   <p className="font-semibold mb-1">Source grounding</p>
                   <p>{activeQuestion.source_excerpt}</p>
                 </div>
@@ -589,8 +589,8 @@ export default function ClassroomQuizPage() {
                     onClick={() => setAnswers((current) => ({ ...current, [activeQuestion.id]: option.id }))}
                     className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
                       answers[activeQuestion.id] === option.id
-                        ? 'border-[#8a5a36] bg-[#f6e8d8] text-[#4d3220]'
-                        : 'border-stone-200 bg-white text-slate-800 hover:border-[#d5b08b]'
+                        ? 'border-[#18181b] bg-[#f4f4f5] text-[#18181b]'
+                        : 'border-zinc-200 bg-white text-slate-800 hover:border-[#a1a1aa]'
                     }`}
                   >
                     <span className="font-semibold mr-2">{option.id}.</span>
@@ -615,13 +615,13 @@ export default function ClassroomQuizPage() {
                   )}
                 </div>
               </div>
-              {latestWarning && <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">{latestWarning}</div>}
+              {latestWarning && <div className="mt-5 rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-800">{latestWarning}</div>}
             </div>
           )}
 
           {isStudent && attemptState === 'submitted' && (
             <div className="card p-10 text-center">
-              <CheckCircle className="mx-auto h-20 w-20 text-[#8a5a36]" />
+              <CheckCircle className="mx-auto h-20 w-20 text-[#18181b]" />
               <h3 className="mt-5 text-3xl font-bold text-slate-950">Quiz submitted</h3>
               <p className="mt-3 text-sm leading-7 text-slate-600">Your classroom quiz attempt has been saved. Your educator can now review the result.</p>
               <div className="mt-6 flex justify-center gap-3">
@@ -632,7 +632,7 @@ export default function ClassroomQuizPage() {
 
           {isStudent && attemptState === 'terminated' && (
             <div className="card p-10 text-center">
-              <AlertTriangle className="mx-auto h-20 w-20 text-[#a6513f]" />
+              <AlertTriangle className="mx-auto h-20 w-20 text-[#3f3f46]" />
               <h3 className="mt-5 text-3xl font-bold text-slate-950">Quiz ended automatically</h3>
               <p className="mt-3 text-sm leading-7 text-slate-600">
                 A proctoring rule was broken, so the attempt was terminated and your educator has been notified.
@@ -646,11 +646,11 @@ export default function ClassroomQuizPage() {
 
         <aside className="space-y-6">
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Attempt guard</p>
+            <p className="section-kicker text-[#18181b]">Attempt guard</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Proctoring status</h3>
             <div className="mt-5 space-y-4">
               <div className="surface-quiet flex items-center gap-3 p-4">
-                <Shield className="h-5 w-5 text-[#8a5a36]" />
+                <Shield className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">{quiz?.proctoring_enabled ? 'Protected attempt' : 'Standard attempt'}</p>
                   <p className="text-sm text-slate-600">Fullscreen, visibility, and camera signals are checked while the quiz is live.</p>
@@ -658,20 +658,20 @@ export default function ClassroomQuizPage() {
               </div>
               <div className="surface-quiet p-4">
                 <div className="flex items-center gap-3">
-                  <Video className="h-5 w-5 text-[#8a5a36]" />
+                  <Video className="h-5 w-5 text-[#18181b]" />
                   <div>
                     <p className="font-semibold text-slate-900">Camera preview</p>
                     <p className="text-sm text-slate-600">Students must keep the webcam feed available during a proctored attempt.</p>
                   </div>
                 </div>
-                <div className="mt-4 overflow-hidden rounded-2xl bg-[#2f2219]">
+                <div className="mt-4 overflow-hidden rounded-2xl bg-[#09090b]">
                   <video ref={videoRef} autoPlay muted playsInline className="h-48 w-full object-cover" />
                 </div>
               </div>
               {attemptState === 'active' && (
                 <div className="surface-subtle p-4 text-sm text-slate-700">
                   <div>{answeredCount} of {questions.length} answered</div>
-                  <div className="mt-2 font-semibold text-[#8a5a36]">{warningCount} of 3 AI warnings used</div>
+                  <div className="mt-2 font-semibold text-[#18181b]">{warningCount} of 3 AI warnings used</div>
                 </div>
               )}
             </div>

@@ -37,19 +37,19 @@ export default function QuickCheckCard({ quickCheck, token }) {
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-[#d7c1ab] bg-[#fff7ef] px-4 py-4">
+    <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-4">
       <div className="mb-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8a5a36]">Quick Check</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#18181b]">Quick Check</p>
         <h3 className="mt-1 text-lg font-semibold text-slate-900">{quickCheck.title}</h3>
       </div>
 
       <div className="space-y-4">
         {quickCheck.questions.map((question, index) => (
-          <div key={question.id} className="rounded-xl border border-stone-200 bg-white px-4 py-3">
+          <div key={question.id} className="rounded-xl border border-zinc-200 bg-white px-4 py-3">
             <p className="font-semibold text-slate-900">{index + 1}. {question.prompt}</p>
             <div className="mt-3 space-y-2">
               {question.options.map((option) => (
-                <label key={option.id} className="flex items-center gap-3 rounded-lg border border-stone-200 px-3 py-2 text-sm text-slate-700">
+                <label key={option.id} className="flex items-center gap-3 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-slate-700">
                   <input
                     type="radio"
                     name={question.id}
@@ -70,7 +70,7 @@ export default function QuickCheckCard({ quickCheck, token }) {
           {submitting ? 'Checking...' : 'Test Me'}
         </button>
         {feedback ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+          <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-2 text-sm text-zinc-900">
             Score: {feedback.score}/{feedback.total_questions} · {feedback.next_step}
           </div>
         ) : null}
@@ -79,7 +79,7 @@ export default function QuickCheckCard({ quickCheck, token }) {
       {feedback?.results?.length ? (
         <div className="mt-4 space-y-3">
           {feedback.results.map((result) => (
-            <div key={result.question_id} className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-slate-700">
+            <div key={result.question_id} className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-slate-700">
               <p className="font-semibold text-slate-900">
                 {result.is_correct ? 'Correct' : 'Review this one'}
               </p>

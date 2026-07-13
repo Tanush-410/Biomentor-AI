@@ -296,7 +296,7 @@ export default function Dashboard() {
           </>
         }
       >
-        {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+        {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
 
         <AISpotlightBanner
           eyebrow="Educator AI Surface"
@@ -309,10 +309,10 @@ export default function Dashboard() {
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#332217,#5f4028_52%,#8a5a36)] p-8 text-white shadow-2xl shadow-stone-200">
-            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#d5b08b]/12 blur-3xl" />
-            <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-[#f0dcc6]/10 blur-3xl" />
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#f0dcc6]">Teacher/Admin Flow</p>
+          <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#09090b,#27272a_52%,#52525b)] p-8 text-white shadow-2xl shadow-zinc-200">
+            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#a1a1aa]/12 blur-3xl" />
+            <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-[#fafafa]/10 blur-3xl" />
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#fafafa]">Teacher/Admin Flow</p>
             <h2 className="mt-4 text-4xl font-bold leading-tight">
               Access class overview, inspect student analytics, intervene quickly, then follow through with AI-guided collaboration.
             </h2>
@@ -331,10 +331,10 @@ export default function Dashboard() {
           <div className="card p-6">
             <h3 className="text-xl font-bold text-slate-900">Overview</h3>
             <div className="mt-5 grid grid-cols-2 gap-4">
-              <StatCard label="Classrooms" value={educatorData?.overview?.classrooms || 0} accent="bg-[#f2e4d4] text-[#8a5a36]" icon={<School2 className="w-5 h-5" />} />
-              <StatCard label="Students" value={educatorData?.overview?.students || 0} accent="bg-[#ead8c6] text-[#6d472d]" icon={<Users className="w-5 h-5" />} />
-              <StatCard label="Avg Mastery" value={`${Math.round(educatorData?.overview?.average_mastery || 0)}%`} accent="bg-[#f3e6d6] text-[#8a5a36]" icon={<BarChart3 className="w-5 h-5" />} />
-              <StatCard label="Top Gap" value={educatorData?.overview?.top_gap || 'N/A'} accent="bg-stone-200 text-stone-700" icon={<AlertTriangle className="w-5 h-5" />} />
+              <StatCard label="Classrooms" value={educatorData?.overview?.classrooms || 0} accent="bg-[#f4f4f5] text-[#18181b]" icon={<School2 className="w-5 h-5" />} />
+              <StatCard label="Students" value={educatorData?.overview?.students || 0} accent="bg-[#d4d4d8] text-[#3f3f46]" icon={<Users className="w-5 h-5" />} />
+              <StatCard label="Avg Mastery" value={`${Math.round(educatorData?.overview?.average_mastery || 0)}%`} accent="bg-[#e4e4e7] text-[#18181b]" icon={<BarChart3 className="w-5 h-5" />} />
+              <StatCard label="Top Gap" value={educatorData?.overview?.top_gap || 'N/A'} accent="bg-zinc-200 text-zinc-700" icon={<AlertTriangle className="w-5 h-5" />} />
             </div>
           </div>
         </section>
@@ -387,8 +387,8 @@ export default function Dashboard() {
                   ))
                 )}
                 {copilotMeetingFollowUps.length > 0 && (
-                  <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Meeting follow-ups</p>
+                  <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Meeting follow-ups</p>
                     <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                       {copilotMeetingFollowUps.slice(0, 3).map((item, index) => (
                         <p key={`${item}-${index}`}>• {item}</p>
@@ -397,8 +397,8 @@ export default function Dashboard() {
                   </div>
                 )}
                 {copilotInterventionPlan.length > 0 && (
-                  <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Intervention plan</p>
+                  <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Intervention plan</p>
                     <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
                       {copilotInterventionPlan.slice(0, 3).map((item, index) => (
                         <p key={`${item}-${index}`}>• {item}</p>
@@ -529,9 +529,9 @@ export default function Dashboard() {
               )}
             </div>
             {liveNotifications.length > 0 && (
-              <div className="mt-5 rounded-2xl border border-[#d8c1aa] bg-[#f5ebdf] p-4">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#8a5a36]">Live educator feed</p>
-                <p className="mt-2 text-sm leading-6 text-[#5f4028]">
+              <div className="mt-5 rounded-2xl border border-[#d4d4d8] bg-[#e4e4e7] p-4">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#18181b]">Live educator feed</p>
+                <p className="mt-2 text-sm leading-6 text-[#3f3f46]">
                   New student messages and complaints are being surfaced in real time while this dashboard is open.
                 </p>
               </div>
@@ -560,16 +560,16 @@ export default function Dashboard() {
       }
     >
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#5f4028,#8a5a36_55%,#b9895d)] p-8 text-white shadow-xl shadow-stone-200">
+        <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#09090b,#18181b_55%,#52525b)] p-8 text-white shadow-xl shadow-zinc-200">
           <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="max-w-2xl">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#f0dcc6]">AI Study Flow</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#fafafa]">AI Study Flow</p>
             <h2 className="mb-4 text-4xl font-bold leading-tight">Upload material, study offline, ask questions, then practice with Bloom’s-based quizzes.</h2>
-            <p className="mb-6 text-lg text-stone-100/90">
+            <p className="mb-6 text-lg text-zinc-100/90">
               This dashboard follows the flow in your VYDRA CORE document: study resources, adaptive quiz practice, and progress tracking in one place.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/documents" className="rounded-lg bg-[#fff7ef] px-5 py-3 font-semibold text-[#6d472d] transition hover:bg-white">
+              <Link href="/documents" className="rounded-lg bg-[#fafafa] px-5 py-3 font-semibold text-[#3f3f46] transition hover:bg-white">
                 Upload or Open Materials
               </Link>
               <Link href="/start-quiz" className="rounded-lg border border-white/60 px-5 py-3 font-semibold text-white transition hover:bg-white/10">
@@ -590,15 +590,15 @@ export default function Dashboard() {
         <div className="card p-6">
           <h3 className="mb-4 text-xl font-bold text-slate-900">Quick Snapshot</h3>
           <div className="grid grid-cols-2 gap-4">
-            <StatCard label="Materials" value={documents.length} accent="bg-[#ead8c6] text-[#6d472d]" icon={<BookOpen className="w-5 h-5" />} />
-            <StatCard label="Quizzes" value={progress?.totalQuizzes || 0} accent="bg-[#f2e4d4] text-[#8a5a36]" icon={<Brain className="w-5 h-5" />} />
-            <StatCard label="Avg Score" value={`${Math.round(progress?.averageScore || 0)}%`} accent="bg-[#f3e6d6] text-[#8a5a36]" icon={<BarChart3 className="w-5 h-5" />} />
-            <StatCard label="Questions" value={progress?.totalQuestionsAnswered || 0} accent="bg-stone-200 text-stone-700" icon={<Sparkles className="w-5 h-5" />} />
+            <StatCard label="Materials" value={documents.length} accent="bg-[#d4d4d8] text-[#3f3f46]" icon={<BookOpen className="w-5 h-5" />} />
+            <StatCard label="Quizzes" value={progress?.totalQuizzes || 0} accent="bg-[#f4f4f5] text-[#18181b]" icon={<Brain className="w-5 h-5" />} />
+            <StatCard label="Avg Score" value={`${Math.round(progress?.averageScore || 0)}%`} accent="bg-[#e4e4e7] text-[#18181b]" icon={<BarChart3 className="w-5 h-5" />} />
+            <StatCard label="Questions" value={progress?.totalQuestionsAnswered || 0} accent="bg-zinc-200 text-zinc-700" icon={<Sparkles className="w-5 h-5" />} />
           </div>
         </div>
       </section>
 
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
 
       <AISpotlightBanner
         eyebrow="Student AI Surface"
@@ -625,23 +625,23 @@ export default function Dashboard() {
         >
           {studyCoach ? (
             <>
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff8f1] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Next best move</p>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Next best move</p>
                 <p className="mt-3 text-lg font-bold text-slate-950">{studyCoach.next_action}</p>
               </div>
               {studyCoach?.daily_goal ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Today’s goal</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Today’s goal</p>
                   <p className="mt-3 text-base font-bold text-slate-950">{studyCoach.daily_goal.label}</p>
                 </div>
               ) : null}
               <StudyCoachActionList actions={studyCoach.short_plan} />
               {(studyCoach.weak_focus_areas || []).length > 0 ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Weak focus areas</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Weak focus areas</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {studyCoach.weak_focus_areas.map((area) => (
-                      <span key={area} className="role-pill border-[#ead8c6] bg-[#fbf2e8] text-[#8a5a36]">
+                      <span key={area} className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
                         {area}
                       </span>
                     ))}
@@ -664,7 +664,7 @@ export default function Dashboard() {
               <h3 className="text-xl font-bold text-slate-900">Knowledge Gaps</h3>
               <p className="text-sm text-slate-600">Weakest Bloom’s Taxonomy levels based on your quiz history.</p>
             </div>
-            <Link href="/progress" className="text-sm font-semibold text-[#8a5a36] hover:text-[#6d472d]">Open Progress</Link>
+            <Link href="/progress" className="text-sm font-semibold text-[#18181b] hover:text-[#3f3f46]">Open Progress</Link>
           </div>
 
           {loading ? (
@@ -689,9 +689,9 @@ export default function Dashboard() {
                       stroke={8}
                       label="Average score"
                       caption={`${area.count} answers`}
-                      progressClassName="stroke-[#8a5a36]"
-                      trackClassName="stroke-[#eee4da]"
-                      tone="text-[#8a5a36]"
+                      progressClassName="stroke-[#18181b]"
+                      trackClassName="stroke-[#d4d4d8]"
+                      tone="text-[#18181b]"
                     />
                   </div>
                 </div>
@@ -745,7 +745,7 @@ function StatCard({ label, value, accent, icon }) {
 function StudentSignal({ label, value }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-4 backdrop-blur">
-      <p className="text-xs uppercase tracking-[0.22em] text-[#f0dcc6]">{label}</p>
+      <p className="text-xs uppercase tracking-[0.22em] text-[#fafafa]">{label}</p>
       <p className="mt-2 text-2xl font-bold text-white">{value}</p>
     </div>
   )

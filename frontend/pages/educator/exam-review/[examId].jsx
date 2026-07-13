@@ -180,8 +180,8 @@ export default function EducatorExamReviewPage() {
       }
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
-      {message && <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">{message}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
+      {message && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-700">{message}</div>}
 
       <AISpotlightBanner
         eyebrow="Teacher review surface"
@@ -196,7 +196,7 @@ export default function EducatorExamReviewPage() {
       <section className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]" id="exam-review-attempts">
         <aside className="space-y-5">
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Review queue</p>
+            <p className="section-kicker text-[#18181b]">Review queue</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">{workspace?.exam?.title || 'Exam review workspace'}</h2>
             <div className="mt-4 grid gap-3">
               <Metric label="Submitted attempts" value={String(attemptList.length)} />
@@ -206,12 +206,12 @@ export default function EducatorExamReviewPage() {
 
           <div className="card p-4">
             {loading ? (
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4 text-sm text-slate-600">Loading attempts...</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">Loading attempts...</div>
             ) : visibleAttemptList.length === 0 ? (
-              <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4 text-sm text-slate-600">No submitted exam attempts are ready for teacher grading yet.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">No submitted exam attempts are ready for teacher grading yet.</div>
             ) : (
               <div className="space-y-3">
-                <label className="flex items-center gap-3 rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3 text-sm font-semibold text-slate-900">
+                <label className="flex items-center gap-3 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-sm font-semibold text-slate-900">
                   <input
                     type="checkbox"
                     checked={showPendingOnly}
@@ -226,11 +226,11 @@ export default function EducatorExamReviewPage() {
                     onClick={() => loadAttempt(attempt.attempt_id)}
                     className={`w-full rounded-3xl border p-4 text-left transition ${
                       activeAttemptId === attempt.attempt_id
-                        ? 'border-[#9b6a43] bg-[#fff5eb]'
-                        : 'border-[#ead8c6] bg-white hover:bg-[#fff9f2]'
+                        ? 'border-[#52525b] bg-[#fafafa]'
+                        : 'border-[#d4d4d8] bg-white hover:bg-[#fafafa]'
                     }`}
                   >
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">{attempt.student_name}</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#18181b]">{attempt.student_name}</p>
                     <p className="mt-2 text-sm text-slate-600">
                       Pending question reviews: <span className="font-semibold text-slate-900">{attempt.pending_review_count}</span>
                     </p>
@@ -252,14 +252,14 @@ export default function EducatorExamReviewPage() {
               <section className="card p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="section-kicker text-[#8a5a36]">Teacher grading review</p>
+                    <p className="section-kicker text-[#18181b]">Teacher grading review</p>
                     <h2 className="mt-2 text-3xl font-bold text-slate-950">{activeAttempt.student_name}</h2>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
                       Review the descriptive response quality, attached handwritten images, and AI confidence question by question before finalizing the released score.
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3 text-right">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Current score</p>
+                  <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-right">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Current score</p>
                     <p className="mt-2 text-3xl font-bold text-slate-950">{activeAttempt.score}</p>
                   </div>
                 </div>
@@ -278,14 +278,14 @@ export default function EducatorExamReviewPage() {
                 </div>
 
                 <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                  <div className="rounded-3xl border border-[#ead8c6] bg-white p-5">
-                    <p className="section-kicker text-[#8a5a36]">Question navigator</p>
+                  <div className="rounded-3xl border border-[#d4d4d8] bg-white p-5">
+                    <p className="section-kicker text-[#18181b]">Question navigator</p>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       {questionNavigator.map((item) => (
-                        <div key={item.response_id || item.question_id} className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] p-4">
+                        <div key={item.response_id || item.question_id} className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="role-pill border-[#ead8c6] bg-white text-[#6d472d]">{item.label}</span>
-                            <span className="role-pill border-[#ead8c6] bg-white text-[#6d472d]">{item.review_status}</span>
+                            <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{item.label}</span>
+                            <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{item.review_status}</span>
                           </div>
                           <p className="mt-3 text-sm font-semibold text-slate-950">{item.prompt_preview || 'Prompt preview will appear here.'}</p>
                           <p className="mt-2 text-sm text-slate-600">
@@ -296,16 +296,16 @@ export default function EducatorExamReviewPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] p-5">
-                    <p className="section-kicker text-[#8a5a36]">Teacher release checklist</p>
+                  <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] p-5">
+                    <p className="section-kicker text-[#18181b]">Teacher release checklist</p>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
                       Keep this visible while you grade so the final release step stays deliberate and teacher-led.
                     </p>
                     <div className="mt-4 space-y-3">
                       {releaseSummary.checklist.map((item) => (
-                        <div key={item.id} className="rounded-2xl border border-[#ead8c6] bg-white p-4">
+                        <div key={item.id} className="rounded-2xl border border-[#d4d4d8] bg-white p-4">
                           <p className="text-sm font-semibold text-slate-950">{item.label}</p>
-                          <p className={`mt-2 text-sm font-semibold ${item.complete ? 'text-emerald-700' : 'text-amber-700'}`}>
+                          <p className={`mt-2 text-sm font-semibold ${item.complete ? 'text-zinc-700' : 'text-zinc-700'}`}>
                             {item.complete ? 'Complete' : 'Still needs attention'}
                           </p>
                         </div>
@@ -315,7 +315,7 @@ export default function EducatorExamReviewPage() {
                 </div>
 
                 {(activeAttempt.low_confidence_reasons || []).length > 0 && (
-                  <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  <div className="mt-5 rounded-3xl border border-zinc-300 bg-zinc-100 p-4 text-sm text-zinc-900">
                     <p className="font-semibold">AI low-confidence reasons</p>
                     <p className="mt-2">{activeAttempt.low_confidence_reasons.join(', ')}</p>
                   </div>
@@ -330,36 +330,36 @@ export default function EducatorExamReviewPage() {
                   return (
                     <article key={question.response_id || question.question_id} className="card p-6">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">Question {index + 1}</span>
-                        <span className="role-pill border-[#d8c1aa] bg-white text-[#6d472d]">{question.question_type}</span>
-                        <span className="role-pill border-[#d8c1aa] bg-white text-[#6d472d]">{question.response_mode}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">Question {index + 1}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{question.question_type}</span>
+                        <span className="role-pill border-[#d4d4d8] bg-white text-[#3f3f46]">{question.response_mode}</span>
                       </div>
                       <h3 className="mt-4 text-2xl font-bold text-slate-950">{question.prompt}</h3>
 
                       {(question.grading_keywords || []).length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-2">
                           {question.grading_keywords.map((keyword) => (
-                            <span key={keyword} className="role-pill border-[#d8c1aa] bg-[#fff9f2] text-[#6d472d]">{keyword}</span>
+                            <span key={keyword} className="role-pill border-[#d4d4d8] bg-[#fafafa] text-[#3f3f46]">{keyword}</span>
                           ))}
                         </div>
                       )}
 
                       <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
                         <div className="space-y-4">
-                          <div className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Student answer</p>
+                          <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Student answer</p>
                             <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">{question.typed_answer || 'No typed answer submitted.'}</p>
                           </div>
 
                           {(question.uploaded_image_urls || []).length > 0 && (
-                            <div className="rounded-3xl border border-[#ead8c6] bg-white p-4">
-                              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">
+                            <div className="rounded-3xl border border-[#d4d4d8] bg-white p-4">
+                              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">
                                 <FileImage className="h-4 w-4" />
                                 Uploaded answer evidence
                               </div>
                               <div className="mt-4 grid gap-3 md:grid-cols-2">
                                 {question.uploaded_image_urls.map((imageUrl, imageIndex) => (
-                                  <img key={`${question.question_id}-image-${imageIndex}`} src={imageUrl} alt={`Student response ${imageIndex + 1}`} className="w-full rounded-2xl border border-[#ead8c6] object-cover" />
+                                  <img key={`${question.question_id}-image-${imageIndex}`} src={imageUrl} alt={`Student response ${imageIndex + 1}`} className="w-full rounded-2xl border border-[#d4d4d8] object-cover" />
                                 ))}
                               </div>
                             </div>
@@ -367,15 +367,15 @@ export default function EducatorExamReviewPage() {
                         </div>
 
                         <div className="space-y-4">
-                          <div className="rounded-3xl border border-[#ead8c6] bg-[#fff9f2] p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">AI guidance</p>
+                          <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] p-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">AI guidance</p>
                             <div className="mt-3 space-y-2 text-sm text-slate-700">
                               <p>AI score suggestion: <span className="font-semibold text-slate-950">{question.ai_score}</span> / {question.marks}</p>
                               <p>Confidence: <span className="font-semibold text-slate-950">{question.ai_confidence ?? 'n/a'}</span></p>
                               <p>Model answer: <span className="font-semibold text-slate-950">{question.answer_key || 'Not provided'}</span></p>
                             </div>
                             {question.rubric_summary?.auto_feedback ? (
-                              <div className="mt-4 rounded-2xl border border-[#ead8c6] bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+                              <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-white px-4 py-3 text-sm leading-6 text-slate-700">
                                 {question.rubric_summary.auto_feedback}
                               </div>
                             ) : null}
@@ -389,26 +389,26 @@ export default function EducatorExamReviewPage() {
                             ) : null}
                             {(question.rubric_summary?.matched_keywords || []).length > 0 ? (
                               <div className="mt-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Matched keywords</p>
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Matched keywords</p>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {question.rubric_summary.matched_keywords.map((keyword) => (
-                                    <span key={`${question.question_id}-${keyword}`} className="role-pill border-emerald-200 bg-emerald-50 text-emerald-800">{keyword}</span>
+                                    <span key={`${question.question_id}-${keyword}`} className="role-pill border-zinc-300 bg-zinc-100 text-zinc-800">{keyword}</span>
                                   ))}
                                 </div>
                               </div>
                             ) : null}
                             {(question.rubric_summary?.missed_keywords || []).length > 0 ? (
                               <div className="mt-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a5a36]">Missing targets</p>
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Missing targets</p>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {question.rubric_summary.missed_keywords.map((keyword) => (
-                                    <span key={`${question.question_id}-missed-${keyword}`} className="role-pill border-amber-200 bg-amber-50 text-amber-800">{keyword}</span>
+                                    <span key={`${question.question_id}-missed-${keyword}`} className="role-pill border-zinc-300 bg-zinc-100 text-zinc-800">{keyword}</span>
                                   ))}
                                 </div>
                               </div>
                             ) : null}
                             {(question.ai_review_reasons || []).length > 0 ? (
-                              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-amber-900">
+                              <div className="mt-4 rounded-2xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-900">
                                 Review triggers: {question.ai_review_reasons.join(', ')}
                               </div>
                             ) : null}
@@ -444,7 +444,7 @@ export default function EducatorExamReviewPage() {
               </section>
 
               <section className="card p-6">
-                <p className="section-kicker text-[#8a5a36]">Release summary</p>
+                <p className="section-kicker text-[#18181b]">Release summary</p>
                 <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher summary</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   Finalize Teacher Review only when the released score, per-question overrides, and the classroom-facing feedback are ready to send back to the learner.
@@ -504,8 +504,8 @@ function buildDraft(attempt) {
 
 function Metric({ label, value }) {
   return (
-    <div className="rounded-2xl border border-[#ead8c6] bg-[#fff9f2] px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">{label}</p>
+    <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">{label}</p>
       <p className="mt-2 text-xl font-bold text-slate-950">{value}</p>
     </div>
   )

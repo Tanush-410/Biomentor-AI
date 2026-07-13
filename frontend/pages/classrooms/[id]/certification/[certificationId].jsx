@@ -23,9 +23,9 @@ import {
 
 function statusTone(status = '') {
   const normalized = String(status || '').toLowerCase()
-  if (['completed', 'issued'].includes(normalized)) return 'border-emerald-200 bg-emerald-50 text-emerald-700'
-  if (['ready_for_review', 'pending_review'].includes(normalized)) return 'border-amber-200 bg-amber-50 text-amber-700'
-  if (['in_progress', 'available'].includes(normalized)) return 'border-blue-200 bg-blue-50 text-blue-700'
+  if (['completed', 'issued'].includes(normalized)) return 'border-zinc-300 bg-zinc-100 text-zinc-700'
+  if (['ready_for_review', 'pending_review'].includes(normalized)) return 'border-zinc-300 bg-zinc-100 text-zinc-700'
+  if (['in_progress', 'available'].includes(normalized)) return 'border-zinc-300 bg-zinc-100 text-zinc-900'
   return 'border-slate-200 bg-slate-100 text-slate-600'
 }
 
@@ -211,7 +211,7 @@ export default function ClassroomCertificationDetailPage() {
   return (
     <ClassroomShell classroom={classroom} activeTab="classwork" isLoading={loading} error={error} actions={actions}>
       {success ? (
-        <div className="rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">
+        <div className="rounded-[18px] border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-700">
           {success}
         </div>
       ) : null}
@@ -221,7 +221,7 @@ export default function ClassroomCertificationDetailPage() {
           <div className="card p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Certification Path</p>
+                <p className="section-kicker text-[#18181b]">Certification Path</p>
                 <h3 className="mt-2 text-3xl font-bold text-slate-950">{certification?.title || 'Certification workspace'}</h3>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
                   {certification?.description || 'Track milestone completion, review external proof, and issue VYDRA CORE certificates from one classroom surface.'}
@@ -229,7 +229,7 @@ export default function ClassroomCertificationDetailPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <span className={`role-pill ${statusTone(certification?.status)}`}>{prettifyStatus(certification?.status)}</span>
-                <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">
+                <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">
                   {certification?.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE track'}
                 </span>
               </div>
@@ -237,15 +237,15 @@ export default function ClassroomCertificationDetailPage() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="surface-subtle p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Issuer</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Issuer</p>
                 <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.issuer_name || 'VYDRA CORE'}</p>
               </div>
               <div className="surface-subtle p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Milestones</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Milestones</p>
                 <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.steps?.length || 0}</p>
               </div>
               <div className="surface-subtle p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Approval mode</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Approval mode</p>
                 <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.requires_teacher_approval ? 'Teacher review' : 'Auto progression'}</p>
               </div>
             </div>
@@ -254,24 +254,24 @@ export default function ClassroomCertificationDetailPage() {
           {isStudent ? (
             <div className="card p-6">
               <div className="flex items-center gap-3">
-                <Sparkles className="h-5 w-5 text-[#8a5a36]" />
+                <Sparkles className="h-5 w-5 text-[#18181b]" />
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Learner Progress</p>
+                  <p className="section-kicker text-[#18181b]">Learner Progress</p>
                   <h3 className="text-2xl font-bold text-slate-950">Complete each milestone to unlock your certificate.</h3>
                 </div>
               </div>
 
               <div className="mt-5 grid gap-4 md:grid-cols-3">
                 <div className="surface-subtle p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Status</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Status</p>
                   <p className="mt-3 text-lg font-semibold text-slate-950">{prettifyStatus(viewerProgress?.status)}</p>
                 </div>
                 <div className="surface-subtle p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Completion</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Completion</p>
                   <p className="mt-3 text-lg font-semibold text-slate-950">{Math.round(viewerProgress?.completion_percentage || 0)}%</p>
                 </div>
                 <div className="surface-subtle p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Proof state</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Proof state</p>
                   <p className="mt-3 text-lg font-semibold text-slate-950">{prettifyStatus(viewerProgress?.proof_status || 'not_required')}</p>
                 </div>
               </div>
@@ -284,10 +284,10 @@ export default function ClassroomCertificationDetailPage() {
                   const canSubmitProof = isExternalReview && step.status !== 'completed'
 
                   return (
-                    <div key={step.id} className="rounded-[24px] border border-[#ead8c6] bg-white p-5">
+                    <div key={step.id} className="rounded-[24px] border border-[#d4d4d8] bg-white p-5">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Milestone {index + 1}</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Milestone {index + 1}</p>
                           <h4 className="mt-2 text-xl font-bold text-slate-950">{step.title}</h4>
                           {step.description ? <p className="mt-2 text-sm leading-6 text-slate-600">{step.description}</p> : null}
                         </div>
@@ -320,7 +320,7 @@ export default function ClassroomCertificationDetailPage() {
                       </div>
 
                       {canSubmitProof ? (
-                        <div className="mt-5 grid gap-4 rounded-[22px] border border-[#ead8c6] bg-[#fff8f1] p-4">
+                        <div className="mt-5 grid gap-4 rounded-[22px] border border-[#d4d4d8] bg-[#fafafa] p-4">
                           <div>
                             <p className="text-sm font-semibold text-slate-900">Submit external completion proof</p>
                             <p className="mt-1 text-sm text-slate-600">Paste a proof link and a short teacher note so your educator can review it.</p>
@@ -350,12 +350,12 @@ export default function ClassroomCertificationDetailPage() {
               </div>
 
               {viewerProgress?.issued_certificate_id ? (
-                <div className="mt-6 rounded-[22px] border border-emerald-200 bg-emerald-50 p-5">
+                <div className="mt-6 rounded-[22px] border border-zinc-300 bg-zinc-100 p-5">
                   <div className="flex items-center gap-3">
-                    <Award className="h-5 w-5 text-emerald-700" />
+                    <Award className="h-5 w-5 text-zinc-700" />
                     <div>
-                      <p className="text-sm font-semibold text-emerald-900">Certificate ready</p>
-                      <p className="text-sm text-emerald-700">Your educator has already issued this certificate.</p>
+                      <p className="text-sm font-semibold text-zinc-900">Certificate ready</p>
+                      <p className="text-sm text-zinc-700">Your educator has already issued this certificate.</p>
                     </div>
                   </div>
                   <div className="mt-4">
@@ -371,9 +371,9 @@ export default function ClassroomCertificationDetailPage() {
           {isEducator ? (
             <div className="card p-6">
               <div className="flex items-center gap-3">
-                <ShieldCheck className="h-5 w-5 text-[#8a5a36]" />
+                <ShieldCheck className="h-5 w-5 text-[#18181b]" />
                 <div>
-                  <p className="section-kicker text-[#8a5a36]">Educator Review</p>
+                  <p className="section-kicker text-[#18181b]">Educator Review</p>
                   <h3 className="text-2xl font-bold text-slate-950">Roster, evidence, and certificate issuing.</h3>
                 </div>
               </div>
@@ -382,7 +382,7 @@ export default function ClassroomCertificationDetailPage() {
                 {roster.length === 0 ? (
                   <div className="surface-subtle p-4 text-sm text-slate-600">No learners are enrolled in this classroom certification yet.</div>
                 ) : roster.map((entry) => (
-                  <div key={entry.student_id} className="rounded-[24px] border border-[#ead8c6] bg-white p-5">
+                  <div key={entry.student_id} className="rounded-[24px] border border-[#d4d4d8] bg-white p-5">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
                         <h4 className="text-xl font-bold text-slate-950">{entry.student_name}</h4>
@@ -405,7 +405,7 @@ export default function ClassroomCertificationDetailPage() {
                     <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
                       <div className="space-y-3">
                         {(entry.steps || []).map((step) => (
-                          <div key={step.id} className="rounded-2xl border border-[#ead8c6] bg-[#fffaf5] p-4">
+                          <div key={step.id} className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div>
                                 <p className="font-semibold text-slate-950">{step.title}</p>
@@ -434,18 +434,18 @@ export default function ClassroomCertificationDetailPage() {
                         ))}
                       </div>
 
-                      <div className="rounded-[24px] border border-[#ead8c6] bg-[#fff8f1] p-4">
+                      <div className="rounded-[24px] border border-[#d4d4d8] bg-[#fafafa] p-4">
                         <div className="flex items-center gap-2">
-                          <ClipboardCheck className="h-4 w-4 text-[#8a5a36]" />
+                          <ClipboardCheck className="h-4 w-4 text-[#18181b]" />
                           <p className="text-sm font-semibold text-slate-950">Teacher review queue</p>
                         </div>
                         {entry.proof_submissions?.length ? (
                           <div className="mt-4 space-y-3">
                             {entry.proof_submissions.map((proof) => (
-                              <div key={proof.id} className="rounded-2xl border border-[#ead8c6] bg-white p-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">{prettifyStatus(proof.proof_type)}</p>
+                              <div key={proof.id} className="rounded-2xl border border-[#d4d4d8] bg-white p-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">{prettifyStatus(proof.proof_type)}</p>
                                 {proof.proof_url ? (
-                                  <Link href={proof.proof_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#6d472d]">
+                                  <Link href={proof.proof_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-[#3f3f46]">
                                     Open proof link
                                     <ExternalLink className="h-4 w-4" />
                                   </Link>
@@ -470,27 +470,27 @@ export default function ClassroomCertificationDetailPage() {
         <div className="space-y-6">
           <div className="card p-6">
             <div className="flex items-center gap-3">
-              <Award className="h-5 w-5 text-[#8a5a36]" />
+              <Award className="h-5 w-5 text-[#18181b]" />
               <div>
-                <p className="section-kicker text-[#8a5a36]">Certificate Outcome</p>
+                <p className="section-kicker text-[#18181b]">Certificate Outcome</p>
                 <h3 className="text-2xl font-bold text-slate-950">{certification?.certificate_subtitle || 'Certificate of Completion'}</h3>
               </div>
             </div>
-            <div className="mt-5 rounded-[28px] border border-[#e5d1bf] bg-[linear-gradient(145deg,#fffdf9,#fff4e8)] p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE</p>
+            <div className="mt-5 rounded-[28px] border border-[#d4d4d8] bg-[linear-gradient(145deg,#ffffff,#f4f4f5)] p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#18181b]">VYDRA CORE</p>
               <p className="mt-5 text-3xl font-bold text-slate-950">{certification?.title || 'Untitled certification'}</p>
               <p className="mt-3 text-sm leading-7 text-slate-600">{certification?.completion_message || 'Learners who complete every required checkpoint will unlock a branded VYDRA CORE certificate.'}</p>
             </div>
           </div>
 
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Path design</p>
+            <p className="section-kicker text-[#18181b]">Path design</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">What this certification expects</h3>
             <div className="mt-5 space-y-3">
               {(certification?.steps || []).map((step, index) => (
                 <div key={step.id} className="surface-quiet p-4">
                   <div className="flex items-start gap-3">
-                    <div className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#f5ebdf] text-sm font-semibold text-[#6d472d]">
+                    <div className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#e4e4e7] text-sm font-semibold text-[#3f3f46]">
                       {index + 1}
                     </div>
                     <div>
@@ -504,7 +504,7 @@ export default function ClassroomCertificationDetailPage() {
           </div>
 
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Next move</p>
+            <p className="section-kicker text-[#18181b]">Next move</p>
             <h3 className="mt-2 text-xl font-bold text-slate-950">{isEducator ? 'Issue when the learner is review-ready.' : 'Work milestone by milestone.'}</h3>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               {isEducator

@@ -253,9 +253,9 @@ export default function EducatorQuizMakerPage() {
       }
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
       {success && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-900">
+        <div className="rounded-2xl border border-zinc-300 bg-zinc-100 px-5 py-4 text-zinc-900">
           <p className="font-semibold">Quiz published to {selectedClassroom?.name || 'your classroom'}.</p>
           <div className="mt-3 flex flex-wrap gap-3">
             <Link href={`/classrooms/${success.classroom_id || form.classroom_id}/classwork`} className="btn btn-outline">Open Classwork</Link>
@@ -277,7 +277,7 @@ export default function EducatorQuizMakerPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px]">
         <form id="quiz-authoring-studio" onSubmit={handleSubmit} className="card p-8 space-y-6">
           <div>
-            <p className="section-kicker text-[#8a5a36]">Authoring studio</p>
+            <p className="section-kicker text-[#18181b]">Authoring studio</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-950">Build classroom quizzes your way, then release them on schedule.</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Educators can still generate quizzes from study material, but now manual authoring is first-class too. Enter the questions, define the answer key, and the backend will autograde the attempt after students submit.
@@ -288,10 +288,10 @@ export default function EducatorQuizMakerPage() {
             <button
               type="button"
               onClick={() => updateForm('quiz_mode', 'generated')}
-              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'generated' ? 'border-[#8a5a36] bg-[#f7ecde] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d8c1aa]'}`}
+              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'generated' ? 'border-[#18181b] bg-[#f4f4f5] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d4d4d8]'}`}
             >
               <div className="flex items-center gap-3">
-                <ListChecks className="h-5 w-5 text-[#8a5a36]" />
+                <ListChecks className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">Generate from Material</p>
                   <p className="text-sm text-slate-600">Use your uploaded study content and Bloom settings to assemble the quiz automatically.</p>
@@ -301,10 +301,10 @@ export default function EducatorQuizMakerPage() {
             <button
               type="button"
               onClick={() => updateForm('quiz_mode', 'manual')}
-              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'manual' ? 'border-[#8a5a36] bg-[#f7ecde] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d8c1aa]'}`}
+              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'manual' ? 'border-[#18181b] bg-[#f4f4f5] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d4d4d8]'}`}
             >
               <div className="flex items-center gap-3">
-                <PencilLine className="h-5 w-5 text-[#8a5a36]" />
+                <PencilLine className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">Build Manually</p>
                   <p className="text-sm text-slate-600">Enter each question, all answer options, and the answer key so student attempts autograde instantly.</p>
@@ -370,7 +370,7 @@ export default function EducatorQuizMakerPage() {
             <div className="space-y-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Manual quiz authoring</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#18181b]">Manual quiz authoring</p>
                   <h3 className="mt-2 text-2xl font-bold text-slate-950">Enter the exact questions, options, and answer key.</h3>
                 </div>
                 <button type="button" onClick={addManualQuestion} className="btn btn-outline inline-flex items-center gap-2">
@@ -380,17 +380,17 @@ export default function EducatorQuizMakerPage() {
               </div>
 
               {form.manual_questions.map((question, index) => (
-                <div key={question.local_id} className="rounded-3xl border border-[#e8d8c8] bg-[#fffaf4] p-5 shadow-sm">
+                <div key={question.local_id} className="rounded-3xl border border-[#e8d8c8] bg-[#fafafa] p-5 shadow-sm">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Question {index + 1}</p>
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#18181b]">Question {index + 1}</p>
                       <p className="mt-1 text-sm text-slate-600">This question will be stored exactly as authored and autograded from the selected answer key.</p>
                     </div>
                     {form.manual_questions.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeManualQuestion(question.local_id)}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e2cdb7] bg-white text-[#8a5a36] transition hover:bg-[#f7ecde]"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e2cdb7] bg-white text-[#18181b] transition hover:bg-[#f4f4f5]"
                         aria-label={`Remove question ${index + 1}`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -471,7 +471,7 @@ export default function EducatorQuizMakerPage() {
                   <input type="number" min="5" max="180" value={form.duration_minutes} onChange={(event) => updateForm('duration_minutes', event.target.value)} className="input" />
                 </label>
                 <div className="surface-quiet flex items-center gap-3 p-4">
-                  <FileQuestion className="h-5 w-5 text-[#8a5a36]" />
+                  <FileQuestion className="h-5 w-5 text-[#18181b]" />
                   <div>
                     <p className="font-semibold text-slate-900">{authoredQuestionCount} authored questions</p>
                     <p className="text-sm text-slate-600">The student quiz will use these exact prompts, options, and answer keys.</p>
@@ -522,8 +522,8 @@ export default function EducatorQuizMakerPage() {
         </form>
 
         <aside className="space-y-6">
-          <div id="assessment-release-gate" className="card border-[#ead8c6] bg-[#fff8f1] p-6">
-            <p className="section-kicker text-[#8a5a36]">Assessment release gate</p>
+          <div id="assessment-release-gate" className="card border-[#d4d4d8] bg-[#fafafa] p-6">
+            <p className="section-kicker text-[#18181b]">Assessment release gate</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Use the AI assessment command before you release this quiz.</h3>
             <p className="mt-3 text-sm leading-6 text-slate-700">
               This review does more than catch weak wording. It tells you what the quiz is really measuring, which fixes matter first, and how to turn the results into follow-up teaching action.
@@ -531,18 +531,18 @@ export default function EducatorQuizMakerPage() {
           </div>
           <QuizQualityPanel review={qualityReview} loading={reviewing} error={reviewError} onReview={handleReview} />
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Publishing summary</p>
+            <p className="section-kicker text-[#18181b]">Publishing summary</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">{form.title || 'Your quiz summary will appear here'}</h3>
             <div className="mt-5 space-y-4 text-sm text-slate-700">
               <div className="surface-quiet flex items-center gap-3 p-4">
-                <School className="h-5 w-5 text-[#8a5a36]" />
+                <School className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">{selectedClassroom?.name || 'Choose a classroom'}</p>
                   <p className="text-slate-600">Students will see this quiz in the classroom classwork view.</p>
                 </div>
               </div>
               <div className="surface-quiet flex items-center gap-3 p-4">
-                <FileQuestion className="h-5 w-5 text-[#8a5a36]" />
+                <FileQuestion className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">
                     {form.quiz_mode === 'manual' ? `${authoredQuestionCount} teacher-authored questions` : `${form.num_questions} generated questions`}
@@ -555,21 +555,21 @@ export default function EducatorQuizMakerPage() {
                 </div>
               </div>
               <div className="surface-quiet flex items-center gap-3 p-4">
-                <Clock3 className="h-5 w-5 text-[#8a5a36]" />
+                <Clock3 className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">{form.duration_minutes} minute attempt window</p>
                   <p className="text-slate-600">Students are auto-timed once they begin.</p>
                 </div>
               </div>
               <div className="surface-quiet flex items-center gap-3 p-4">
-                <Camera className="h-5 w-5 text-[#8a5a36]" />
+                <Camera className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">{form.proctoring_enabled ? 'Camera and browser rules on' : 'Proctoring disabled'}</p>
                   <p className="text-slate-600">Leaving fullscreen, hiding the tab, or losing the camera will end a protected quiz.</p>
                 </div>
               </div>
               <div className="surface-quiet flex items-center gap-3 p-4">
-                <CalendarDays className="h-5 w-5 text-[#8a5a36]" />
+                <CalendarDays className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">
                     {form.available_from ? new Date(form.available_from).toLocaleString() : 'Available immediately'}
@@ -584,7 +584,7 @@ export default function EducatorQuizMakerPage() {
 
           {form.quiz_mode === 'manual' && (
             <div className="card p-6">
-              <p className="section-kicker text-[#8a5a36]">Answer key confidence</p>
+              <p className="section-kicker text-[#18181b]">Answer key confidence</p>
               <h3 className="mt-2 text-2xl font-bold text-slate-950">Every manual question is graded from your stored answer key.</h3>
               <div className="mt-5 space-y-3 text-sm text-slate-700">
                 {form.manual_questions.map((question, index) => (

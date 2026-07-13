@@ -123,7 +123,7 @@ export default function StartQuizPage() {
           </p>
 
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 mb-6">
+            <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900 mb-6">
               {error}
             </div>
           )}
@@ -143,7 +143,7 @@ export default function StartQuizPage() {
                       onClick={() => setSelectedDoc(String(doc.id))}
                       className={`rounded-xl border-2 p-4 text-left transition ${
                         String(selectedDoc) === String(doc.id)
-                          ? 'border-violet-600 bg-violet-50'
+                          ? 'border-zinc-950 bg-zinc-100'
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
                     >
@@ -164,7 +164,7 @@ export default function StartQuizPage() {
                     onClick={() => setSelectedLevel(item.level)}
                     className={`rounded-xl border-2 p-4 text-left transition ${
                       selectedLevel === item.level
-                        ? 'border-violet-600 bg-violet-50'
+                        ? 'border-zinc-950 bg-zinc-100'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
@@ -188,7 +188,7 @@ export default function StartQuizPage() {
                     onChange={(event) => setNumQuestions(Number(event.target.value))}
                     className="w-full"
                   />
-                  <p className="text-lg font-semibold text-violet-700 mt-3">{numQuestions} questions</p>
+                  <p className="text-lg font-semibold text-zinc-900 mt-3">{numQuestions} questions</p>
                 </div>
               </div>
 
@@ -204,7 +204,7 @@ export default function StartQuizPage() {
                     onChange={(event) => setDuration(Number(event.target.value))}
                     className="w-full"
                   />
-                  <p className="text-lg font-semibold text-violet-700 mt-3">{duration} minutes</p>
+                  <p className="text-lg font-semibold text-zinc-900 mt-3">{duration} minutes</p>
                 </div>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function StartQuizPage() {
 function FeatureCard({ icon, title, description }) {
   return (
     <div className="card p-6">
-      <div className="inline-flex items-center justify-center rounded-full bg-violet-100 p-3 text-violet-700">
+      <div className="inline-flex items-center justify-center rounded-full bg-zinc-100 p-3 text-zinc-900">
         {icon}
       </div>
       <h3 className="text-lg font-bold text-slate-900 mt-4">{title}</h3>

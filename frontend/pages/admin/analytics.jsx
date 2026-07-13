@@ -43,7 +43,7 @@ export default function AdminAnalyticsPage() {
       description="Track institutional performance, compare classrooms, review complaint pressure, and monitor collaboration usage from one clearer oversight view."
       contentClassName="space-y-8"
     >
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+      {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
 
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-6">
         <StatCard label="Users" value={analytics?.overview?.users || 0} />
@@ -71,9 +71,9 @@ export default function AdminAnalyticsPage() {
                     stroke={8}
                     label="Average mastery"
                     caption={`${item.count} accounts`}
-                    progressClassName="stroke-[#8a5a36]"
-                    trackClassName="stroke-[#eee4da]"
-                    tone="text-[#8a5a36]"
+                    progressClassName="stroke-[#18181b]"
+                    trackClassName="stroke-[#d4d4d8]"
+                    tone="text-[#18181b]"
                   />
                 </div>
               </div>
@@ -84,9 +84,9 @@ export default function AdminAnalyticsPage() {
         <div className="card p-6">
           <h2 className="text-xl font-bold text-slate-950">Complaint Pressure</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <MiniPill label="Open" value={analytics?.complaint_summary?.open || 0} tone="bg-[#f3e6d6] text-[#8a5a36]" />
-            <MiniPill label="Resolved" value={analytics?.complaint_summary?.resolved || 0} tone="bg-[#ead8c6] text-[#6d472d]" />
-            <MiniPill label="High Priority" value={analytics?.complaint_summary?.high_priority || 0} tone="bg-stone-200 text-stone-700" />
+            <MiniPill label="Open" value={analytics?.complaint_summary?.open || 0} tone="bg-[#e4e4e7] text-[#18181b]" />
+            <MiniPill label="Resolved" value={analytics?.complaint_summary?.resolved || 0} tone="bg-[#d4d4d8] text-[#3f3f46]" />
+            <MiniPill label="High Priority" value={analytics?.complaint_summary?.high_priority || 0} tone="bg-zinc-200 text-zinc-700" />
           </div>
           <div className="mt-6 space-y-3 text-slate-700">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -122,9 +122,9 @@ export default function AdminAnalyticsPage() {
                       stroke={8}
                       label="Average mastery"
                       caption={`${item.student_count} students`}
-                      progressClassName="stroke-[#8a5a36]"
-                      trackClassName="stroke-[#eee4da]"
-                      tone="text-[#8a5a36]"
+                      progressClassName="stroke-[#18181b]"
+                      trackClassName="stroke-[#d4d4d8]"
+                      tone="text-[#18181b]"
                     />
                   </div>
                 </div>

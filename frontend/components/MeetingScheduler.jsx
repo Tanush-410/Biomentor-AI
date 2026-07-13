@@ -28,7 +28,7 @@ export default function MeetingScheduler({ onSubmit, submitting = false }) {
 
   return (
     <form onSubmit={handleSubmit} className="card p-6">
-      <p className="section-kicker text-[#8a5a36]">Schedule meeting</p>
+      <p className="section-kicker text-[#18181b]">Schedule meeting</p>
       <h3 className="mt-2 text-2xl font-bold text-slate-950">Plan a classroom video session.</h3>
       <div className="mt-5 space-y-4">
         <input

@@ -254,7 +254,7 @@ export default function EducatorCertificationPage() {
         requires_teacher_approval: form.requires_teacher_approval,
         certificate_template: {
           theme: 'biomentor-premium',
-          accent: '#8a5a36',
+          accent: '#18181b',
           seal_label: 'VYDRA CORE'
         },
         ai_notes: {
@@ -302,8 +302,8 @@ export default function EducatorCertificationPage() {
       contentClassName="space-y-8"
       actions={actions}
     >
-      {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">{error}</div> : null}
-      {success ? <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700">{success}</div> : null}
+      {error ? <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div> : null}
+      {success ? <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-700">{success}</div> : null}
 
       <AISpotlightBanner
         eyebrow="Certification AI Surface"
@@ -318,9 +318,9 @@ export default function EducatorCertificationPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
         <div id="certification-builder" className="card p-6">
           <div className="flex items-center gap-3">
-            <Award className="h-5 w-5 text-[#8a5a36]" />
+            <Award className="h-5 w-5 text-[#18181b]" />
             <div>
-              <p className="section-kicker text-[#8a5a36]">Builder</p>
+              <p className="section-kicker text-[#18181b]">Builder</p>
               <h2 className="text-2xl font-bold text-slate-950">Certification composer</h2>
             </div>
           </div>
@@ -376,11 +376,11 @@ export default function EducatorCertificationPage() {
             ) : null}
           </div>
 
-          <div className="mt-6 rounded-[24px] border border-[#ead8c6] bg-[#fff8f1] p-5">
+          <div className="mt-6 rounded-[24px] border border-[#d4d4d8] bg-[#fafafa] p-5">
             <div className="flex items-center gap-3">
-              <Sparkles className="h-5 w-5 text-[#8a5a36]" />
+              <Sparkles className="h-5 w-5 text-[#18181b]" />
               <div>
-                <p className="section-kicker text-[#8a5a36]">AI draft context</p>
+                <p className="section-kicker text-[#18181b]">AI draft context</p>
                 <h3 className="text-lg font-bold text-slate-950">Choose the material AI should study first</h3>
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function EducatorCertificationPage() {
                         ? current.linked_material_ids.filter((item) => item !== document.id)
                         : [...current.linked_material_ids, document.id]
                     }))}
-                    className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-[#8a5a36] bg-white shadow-sm' : 'border-[#ead8c6] bg-[#fffaf5]'}`}
+                    className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-[#18181b] bg-white shadow-sm' : 'border-[#d4d4d8] bg-[#fafafa]'}`}
                   >
                     <p className="font-semibold text-slate-950">{document.title}</p>
                     <p className="mt-1 text-sm text-slate-600">{document.file_name}</p>
@@ -410,7 +410,7 @@ export default function EducatorCertificationPage() {
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="section-kicker text-[#8a5a36]">Milestones</p>
+                <p className="section-kicker text-[#18181b]">Milestones</p>
                 <h3 className="text-xl font-bold text-slate-950">Structured certification path</h3>
               </div>
               <button type="button" onClick={addStep} className="btn btn-outline">
@@ -421,9 +421,9 @@ export default function EducatorCertificationPage() {
             {form.steps.map((step, index) => {
               const options = stepOptions[step.step_type] || []
               return (
-                <div key={step.local_id} className="rounded-[24px] border border-[#ead8c6] bg-white p-5">
+                <div key={step.local_id} className="rounded-[24px] border border-[#d4d4d8] bg-white p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8a5a36]">Step {index + 1}</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#18181b]">Step {index + 1}</p>
                     <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => moveStep(step.local_id, -1)} className="btn btn-outline">Up</button>
                       <button type="button" onClick={() => moveStep(step.local_id, 1)} className="btn btn-outline">Down</button>
@@ -468,7 +468,7 @@ export default function EducatorCertificationPage() {
                       <span className="text-sm font-semibold text-slate-800">Minimum score</span>
                       <input className="input" type="number" min="0" max="100" value={step.minimum_score} onChange={(event) => updateStep(step.local_id, { minimum_score: event.target.value })} placeholder="Optional" />
                     </label>
-                    <label className="flex items-center gap-3 rounded-2xl border border-[#ead8c6] bg-[#fff8f1] px-4 py-3 text-sm font-medium text-slate-700">
+                    <label className="flex items-center gap-3 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-sm font-medium text-slate-700">
                       <input type="checkbox" checked={step.required} onChange={(event) => updateStep(step.local_id, { required: event.target.checked })} />
                       Required milestone
                     </label>
@@ -481,25 +481,25 @@ export default function EducatorCertificationPage() {
 
         <div className="space-y-6">
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Certificate preview</p>
+            <p className="section-kicker text-[#18181b]">Certificate preview</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">{form.certificate_subtitle || 'Certificate of Completion'}</h3>
-            <div className="mt-5 rounded-[28px] border border-[#e5d1bf] bg-[linear-gradient(145deg,#fffdf9,#fff4e8)] p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE</p>
+            <div className="mt-5 rounded-[28px] border border-[#d4d4d8] bg-[linear-gradient(145deg,#ffffff,#f4f4f5)] p-6 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#18181b]">VYDRA CORE</p>
               <p className="mt-5 text-3xl font-bold text-slate-950">{form.title || 'Untitled certification'}</p>
               <p className="mt-3 text-sm leading-7 text-slate-600">{form.completion_message}</p>
               <div className="mt-6 grid gap-3 text-sm text-slate-600">
-                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">Issuer: {form.issuer_name || 'VYDRA CORE'}</div>
-                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">Mode: {form.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE completion only'}</div>
-                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">{form.steps.length} milestone(s) configured</div>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-white px-4 py-3">Issuer: {form.issuer_name || 'VYDRA CORE'}</div>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-white px-4 py-3">Mode: {form.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE completion only'}</div>
+                <div className="rounded-2xl border border-[#d4d4d8] bg-white px-4 py-3">{form.steps.length} milestone(s) configured</div>
               </div>
             </div>
           </div>
 
           <div className="card p-6">
             <div className="flex items-center gap-3">
-              <FileCheck2 className="h-5 w-5 text-[#8a5a36]" />
+              <FileCheck2 className="h-5 w-5 text-[#18181b]" />
               <div>
-                <p className="section-kicker text-[#8a5a36]">Classroom status</p>
+                <p className="section-kicker text-[#18181b]">Classroom status</p>
                 <h3 className="text-2xl font-bold text-slate-950">Existing certification tracks</h3>
               </div>
             </div>
@@ -509,8 +509,8 @@ export default function EducatorCertificationPage() {
               ) : existing.map((item) => (
                 <div key={item.id} className="surface-quiet p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{item.status}</span>
-                    <span className="role-pill border-[#d8c1aa] bg-white text-slate-600">{item.steps?.length || 0} steps</span>
+                    <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">{item.status}</span>
+                    <span className="role-pill border-[#d4d4d8] bg-white text-slate-600">{item.steps?.length || 0} steps</span>
                   </div>
                   <p className="mt-3 text-lg font-semibold text-slate-950">{item.title}</p>
                   <p className="mt-2 text-sm text-slate-600">{item.description}</p>
@@ -525,20 +525,20 @@ export default function EducatorCertificationPage() {
           </div>
 
           <div className="card p-6">
-            <p className="section-kicker text-[#8a5a36]">Linked resource inventory</p>
+            <p className="section-kicker text-[#18181b]">Linked resource inventory</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">What can feed this certification</h3>
             <div className="mt-5 space-y-3 text-sm text-slate-600">
               <div className="surface-quiet p-4">
-                <div className="flex items-center gap-2 text-slate-950 font-semibold"><BookOpen className="h-4 w-4 text-[#8a5a36]" /> Materials</div>
+                <div className="flex items-center gap-2 text-slate-950 font-semibold"><BookOpen className="h-4 w-4 text-[#18181b]" /> Materials</div>
                 <p className="mt-2">{materials.length} classroom resource(s) available to attach as required checkpoints.</p>
               </div>
               <div className="surface-quiet p-4">
-                <div className="flex items-center gap-2 text-slate-950 font-semibold"><Sparkles className="h-4 w-4 text-[#8a5a36]" /> Quizzes and exams</div>
+                <div className="flex items-center gap-2 text-slate-950 font-semibold"><Sparkles className="h-4 w-4 text-[#18181b]" /> Quizzes and exams</div>
                 <p className="mt-2">{quizzes.length} quiz checkpoint(s) and {exams.length} exam checkpoint(s) available for auto-completion rules.</p>
               </div>
               {form.course_mode === 'external_course' ? (
                 <div className="surface-quiet p-4">
-                  <div className="flex items-center gap-2 text-slate-950 font-semibold"><ExternalLink className="h-4 w-4 text-[#8a5a36]" /> External proof mode</div>
+                  <div className="flex items-center gap-2 text-slate-950 font-semibold"><ExternalLink className="h-4 w-4 text-[#18181b]" /> External proof mode</div>
                   <p className="mt-2">Learners can submit external completion proof for teacher review before certificate issue.</p>
                 </div>
               ) : null}

@@ -9,7 +9,7 @@ export default function MeetingList({
 }) {
   return (
     <div className="card p-6">
-      <p className="section-kicker text-[#8a5a36]">Live meetings</p>
+      <p className="section-kicker text-[#18181b]">Live meetings</p>
       <h3 className="mt-2 text-2xl font-bold text-slate-950">Upcoming sessions and join state.</h3>
       <div className="mt-6 space-y-4">
         {meetings.length === 0 ? (
@@ -21,14 +21,14 @@ export default function MeetingList({
               <div key={meeting.id} className="surface-quiet p-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
-                    <div className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">
+                    <div className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">
                       {meeting.status}
                     </div>
                     <h4 className="mt-3 text-xl font-bold text-slate-950 break-words">{meeting.title}</h4>
                     <p className="mt-2 text-sm leading-6 text-slate-600 whitespace-pre-wrap break-words">
                       {meeting.description || 'No description provided.'}
                     </p>
-                    <p className="mt-3 text-sm text-[#6d472d]">
+                    <p className="mt-3 text-sm text-[#3f3f46]">
                       {new Date(meeting.scheduled_start).toLocaleString()} - {new Date(meeting.scheduled_end).toLocaleTimeString()}
                     </p>
                   </div>

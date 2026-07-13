@@ -13,7 +13,7 @@ import StickyNotesLayer from '../components/sticky-notes/StickyNotesLayer'
 import { AuthProvider, useAuth } from '../context/AuthContext'
 import '../styles/globals.css'
 
-const LEGACY_CACHE_PREFIXES = ['biomentor-']
+const LEGACY_CACHE_PREFIXES = ['biomentor-', 'vydra-']
 
 function AppContent({ Component, pageProps }) {
   const router = useRouter()
@@ -31,15 +31,15 @@ function AppContent({ Component, pageProps }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(180,120,76,0.14),_transparent_30%),linear-gradient(180deg,_#fbf5ee,_#f3e6d6)] px-6">
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(0,0,0,0.06),_transparent_30%),linear-gradient(180deg,_#ffffff,_#f4f4f5)] px-6">
         <div className="card max-w-md p-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-800">VYDRA CORE</p>
-          <h1 className="mt-4 text-3xl font-bold text-slate-950">Preparing your workspace</h1>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-500">VYDRA CORE</p>
+          <h1 className="mt-4 text-3xl font-bold text-zinc-950">Preparing your workspace</h1>
+          <p className="mt-3 text-sm leading-7 text-zinc-600">
             Loading your role-aware dashboard, study tools, and saved session state.
           </p>
-          <div className="mt-6 h-2 overflow-hidden rounded-full bg-stone-200">
-            <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-[#6d472d] via-[#8b5a35] to-[#b9895d]" />
+          <div className="mt-6 h-2 overflow-hidden rounded-full bg-zinc-200">
+            <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-black via-zinc-700 to-zinc-400" />
           </div>
         </div>
       </div>
@@ -47,11 +47,11 @@ function AppContent({ Component, pageProps }) {
   }
 
   const pageFallback = (
-    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#fbf5ee,#f3e6d6)] px-6">
+    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#ffffff,#f4f4f5)] px-6">
       <div className="card max-w-lg p-8 text-center">
-        <p className="section-kicker text-[#8a5a36]">VYDRA CORE recovery</p>
-        <h1 className="mt-4 text-3xl font-bold text-slate-950">Something went wrong in this workspace</h1>
-        <p className="mt-3 text-sm leading-7 text-slate-600">
+        <p className="section-kicker text-zinc-500">VYDRA CORE recovery</p>
+        <h1 className="mt-4 text-3xl font-bold text-zinc-950">Something went wrong in this workspace</h1>
+        <p className="mt-3 text-sm leading-7 text-zinc-600">
           Your account is safe. Reload this page to reconnect to the latest VYDRA CORE session.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">

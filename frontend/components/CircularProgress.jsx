@@ -6,9 +6,9 @@ export default function CircularProgress({
   stroke = 8,
   label,
   caption,
-  tone = 'text-[#8a5a36]',
-  trackClassName = 'stroke-[#ead8c6]',
-  progressClassName = 'stroke-[#8a5a36]',
+  tone = 'text-zinc-950',
+  trackClassName = 'stroke-zinc-200',
+  progressClassName = 'stroke-zinc-950',
   className = '',
   valueSuffix = '%'
 }) {
@@ -47,8 +47,8 @@ export default function CircularProgress({
       </div>
       {(label || caption) && (
         <div className="min-w-0">
-          {label && <p className="font-semibold text-slate-900">{label}</p>}
-          {caption && <p className="text-sm text-slate-600">{caption}</p>}
+          {label && <p className="font-semibold text-zinc-900">{label}</p>}
+          {caption && <p className="text-sm text-zinc-600">{caption}</p>}
         </div>
       )}
     </div>
