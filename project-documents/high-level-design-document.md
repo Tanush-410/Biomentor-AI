@@ -1,19 +1,19 @@
-# BioMentor AI High Level Design Document
+# VYDRA CORE High Level Design Document
 
 ## Document Control
 
-- Project: BioMentor AI
+- Project: VYDRA CORE
 - Document Type: High Level Design
 - Version: 1.0
 - Date: 13 May 2026
 
 ## 1. Purpose
 
-This document describes the high-level architecture, core components, data flows, deployment topology, and design decisions for the BioMentor AI web application.
+This document describes the high-level architecture, core components, data flows, deployment topology, and design decisions for the VYDRA CORE web application.
 
 ## 2. System Overview
 
-BioMentor AI is a role-aware web platform for exam preparation. The product combines:
+VYDRA CORE is a role-aware web platform for exam preparation. The product combines:
 
 - A student learning workspace
 - An educator command center

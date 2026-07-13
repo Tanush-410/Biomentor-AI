@@ -1,10 +1,10 @@
-# BioMentor Sticky Notes Design
+# VYDRA CORE Sticky Notes Design
 
 Date: 2026-06-13
 
 ## Goal
 
-Add a private `Sticky Notes` system to BioMentor AI that lets both students and educators right-click anywhere in the app and create colorful draggable notes that:
+Add a private `Sticky Notes` system to VYDRA CORE that lets both students and educators right-click anywhere in the app and create colorful draggable notes that:
 
 - stay tied to the exact user-facing page route where they were created
 - persist across logout and login
@@ -138,7 +138,7 @@ The feature should mount inside the shared application shell so it can work acro
 
 ### Visual style
 
-Notes should feel like premium BioMentor-native stationery rather than generic browser widgets.
+Notes should feel like premium VYDRA CORE-native stationery rather than generic browser widgets.
 
 Recommended note palette:
 

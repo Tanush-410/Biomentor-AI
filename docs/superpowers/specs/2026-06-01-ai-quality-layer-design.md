@@ -2,7 +2,7 @@
 
 ## Goal
 
-Upgrade every AI-powered surface in BioMentor AI so the system is more accurate, more evidence-grounded, more consistent across pages, and more conservative when confidence is weak.
+Upgrade every AI-powered surface in VYDRA CORE so the system is more accurate, more evidence-grounded, more consistent across pages, and more conservative when confidence is weak.
 
 This design does not introduce ML training pipelines. Instead, it makes the existing AI stack smarter through:
 - stronger evidence retrieval

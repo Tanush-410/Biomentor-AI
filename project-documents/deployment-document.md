@@ -1,19 +1,19 @@
-# BioMentor AI Deployment Document
+# VYDRA CORE Deployment Document
 
 ## Document Control
 
-- Project: BioMentor AI
+- Project: VYDRA CORE
 - Document Type: Deployment Guide
 - Version: 1.0
 - Date: 13 May 2026
 
 ## 1. Purpose
 
-This document explains how to configure, deploy, verify, and troubleshoot the BioMentor AI application across local, development, and cloud-backed environments.
+This document explains how to configure, deploy, verify, and troubleshoot the VYDRA CORE application across local, development, and cloud-backed environments.
 
 ## 2. Deployment Overview
 
-BioMentor AI consists of:
+VYDRA CORE consists of:
 
 - a Next.js frontend
 - a FastAPI backend

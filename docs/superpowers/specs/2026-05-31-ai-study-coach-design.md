@@ -4,7 +4,7 @@ Date: 2026-05-31
 
 ## Goal
 
-Add an `AI Study Coach` to BioMentor AI so students get a more guided, assistant-driven learning journey across:
+Add an `AI Study Coach` to VYDRA CORE so students get a more guided, assistant-driven learning journey across:
 - dashboard
 - progress
 - materials

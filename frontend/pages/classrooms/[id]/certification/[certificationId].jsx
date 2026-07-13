@@ -224,13 +224,13 @@ export default function ClassroomCertificationDetailPage() {
                 <p className="section-kicker text-[#8a5a36]">Certification Path</p>
                 <h3 className="mt-2 text-3xl font-bold text-slate-950">{certification?.title || 'Certification workspace'}</h3>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  {certification?.description || 'Track milestone completion, review external proof, and issue BioMentor certificates from one classroom surface.'}
+                  {certification?.description || 'Track milestone completion, review external proof, and issue VYDRA CORE certificates from one classroom surface.'}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <span className={`role-pill ${statusTone(certification?.status)}`}>{prettifyStatus(certification?.status)}</span>
                 <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">
-                  {certification?.course_mode === 'external_course' ? 'External + BioMentor' : 'BioMentor track'}
+                  {certification?.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE track'}
                 </span>
               </div>
             </div>
@@ -238,7 +238,7 @@ export default function ClassroomCertificationDetailPage() {
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="surface-subtle p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Issuer</p>
-                <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.issuer_name || 'BioMentor AI'}</p>
+                <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.issuer_name || 'VYDRA CORE'}</p>
               </div>
               <div className="surface-subtle p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Milestones</p>
@@ -477,9 +477,9 @@ export default function ClassroomCertificationDetailPage() {
               </div>
             </div>
             <div className="mt-5 rounded-[28px] border border-[#e5d1bf] bg-[linear-gradient(145deg,#fffdf9,#fff4e8)] p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">BioMentor AI</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE</p>
               <p className="mt-5 text-3xl font-bold text-slate-950">{certification?.title || 'Untitled certification'}</p>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{certification?.completion_message || 'Learners who complete every required checkpoint will unlock a branded BioMentor certificate.'}</p>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{certification?.completion_message || 'Learners who complete every required checkpoint will unlock a branded VYDRA CORE certificate.'}</p>
             </div>
           </div>
 

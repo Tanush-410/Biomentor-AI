@@ -1,6 +1,6 @@
-# BioMentor AI Project Documents
+# VYDRA CORE Project Documents
 
-This folder contains the project deliverables prepared for the BioMentor AI web application.
+This folder contains the project deliverables prepared for the VYDRA CORE web application.
 
 ## Available Documents
 

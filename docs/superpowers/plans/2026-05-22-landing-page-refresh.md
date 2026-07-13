@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refresh the BioMentor landing page so it presents the app as both an AI learning platform and a classroom-ready exam preparation system, while keeping the current structure and warm visual identity.
+**Goal:** Refresh the VYDRA CORE landing page so it presents the app as both an AI learning platform and a classroom-ready exam preparation system, while keeping the current structure and warm visual identity.
 
 **Architecture:** Update only the landing-page UI in `frontend/pages/index.jsx`, preserving the current section rhythm but rewriting the content hierarchy and component copy. Keep the existing CTA/navigation behavior, extract any repeated content into local data structures where it improves clarity, and verify the new visible copy and hero styling through a frontend build plus a small text-focused test.
 
@@ -71,7 +71,7 @@ const heroWords = ['Smarter', 'Learning', 'Starts', 'Here.']
 and update the supporting copy to emphasize:
 
 ```jsx
-BioMentor turns uploaded study material into AI-guided learning for students and classroom-ready assessment, intervention, and support workflows for educators.
+VYDRA CORE turns uploaded study material into AI-guided learning for students and classroom-ready assessment, intervention, and support workflows for educators.
 ```
 
 Also ensure the highlighted first letters use:
@@ -82,10 +82,10 @@ Also ensure the highlighted first letters use:
 
 - [ ] **Step 2: Refresh the top header hierarchy**
 
-Make the visible `BioMentor AI` eyebrow larger and more premium:
+Make the visible `VYDRA CORE` eyebrow larger and more premium:
 
 ```jsx
-<p className="text-lg font-semibold uppercase tracking-[0.32em] text-[#8a5a36] md:text-xl">BioMentor AI</p>
+<p className="text-lg font-semibold uppercase tracking-[0.32em] text-[#8a5a36] md:text-xl">VYDRA CORE</p>
 ```
 
 - [ ] **Step 3: Run the landing content test**

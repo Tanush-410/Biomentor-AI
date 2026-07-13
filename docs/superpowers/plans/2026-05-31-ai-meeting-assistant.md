@@ -704,7 +704,7 @@ git commit -m "feat: show post-meeting recap in classroom live page"
 
 - Teachers get a private live assistant panel inside classroom meetings
 - Transcript snippets and typed meeting events feed rolling notes
-- When a meeting ends, BioMentor saves:
+- When a meeting ends, VYDRA CORE saves:
   - summary
   - action items
   - unresolved doubts

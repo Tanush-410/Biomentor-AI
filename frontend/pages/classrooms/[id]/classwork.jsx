@@ -278,7 +278,7 @@ export default function ClassroomClassworkPage() {
                 certifications.map((certification) => (
                   <div key={certification.id} className="surface-quiet p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{certification.course_mode === 'external_course' ? 'External + BioMentor' : 'BioMentor track'}</span>
+                      <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">{certification.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE track'}</span>
                       <span className="role-pill border-[#d8c1aa] bg-white text-slate-600">{certification.status}</span>
                       {certification.viewer_progress?.status ? (
                         <span className="inline-flex items-center gap-2 text-sm text-slate-600">

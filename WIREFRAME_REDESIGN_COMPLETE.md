@@ -1,15 +1,15 @@
-# 🎨 BioMentor AI Frontend Redesign - Wireframe Implementation Complete
+# 🎨 VYDRA CORE Frontend Redesign - Wireframe Implementation Complete
 
 ## ✅ Redesign Summary
 
-Successfully redesigned the entire BioMentor AI frontend to match the exact wireframe specifications provided. All 4 main screens have been rebuilt with clean, minimal UI and proper navigation flow.
+Successfully redesigned the entire VYDRA CORE frontend to match the exact wireframe specifications provided. All 4 main screens have been rebuilt with clean, minimal UI and proper navigation flow.
 
 ---
 
 ## 📄 Redesigned Pages
 
 ### 1. **Login Page** (`/login`)
-- ✅ Clean BioMentor AI header with logo
+- ✅ Clean VYDRA CORE header with logo
 - ✅ Centered login form with border-2 border-gray-400 styling
 - ✅ Email input field
 - ✅ Password input field
@@ -38,7 +38,7 @@ Successfully redesigned the entire BioMentor AI frontend to match the exact wire
 
 ### 3. **Dashboard Page** (`/dashboard`)
 - ✅ Top navigation with:
-  - BioMentor AI logo/title
+  - VYDRA CORE logo/title
   - Navigation links: Home, Resources, Study Plan
   - Settings and User profile icons
 - ✅ Main content grid (3-column layout):

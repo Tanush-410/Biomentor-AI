@@ -150,7 +150,7 @@ export default function LearningChatPage() {
         <AISpotlightBanner
           eyebrow="Chat AI Surface"
           title="AI Reasoning Mode"
-          description="Ask from your own material first, then let BioMentor widen the search when needed. This workspace is built to show where the answer came from, how confident the system is, and when a Quick Check should lock in the concept."
+          description="Ask from your own material first, then let VYDRA CORE widen the search when needed. This workspace is built to show where the answer came from, how confident the system is, and when a Quick Check should lock in the concept."
           highlights={['PDF-first grounding', 'Trusted web fallback', 'Adaptive quick checks']}
           primaryAction={{ label: 'Start Reasoning Session', href: '#chat-transcript' }}
           secondaryAction={{ label: 'Open Materials', href: '/documents#material-intelligence-studio' }}

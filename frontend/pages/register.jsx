@@ -71,7 +71,7 @@ export default function Register() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">BioMentor AI</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE</p>
             <h1 className="mt-2 text-4xl font-bold text-slate-950">Create your workspace</h1>
           </div>
           <Link href="/login" className="rounded-full border border-stone-300 bg-[rgba(255,251,247,0.9)] px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-[#8a5a36] hover:text-[#8a5a36]">

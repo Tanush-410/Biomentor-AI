@@ -1,10 +1,10 @@
-# BioMentor Certification Implementation Plan
+# VYDRA CORE Certification Implementation Plan
 
 Date: 2026-06-12
 
 ## Objective
 
-Implement the new classroom-linked `Certification` feature described in `2026-06-12-certification-design.md` so educators can create BioMentor-native and external-course certification tracks, monitor student completion, and issue branded certificates.
+Implement the new classroom-linked `Certification` feature described in `2026-06-12-certification-design.md` so educators can create VYDRA CORE-native and external-course certification tracks, monitor student completion, and issue branded certificates.
 
 ## Build Order
 
@@ -41,7 +41,7 @@ Implement the new classroom-linked `Certification` feature described in `2026-06
 - add a new educator nav item: `Certification`
 - create an educator certification builder page
 - support both:
-  - `BioMentor track`
+  - `VYDRA CORE track`
   - `External course`
 - support:
   - classroom selection
@@ -59,14 +59,14 @@ Implement the new classroom-linked `Certification` feature described in `2026-06
 
 ### 5. Certificate rendering
 
-- build a branded HTML certificate surface in the BioMentor theme
+- build a branded HTML certificate surface in the VYDRA CORE theme
 - expose a printable/downloadable certificate route
 - include:
   - student name
   - course title
   - educator or issuer line
   - completion or issue date
-  - BioMentor AI branding
+  - VYDRA CORE branding
 
 ### 6. Verification
 

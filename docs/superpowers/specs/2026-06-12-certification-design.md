@@ -1,13 +1,13 @@
-# BioMentor Certification Design
+# VYDRA CORE Certification Design
 
 Date: 2026-06-12
 
 ## Goal
 
-Add a first-class `Certification` feature to BioMentor AI that lets educators:
+Add a first-class `Certification` feature to VYDRA CORE that lets educators:
 
 - create classroom-linked certification tracks
-- support both BioMentor-native learning paths and external course links
+- support both VYDRA CORE-native learning paths and external course links
 - define completion rules for students
 - issue branded certificates with the student's name after completion
 - surface certification progress clearly to both teachers and students
@@ -18,14 +18,14 @@ The feature should feel like a natural extension of the existing classroom, clas
 
 - Primary model: `Classroom Certification Tracks`
 - Unlock model: both supported
-  - `BioMentor-native completion`
+  - `VYDRA CORE-native completion`
   - `External course + teacher confirmation`
 - Certificates should carry:
   - student name
   - certification title
   - educator or classroom attribution
   - completion date
-  - BioMentor AI platform branding
+  - VYDRA CORE platform branding
 - Teachers should be able to issue automatically by rule or manually after review
 - Students should see both active tracks and earned certificates in a clear progress-oriented surface
 
@@ -37,12 +37,12 @@ The feature should feel like a natural extension of the existing classroom, clas
 - classroom-bound certification tracks
 - support for external course links
 - support for teacher-defined custom course structures
-- completion rules tied to BioMentor work
+- completion rules tied to VYDRA CORE work
 - teacher manual completion override for external certifications
 - certificate generation and download
 - student certification progress surface
 - teacher certification oversight surface
-- BioMentor-themed certificate layout
+- VYDRA CORE-themed certificate layout
 - AI assistance for drafting certification milestones and completion criteria
 
 ### Out of scope
@@ -68,7 +68,7 @@ Educators should manage certifications through classroom and educator flows they
 
 Teachers should be able to certify outside learning, but the app should preserve teacher control over when completion is accepted.
 
-### 4. BioMentor-native certifications should feel smarter than generic course badges
+### 4. VYDRA CORE-native certifications should feel smarter than generic course badges
 
 The system should take advantage of existing platform strengths:
 
@@ -80,13 +80,13 @@ The system should take advantage of existing platform strengths:
 
 ### 5. Certificates should feel premium
 
-The generated certificate should match the BioMentor visual language and feel polished enough to share or download confidently.
+The generated certificate should match the VYDRA CORE visual language and feel polished enough to share or download confidently.
 
 ## User Flows
 
 ## Educator flow
 
-### Create a BioMentor-native certification track
+### Create a VYDRA CORE-native certification track
 
 1. Educator opens a new `Certification` surface.
 2. Educator chooses a classroom.
@@ -95,7 +95,7 @@ The generated certificate should match the BioMentor visual language and feel po
    - description
    - completion message
    - signatory name or issuer line
-4. Educator chooses `BioMentor track`.
+4. Educator chooses `VYDRA CORE track`.
 5. Educator selects required completion items such as:
    - shared materials
    - classwork tasks
@@ -138,7 +138,7 @@ The generated certificate should match the BioMentor visual language and feel po
    - linked evidence
    - scores or required milestones
 5. Educator issues the certificate.
-6. BioMentor generates a certificate artifact for the student.
+6. VYDRA CORE generates a certificate artifact for the student.
 
 ### Use AI help during setup
 
@@ -177,7 +177,7 @@ The generated certificate should match the BioMentor visual language and feel po
    - certificate status
    - issue date
    - download action
-4. Student opens or downloads the BioMentor certificate.
+4. Student opens or downloads the VYDRA CORE certificate.
 
 ## UX Placement
 
@@ -423,7 +423,7 @@ Suggested endpoints:
 
 ## Completion logic
 
-### BioMentor-native certifications
+### VYDRA CORE-native certifications
 
 Completion should be calculated from linked steps:
 
@@ -450,7 +450,7 @@ Support:
 
 ## Certificate generation
 
-The certificate should be visually premium and BioMentor-branded.
+The certificate should be visually premium and VYDRA CORE-branded.
 
 Certificate content:
 
@@ -460,7 +460,7 @@ Certificate content:
 - educator or issuer name
 - classroom name where applicable
 - completion or issue date
-- BioMentor AI branding
+- VYDRA CORE branding
 
 Rendering options for phase 1:
 
@@ -482,7 +482,7 @@ Sections:
 - track details
 - classroom selector
 - mode selector
-  - `BioMentor track`
+  - `VYDRA CORE track`
   - `External course`
 - milestone builder
 - completion policy
@@ -577,7 +577,7 @@ Mitigation:
 
 Mitigation:
 - build a branded certificate layout from day one
-- match BioMentor’s premium tone and typography
+- match VYDRA CORE’s premium tone and typography
 
 ## Phase 1 Recommendation
 
@@ -593,8 +593,8 @@ Build the first release in this order:
 
 The feature is successful when:
 
-- educators can create both BioMentor and external certifications
+- educators can create both VYDRA CORE and external certifications
 - students can clearly see progress toward a certificate
 - certificates can be issued and downloaded without manual file editing
-- the certificate looks native to BioMentor AI
+- the certificate looks native to VYDRA CORE
 - the system uses existing classroom evidence instead of requiring duplicate tracking work

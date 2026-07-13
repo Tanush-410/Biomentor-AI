@@ -27,7 +27,7 @@ test('classroom certification detail page exposes learner and educator workflow'
 test('certificate viewer exposes branded artifact details', () => {
   const source = fs.readFileSync(new URL('../pages/certificate/[certificateId].jsx', import.meta.url), 'utf8')
 
-  assert.match(source, /BioMentor AI Certificate/)
+  assert.match(source, /VYDRA CORE Certificate/)
   assert.match(source, /Certificate of Completion/)
   assert.match(source, /Print \/ Save PDF/)
   assert.match(source, /Platform-backed completion artifact/)

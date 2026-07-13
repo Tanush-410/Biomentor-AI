@@ -46,7 +46,7 @@ function isActiveItem(item, pathname) {
   return item.match.some((pattern) => pathname === pattern)
 }
 
-export default function AppShell({ title, eyebrow = 'BioMentor AI', description = '', actions = null, children, contentClassName = '' }) {
+export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = '', actions = null, children, contentClassName = '' }) {
   const router = useRouter()
   const { logout, user } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -133,7 +133,7 @@ export default function AppShell({ title, eyebrow = 'BioMentor AI', description 
           <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#2f2218] text-stone-100 shadow-2xl">
             <div className="flex items-start justify-between border-b border-[#4a3829] px-6 py-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d5b08b]">BioMentor AI</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d5b08b]">VYDRA CORE</p>
                 <h2 className="mt-3 text-2xl font-bold text-white">{workspaceTitle}</h2>
                 <p className="mt-3 text-xs uppercase tracking-[0.24em] text-stone-400">{roleLabel}</p>
               </div>
@@ -169,7 +169,7 @@ export default function AppShell({ title, eyebrow = 'BioMentor AI', description 
         <div className={`border-b border-[#4a3829] py-6 ${isCollapsed ? 'px-3' : 'px-6'}`}>
           <div className={`flex ${isCollapsed ? 'justify-center' : 'items-start justify-between gap-3'}`}>
             <div className={isCollapsed ? 'hidden' : 'block'}>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d5b08b]">BioMentor AI</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#d5b08b]">VYDRA CORE</p>
               <h2 className="mt-3 text-2xl font-bold text-white">{workspaceTitle}</h2>
               <p className="mt-2 text-sm leading-6 text-stone-400">{roleSupportCopy}</p>
               <div className="role-pill mt-4 border-[#b28a67]/30 bg-[#8a5a36]/18 text-[#e9cfb5]">

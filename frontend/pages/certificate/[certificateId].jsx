@@ -49,14 +49,14 @@ export default function CertificateDetailPage() {
   }
 
   const renderPayload = certificate?.render_payload || {}
-  const completionMessage = renderPayload.completion_message || 'has completed the required certification path on BioMentor AI.'
-  const issuerName = meta?.issuer_name || renderPayload.issuer_name || 'BioMentor AI'
+  const completionMessage = renderPayload.completion_message || 'has completed the required certification path on VYDRA CORE.'
+  const issuerName = meta?.issuer_name || renderPayload.issuer_name || 'VYDRA CORE'
 
   return (
     <AppShell
       title="Certificate"
-      eyebrow="BioMentor Award"
-      description="A BioMentor-branded completion artifact generated after the required classroom certification path is finished and approved."
+      eyebrow="VYDRA CORE Award"
+      description="A VYDRA CORE-branded completion artifact generated after the required classroom certification path is finished and approved."
       contentClassName="space-y-8"
       actions={
         <>
@@ -83,10 +83,10 @@ export default function CertificateDetailPage() {
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
             <div className="card overflow-hidden">
               <div className="border-b border-stone-200/80 bg-[linear-gradient(135deg,rgba(255,250,244,0.98),rgba(244,232,217,0.9),rgba(230,208,186,0.8))] px-8 py-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">BioMentor AI Certificate</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE Certificate</p>
                 <h1 className="mt-5 text-4xl font-bold text-slate-950">{renderPayload.certificate_subtitle || 'Certificate of Completion'}</h1>
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
-                  Generated from the BioMentor certification workflow after milestone completion and educator approval.
+                  Generated from the VYDRA CORE certification workflow after milestone completion and educator approval.
                 </p>
               </div>
 
@@ -120,7 +120,7 @@ export default function CertificateDetailPage() {
                     </div>
                     <div className="rounded-2xl border border-[#ead8c6] bg-white p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a36]">Classroom</p>
-                      <p className="mt-3 text-lg font-semibold text-slate-950">{meta?.classroom_name || 'BioMentor Classroom'}</p>
+                      <p className="mt-3 text-lg font-semibold text-slate-950">{meta?.classroom_name || 'VYDRA CORE Classroom'}</p>
                     </div>
                   </div>
                 </div>
@@ -152,14 +152,14 @@ export default function CertificateDetailPage() {
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-5 w-5 text-[#8a5a36]" />
                   <div>
-                    <p className="section-kicker text-[#8a5a36]">BioMentor Validation</p>
+                    <p className="section-kicker text-[#8a5a36]">VYDRA CORE Validation</p>
                     <h3 className="text-2xl font-bold text-slate-950">Platform-backed completion artifact</h3>
                   </div>
                 </div>
                 <div className="mt-5 space-y-4 text-sm leading-7 text-slate-600">
-                  <p>This certificate was generated inside the BioMentor AI classroom workflow after the required checkpoints were completed and reviewed.</p>
+                  <p>This certificate was generated inside the VYDRA CORE classroom workflow after the required checkpoints were completed and reviewed.</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">BioMentor branded</span>
+                    <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">VYDRA CORE branded</span>
                     <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">Teacher issued</span>
                     <span className="role-pill border-[#d8c1aa] bg-[#f5ebdf] text-[#6d472d]">Classroom verified</span>
                   </div>

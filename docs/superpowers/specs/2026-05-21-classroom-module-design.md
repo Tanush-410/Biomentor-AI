@@ -1,7 +1,7 @@
-# BioMentor Classroom Module Design
+# VYDRA CORE Classroom Module Design
 
 ## Goal
-Transform the existing `Classroom` feature into a Google Classroom-style module inside the current BioMentor website, without disrupting the already-built global features such as `Dashboard`, `Materials`, `Learning Chat`, `Quiz Generator`, `Progress`, and `Collaboration`.
+Transform the existing `Classroom` feature into a Google Classroom-style module inside the current VYDRA CORE website, without disrupting the already-built global features such as `Dashboard`, `Materials`, `Learning Chat`, `Quiz Generator`, `Progress`, and `Collaboration`.
 
 The new classroom module should:
 - show a classroom list/grid when the user clicks `Classroom`
@@ -34,7 +34,7 @@ The new classroom module should:
 
 ### Out of scope
 - email sending implementation
-- native video call engine inside BioMentor
+- native video call engine inside VYDRA CORE
 - parent accounts
 - student-to-student chat
 - major rewrites of global pages outside the classroom module
@@ -53,7 +53,7 @@ The architecture should stay familiar to users who know Google Classroom:
 - class detail second
 - core tabs inside the selected class
 
-BioMentor then extends that model with:
+VYDRA CORE then extends that model with:
 - private messaging
 - live/video session management
 - tighter AI integration later
@@ -404,13 +404,13 @@ This preserves backward compatibility and keeps the current system extensible.
 
 ## Frontend Design Direction
 
-The classroom module should follow a Google Classroom-like architecture, but remain visually aligned to BioMentor’s current beige/brown/cream identity.
+The classroom module should follow a Google Classroom-like architecture, but remain visually aligned to VYDRA CORE’s current beige/brown/cream identity.
 
 ### Classroom list page
 - more Google Classroom-like grid/list of classroom cards
 - educator and student both start here
 - left rail can show enrolled/owned classrooms and quick filters
-- top area can keep current BioMentor shell identity
+- top area can keep current VYDRA CORE shell identity
 
 ### Classroom detail page
 - banner/header area with classroom title, subject, educator
@@ -430,7 +430,7 @@ The classroom module should follow a Google Classroom-like architecture, but rem
 ### Classwork page
 - grouped sections for materials, quizzes, assignments
 - due dates shown clearly
-- documents open in current BioMentor study/document viewer flows
+- documents open in current VYDRA CORE study/document viewer flows
 
 ### Messages page
 - two-pane layout:

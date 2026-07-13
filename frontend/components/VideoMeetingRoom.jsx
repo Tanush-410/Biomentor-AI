@@ -207,7 +207,7 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
           <p className="section-kicker text-[#8a5a36]">Meeting Copilot</p>
           <h3 className="mt-2 text-2xl font-bold text-slate-950">Live teacher guidance during the session.</h3>
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            BioMentor is reading transcript snippets and your explicit meeting flags to suggest what to reteach, what students are still unsure about, and what should happen after the room ends.
+            VYDRA CORE is reading transcript snippets and your explicit meeting flags to suggest what to reteach, what students are still unsure about, and what should happen after the room ends.
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="surface-subtle p-4 text-sm text-slate-700">Use <strong>Flag Doubt</strong> when a concept remains unresolved.</div>

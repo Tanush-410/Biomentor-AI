@@ -116,12 +116,12 @@ class RuntimeCertificationExamAnticheatFlowTests(unittest.TestCase):
             f"/api/classrooms/{self.classroom.id}/certifications",
             headers=self._auth_headers(self.educator["access_token"]),
             json={
-                "title": "BioMentor External Certification",
+                "title": "VYDRA CORE External Certification",
                 "description": "Learners submit external completion proof for review.",
                 "course_mode": "external_course",
-                "provider_name": "BioMentor AI",
+                "provider_name": "VYDRA CORE",
                 "external_url": "https://example.com/course",
-                "issuer_name": "BioMentor AI",
+                "issuer_name": "VYDRA CORE",
                 "certificate_subtitle": "Certificate of Completion",
                 "completion_message": "completed the guided course path.",
                 "manual_issue_only": False,
@@ -212,7 +212,7 @@ class RuntimeCertificationExamAnticheatFlowTests(unittest.TestCase):
         self.assertEqual(detail_response.status_code, 200, detail_response.text)
         payload = detail_response.json()
         self.assertEqual(payload["certificate"]["student_name"], "Student Runtime")
-        self.assertEqual(payload["meta"]["certification_title"], "BioMentor External Certification")
+        self.assertEqual(payload["meta"]["certification_title"], "VYDRA CORE External Certification")
 
     def test_exam_authoring_ai_draft_submission_review_and_anticheat_case(self):
         draft_response = self.client.post(

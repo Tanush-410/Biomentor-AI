@@ -61,9 +61,9 @@ export default function EducatorCertificationPage() {
     course_mode: 'biomentor_track',
     provider_name: '',
     external_url: '',
-    issuer_name: 'BioMentor AI',
+    issuer_name: 'VYDRA CORE',
     certificate_subtitle: 'Certificate of Completion',
-    completion_message: 'has completed the required certification path on BioMentor AI.',
+    completion_message: 'has completed the required certification path on VYDRA CORE.',
     manual_issue_only: false,
     requires_teacher_approval: true,
     target_outcome: '',
@@ -255,7 +255,7 @@ export default function EducatorCertificationPage() {
         certificate_template: {
           theme: 'biomentor-premium',
           accent: '#8a5a36',
-          seal_label: 'BioMentor AI'
+          seal_label: 'VYDRA CORE'
         },
         ai_notes: {
           target_outcome: form.target_outcome || null,
@@ -298,7 +298,7 @@ export default function EducatorCertificationPage() {
     <AppShell
       title="Certification Studio"
       eyebrow="Educator Command"
-      description="Build BioMentor-branded certification tracks from classroom material, quizzes, exams, and external course proof so learners can earn real completion certificates."
+      description="Build VYDRA CORE-branded certification tracks from classroom material, quizzes, exams, and external course proof so learners can earn real completion certificates."
       contentClassName="space-y-8"
       actions={actions}
     >
@@ -308,11 +308,11 @@ export default function EducatorCertificationPage() {
       <AISpotlightBanner
         eyebrow="Certification AI Surface"
         title="Turn classroom outcomes into branded completion paths."
-        description="Mix BioMentor checkpoints with optional external course proof, let AI suggest milestone order from uploaded material, and issue certificates from the same workflow."
-        highlights={['AI certification draft', 'BioMentor-branded certificate', 'Teacher issue control']}
+        description="Mix VYDRA CORE checkpoints with optional external course proof, let AI suggest milestone order from uploaded material, and issue certificates from the same workflow."
+        highlights={['AI certification draft', 'VYDRA CORE-branded certificate', 'Teacher issue control']}
         primaryAction={{ label: 'Jump to builder', href: '#certification-builder' }}
         secondaryAction={{ label: 'Open classwork', href: `/classrooms/${form.classroom_id || ''}/classwork` }}
-        status="Teachers can choose a pure BioMentor path or combine it with external course completion proof."
+        status="Teachers can choose a pure VYDRA CORE path or combine it with external course completion proof."
       />
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
@@ -338,8 +338,8 @@ export default function EducatorCertificationPage() {
             <label className="space-y-2">
               <span className="text-sm font-semibold text-slate-800">Mode</span>
               <select className="input" value={form.course_mode} onChange={(event) => setForm((current) => ({ ...current, course_mode: event.target.value }))}>
-                <option value="biomentor_track">BioMentor completion only</option>
-                <option value="external_course">External + BioMentor</option>
+                <option value="biomentor_track">VYDRA CORE completion only</option>
+                <option value="external_course">External + VYDRA CORE</option>
               </select>
             </label>
             <label className="space-y-2 md:col-span-2">
@@ -484,12 +484,12 @@ export default function EducatorCertificationPage() {
             <p className="section-kicker text-[#8a5a36]">Certificate preview</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">{form.certificate_subtitle || 'Certificate of Completion'}</h3>
             <div className="mt-5 rounded-[28px] border border-[#e5d1bf] bg-[linear-gradient(145deg,#fffdf9,#fff4e8)] p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">BioMentor AI</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#8a5a36]">VYDRA CORE</p>
               <p className="mt-5 text-3xl font-bold text-slate-950">{form.title || 'Untitled certification'}</p>
               <p className="mt-3 text-sm leading-7 text-slate-600">{form.completion_message}</p>
               <div className="mt-6 grid gap-3 text-sm text-slate-600">
-                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">Issuer: {form.issuer_name || 'BioMentor AI'}</div>
-                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">Mode: {form.course_mode === 'external_course' ? 'External + BioMentor' : 'BioMentor completion only'}</div>
+                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">Issuer: {form.issuer_name || 'VYDRA CORE'}</div>
+                <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">Mode: {form.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE completion only'}</div>
                 <div className="rounded-2xl border border-[#ead8c6] bg-white px-4 py-3">{form.steps.length} milestone(s) configured</div>
               </div>
             </div>

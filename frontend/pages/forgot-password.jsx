@@ -29,7 +29,7 @@ export default function ForgotPassword() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="section-kicker text-[#8a5a36]">BioMentor AI</p>
+            <p className="section-kicker text-[#8a5a36]">VYDRA CORE</p>
             <h1 className="mt-2 text-4xl font-bold text-stone-950">Reset your password</h1>
           </div>
           <Link href="/login" className="btn btn-outline">Back to login</Link>
@@ -46,7 +46,7 @@ export default function ForgotPassword() {
 
           <section className="card p-8">
             <h2 className="text-2xl font-bold text-stone-950">Send reset link</h2>
-            <p className="mt-3 text-sm leading-6 text-stone-600">Use the email associated with your BioMentor account.</p>
+            <p className="mt-3 text-sm leading-6 text-stone-600">Use the email associated with your VYDRA CORE account.</p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-4">
               {error && (

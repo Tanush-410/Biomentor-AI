@@ -33,7 +33,7 @@ function AppContent({ Component, pageProps }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(180,120,76,0.14),_transparent_30%),linear-gradient(180deg,_#fbf5ee,_#f3e6d6)] px-6">
         <div className="card max-w-md p-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-800">BioMentor AI</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-800">VYDRA CORE</p>
           <h1 className="mt-4 text-3xl font-bold text-slate-950">Preparing your workspace</h1>
           <p className="mt-3 text-sm leading-7 text-slate-600">
             Loading your role-aware dashboard, study tools, and saved session state.
@@ -49,10 +49,10 @@ function AppContent({ Component, pageProps }) {
   const pageFallback = (
     <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#fbf5ee,#f3e6d6)] px-6">
       <div className="card max-w-lg p-8 text-center">
-        <p className="section-kicker text-[#8a5a36]">BioMentor recovery</p>
+        <p className="section-kicker text-[#8a5a36]">VYDRA CORE recovery</p>
         <h1 className="mt-4 text-3xl font-bold text-slate-950">Something went wrong in this workspace</h1>
         <p className="mt-3 text-sm leading-7 text-slate-600">
-          Your account is safe. Reload this page to reconnect to the latest BioMentor session.
+          Your account is safe. Reload this page to reconnect to the latest VYDRA CORE session.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <button type="button" onClick={() => window.location.reload()} className="btn btn-primary">

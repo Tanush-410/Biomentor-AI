@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a first-class classroom exam system to BioMentor AI with a document-style educator exam builder, scheduled and proctored exam delivery, mixed typed and image-based student responses, AI-first descriptive grading with teacher review fallback, and a dedicated `Anticheat Bot` review workspace that stores final debarred cases plus the last three major-warning evidence snapshots.
+**Goal:** Add a first-class classroom exam system to VYDRA CORE with a document-style educator exam builder, scheduled and proctored exam delivery, mixed typed and image-based student responses, AI-first descriptive grading with teacher review fallback, and a dedicated `Anticheat Bot` review workspace that stores final debarred cases plus the last three major-warning evidence snapshots.
 
 **Architecture:** Build exams as a sibling assessment system beside classroom quizzes. Reuse current classroom access control, scheduling patterns, proctoring escalation, and review language where possible. Add new SQLAlchemy exam and anti-cheat models, new classroom exam routes and grading helpers, and new educator/student surfaces that parallel the existing quiz workflow while supporting richer paper authoring and per-question response rules.
 

@@ -1,8 +1,8 @@
-# BioMentor Classroom Module Implementation Plan
+# VYDRA CORE Classroom Module Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a Google Classroom-style classroom module to BioMentor so `Classroom` opens a classroom list, selecting a classroom opens a dedicated workspace, and each classroom supports `Stream`, `Classwork`, `People`, `Messages`, and `Live` without breaking the existing global features.
+**Goal:** Add a Google Classroom-style classroom module to VYDRA CORE so `Classroom` opens a classroom list, selecting a classroom opens a dedicated workspace, and each classroom supports `Stream`, `Classwork`, `People`, `Messages`, and `Live` without breaking the existing global features.
 
 **Architecture:** Extend the current classroom, communication, and live-session backend with classroom-scoped announcements, materials, assignments, private threads, and notifications. Add a shared classroom shell on the frontend with role-aware pages under `/classrooms`, while keeping the existing dashboard, materials, learning chat, quiz, progress, and collaboration routes operational.
 

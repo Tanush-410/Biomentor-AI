@@ -188,7 +188,7 @@ export default function ProgressPage() {
                       {certificates.earned_certifications.map((item) => (
                         <div key={item.id} className="rounded-xl border border-slate-200 p-4">
                           <p className="font-semibold text-slate-900">{item.title}</p>
-                          <p className="mt-1 text-sm text-slate-600">{item.classroom_name || 'Classroom certification'} · {item.course_mode === 'external_course' ? 'External + BioMentor' : 'BioMentor track'}</p>
+                          <p className="mt-1 text-sm text-slate-600">{item.classroom_name || 'Classroom certification'} · {item.course_mode === 'external_course' ? 'External + VYDRA CORE' : 'VYDRA CORE track'}</p>
                           <div className="mt-4 flex flex-wrap gap-3">
                             {item.issued_certificate_id ? (
                               <Link href={`/certificate/${item.issued_certificate_id}`} className="btn btn-outline">

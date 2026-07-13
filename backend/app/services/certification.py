@@ -539,7 +539,7 @@ def issue_certificate(
         student_name_snapshot=student.full_name,
         course_title_snapshot=certification.title,
         render_payload={
-            "platform_name": "BioMentor AI",
+            "platform_name": "VYDRA CORE",
             "student_name": student.full_name,
             "course_title": certification.title,
             "classroom_name": classroom.name,
@@ -582,7 +582,7 @@ def create_certification_draft_payload(
     chosen_title = (title or "").strip() or (
         f"{materials[0].get('title', 'Course')} Mastery Certification"
         if materials
-        else "BioMentor Certification Track"
+        else "VYDRA CORE Certification Track"
     )
     focus_labels = [material.get("title") or material.get("file_name") for material in materials[:3] if material.get("title") or material.get("file_name")]
     learning_outcome = (
@@ -623,8 +623,8 @@ def create_certification_draft_payload(
     return {
         "title": chosen_title,
         "description": f"A classroom certification track aligned to {learning_outcome}",
-        "completion_message": "has completed the BioMentor certification pathway and satisfied the required milestones.",
-        "issuer_name": "BioMentor AI",
+        "completion_message": "has completed the VYDRA CORE certification pathway and satisfied the required milestones.",
+        "issuer_name": "VYDRA CORE",
         "suggested_learning_outcome": learning_outcome,
         "steps": suggested_steps,
     }

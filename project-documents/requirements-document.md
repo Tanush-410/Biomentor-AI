@@ -1,20 +1,20 @@
-# BioMentor AI Requirements Document
+# VYDRA CORE Requirements Document
 
 ## Document Control
 
-- Project: BioMentor AI
+- Project: VYDRA CORE
 - Product Type: Smart learning assistant web application for exam preparation
 - Version: 1.0
 - Date: 13 May 2026
-- Prepared For: BioMentor AI project submission and implementation alignment
+- Prepared For: VYDRA CORE project submission and implementation alignment
 
 ## 1. Purpose
 
-This document defines the business, functional, non-functional, security, and operational requirements for BioMentor AI. The application is intended to support exam preparation through AI-assisted study, retrieval-augmented question answering, Bloom's Taxonomy-aligned quiz workflows, offline study support, educator analytics, and real-time class collaboration.
+This document defines the business, functional, non-functional, security, and operational requirements for VYDRA CORE. The application is intended to support exam preparation through AI-assisted study, retrieval-augmented question answering, Bloom's Taxonomy-aligned quiz workflows, offline study support, educator analytics, and real-time class collaboration.
 
 ## 2. Product Vision
 
-BioMentor AI is a web-based intelligent learning platform that helps students study from uploaded material, ask grounded questions, practice AI-generated quizzes, and track mastery over time. It also gives educators tools to monitor class performance, identify learning gaps, intervene quickly, and manage live AI-supported collaboration sessions.
+VYDRA CORE is a web-based intelligent learning platform that helps students study from uploaded material, ask grounded questions, practice AI-generated quizzes, and track mastery over time. It also gives educators tools to monitor class performance, identify learning gaps, intervene quickly, and manage live AI-supported collaboration sessions.
 
 ## 3. Objectives
 

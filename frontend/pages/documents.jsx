@@ -260,7 +260,7 @@ export default function DocumentsPage() {
           highlights={['Layered summaries', 'Concept map', 'Exam-focused study path']}
           primaryAction={{ label: 'Open Material Intelligence', href: '#material-intelligence-studio' }}
           secondaryAction={{ label: 'Review Coach Sequence', href: '#study-coach-materials' }}
-          status="This is where BioMentor stops being a file locker and starts acting like a study engine built around your own material."
+          status="This is where VYDRA CORE stops being a file locker and starts acting like a study engine built around your own material."
         />
 
         <section className="card p-8">

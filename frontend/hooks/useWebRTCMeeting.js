@@ -160,7 +160,7 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
 
       peer.onconnectionstatechange = () => {
         if (peer.connectionState === 'failed') {
-          setError('A participant connection dropped. BioMentor is trying to reconnect it.')
+          setError('A participant connection dropped. VYDRA CORE is trying to reconnect it.')
           if (!iceRestartInFlightRef.current.has(targetUserId)) {
             iceRestartInFlightRef.current.add(targetUserId)
             createAndSendOffer(targetUserId, { iceRestart: true }).catch(() => {})

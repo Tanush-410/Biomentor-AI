@@ -4,7 +4,7 @@ Date: 2026-05-31
 
 ## Goal
 
-Add an `AI Educator Copilot` to BioMentor AI so educators get actionable, draft-ready support across their daily workflow without automating decisions unsafely.
+Add an `AI Educator Copilot` to VYDRA CORE so educators get actionable, draft-ready support across their daily workflow without automating decisions unsafely.
 
 The copilot should:
 

@@ -80,7 +80,7 @@ class DuckDuckGoSearchClient:
         search_url = f"https://html.duckduckgo.com/html/?q={quote(query)}"
         response = requests.get(
             search_url,
-            headers={"User-Agent": "Mozilla/5.0 BioMentorAI/1.0"},
+            headers={"User-Agent": "Mozilla/5.0 VydraCore/1.0"},
             timeout=self.timeout,
         )
         response.raise_for_status()
@@ -112,7 +112,7 @@ class DuckDuckGoSearchClient:
         try:
             response = requests.get(
                 url,
-                headers={"User-Agent": "Mozilla/5.0 BioMentorAI/1.0"},
+                headers={"User-Agent": "Mozilla/5.0 VydraCore/1.0"},
                 timeout=self.timeout,
             )
             response.raise_for_status()

@@ -1,15 +1,15 @@
-# BioMentor AI Test Plan Document
+# VYDRA CORE Test Plan Document
 
 ## Document Control
 
-- Project: BioMentor AI
+- Project: VYDRA CORE
 - Document Type: Test Plan
 - Version: 1.0
 - Date: 13 May 2026
 
 ## 1. Purpose
 
-This test plan defines the strategy, scope, environments, responsibilities, and key test scenarios required to validate the BioMentor AI web application across student, educator, admin, AI, document, and collaboration workflows.
+This test plan defines the strategy, scope, environments, responsibilities, and key test scenarios required to validate the VYDRA CORE web application across student, educator, admin, AI, document, and collaboration workflows.
 
 ## 2. Test Objectives
 

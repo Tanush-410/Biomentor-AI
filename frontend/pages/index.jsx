@@ -23,7 +23,7 @@ export default function HomePage() {
     {
       label: '01',
       title: 'Study from your own material',
-      text: 'Upload PDFs, notes, and classroom material. BioMentor turns them into searchable study context, summaries, quiz practice, and revision paths.',
+      text: 'Upload PDFs, notes, and classroom material. VYDRA CORE turns them into searchable study context, summaries, quiz practice, and revision paths.',
     },
     {
       label: '02',
@@ -76,7 +76,7 @@ export default function HomePage() {
     },
     {
       title: 'Certifications',
-      text: 'Teachers can attach course links or create course paths, then issue BioMentor-branded certificates when students complete them.',
+      text: 'Teachers can attach course links or create course paths, then issue VYDRA CORE-branded certificates when students complete them.',
     },
     {
       title: 'Sticky notes',
@@ -106,7 +106,7 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-7xl">
           <header className="flex flex-wrap items-center justify-between gap-5 border-b border-[#e4d3c2] bg-[#fffaf3]/76 px-1 py-7 backdrop-blur md:px-0">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.48em] text-[#9a5f2f]">BioMentor AI</p>
+              <p className="text-sm font-black uppercase tracking-[0.48em] text-[#9a5f2f]">VYDRA CORE</p>
               <h1 className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-4xl font-black leading-none tracking-[-0.06em] text-[#1f160f] md:text-5xl">
                 {brandWords.map((word) => (
                   <span key={`${word.lead}${word.rest}`}>
@@ -136,7 +136,7 @@ export default function HomePage() {
                     Study, assess, meet, certify, and protect learning from one connected system.
                   </h1>
                   <p className="mt-7 max-w-2xl text-lg font-semibold leading-8 text-[#f6e8d8] md:text-xl">
-                    BioMentor is now the workspace where students study from your own material, educators run classroom-ready workflows, and every proctored quiz, exam, meeting, note, and certificate connects back to learning evidence.
+                    VYDRA CORE is now the workspace where students study from your own material, educators run classroom-ready workflows, and every proctored quiz, exam, meeting, note, and certificate connects back to learning evidence.
                   </p>
                 </div>
 
@@ -149,7 +149,7 @@ export default function HomePage() {
 
                 <div className="flex flex-wrap gap-3">
                   <Link href="/login?mode=student" className="btn bg-[#f4c392] text-[#2d2118] hover:bg-[#ffd7aa]">
-                    Start with BioMentor <ArrowRight size={18} />
+                    Start with VYDRA CORE <ArrowRight size={18} />
                   </Link>
                   <Link href="/login?mode=educator" className="btn border border-white/40 bg-white/10 text-white hover:bg-white/20">
                     Open educator workspace
@@ -214,7 +214,7 @@ export default function HomePage() {
               From classroom task to verified outcome.
             </h2>
             <p className="mt-6 text-lg font-semibold leading-8 text-[#e9dfd4]">
-              BioMentor now supports teacher-built exams, AI-suggested papers, proctored attempts, anticheat review, rubric-backed grading, and completion certificates.
+              VYDRA CORE now supports teacher-built exams, AI-suggested papers, proctored attempts, anticheat review, rubric-backed grading, and completion certificates.
             </p>
           </div>
 

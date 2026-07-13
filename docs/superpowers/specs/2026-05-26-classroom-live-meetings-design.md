@@ -1,10 +1,10 @@
-# BioMentor Classroom Live Meetings Design
+# VYDRA CORE Classroom Live Meetings Design
 
 ## Goal
 Replace the current classroom `Live` feature, which only schedules external meeting links, with an in-product video meeting system for small classroom sessions.
 
 The new design should allow:
-- educators to schedule and start classroom meetings inside BioMentor
+- educators to schedule and start classroom meetings inside VYDRA CORE
 - students to see upcoming/live sessions and join them in-browser
 - audio/video transport through browser WebRTC peer connections
 - FastAPI to handle signaling only through WebSockets
@@ -69,7 +69,7 @@ Meeting creation, stream announcements, notifications, and attendance presence s
    - start date/time
    - duration
 3. Educator saves the meeting
-4. BioMentor stores the meeting as `scheduled`
+4. VYDRA CORE stores the meeting as `scheduled`
 5. Students in the classroom see it in the live page and receive in-app notifications
 6. A classroom stream post may reference the scheduled meeting
 

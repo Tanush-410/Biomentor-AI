@@ -283,7 +283,7 @@ export default function Dashboard() {
     return (
       <AppShell
         title="Educator Command Center"
-        eyebrow={user?.role === 'admin' ? 'BioMentor AI Admin' : 'BioMentor AI Educator'}
+        eyebrow={user?.role === 'admin' ? 'VYDRA CORE Admin' : 'VYDRA CORE Educator'}
         description="Move from class overview to intervention, live collaboration, communication, and institutional insight from one role-aware workspace."
         contentClassName="space-y-8"
         actions={
@@ -305,7 +305,7 @@ export default function Dashboard() {
           highlights={['Intervention priorities', 'Meeting follow-ups', 'Classroom risk signals']}
           primaryAction={{ label: 'Open Educator Copilot', href: '#educator-copilot' }}
           secondaryAction={{ label: 'Jump to Communication Hub', href: '/communication-hub#copilot-response-center' }}
-          status="This is the place where BioMentor decides what needs your attention now, what can wait, and what should turn into a class-wide response."
+          status="This is the place where VYDRA CORE decides what needs your attention now, what can wait, and what should turn into a class-wide response."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -566,7 +566,7 @@ export default function Dashboard() {
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#f0dcc6]">AI Study Flow</p>
             <h2 className="mb-4 text-4xl font-bold leading-tight">Upload material, study offline, ask questions, then practice with Bloom’s-based quizzes.</h2>
             <p className="mb-6 text-lg text-stone-100/90">
-              This dashboard follows the flow in your BioMentor document: study resources, adaptive quiz practice, and progress tracking in one place.
+              This dashboard follows the flow in your VYDRA CORE document: study resources, adaptive quiz practice, and progress tracking in one place.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/documents" className="rounded-lg bg-[#fff7ef] px-5 py-3 font-semibold text-[#6d472d] transition hover:bg-white">

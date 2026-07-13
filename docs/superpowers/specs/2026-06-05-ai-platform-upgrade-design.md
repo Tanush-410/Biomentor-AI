@@ -4,7 +4,7 @@ Date: 2026-06-05
 
 ## Goal
 
-Upgrade BioMentor AI so its named AI systems feel indispensable rather than generic, while making those systems much more visible and valuable in the product UI.
+Upgrade VYDRA CORE so its named AI systems feel indispensable rather than generic, while making those systems much more visible and valuable in the product UI.
 
 This upgrade is balanced across both sides of the product:
 - student value

@@ -1,10 +1,10 @@
-# BioMentor Exam Maker And Anticheat Bot Design
+# VYDRA CORE Exam Maker And Anticheat Bot Design
 
 Date: 2026-06-10
 
 ## Goal
 
-Add a first-class classroom exam system to BioMentor AI that lets educators build rich mixed-format papers, schedule and proctor them like classroom quizzes, use AI-assisted grading for descriptive answers, and review final debarred cheating cases inside a dedicated `Anticheat Bot` workspace.
+Add a first-class classroom exam system to VYDRA CORE that lets educators build rich mixed-format papers, schedule and proctor them like classroom quizzes, use AI-assisted grading for descriptive answers, and review final debarred cheating cases inside a dedicated `Anticheat Bot` workspace.
 
 The new system should allow:
 - educators to author exams in a mini document-editor experience
@@ -430,7 +430,7 @@ Required capabilities:
 - AI suggestion insertion
 - schedule and proctoring controls
 
-The editor should preserve the premium BioMentor visual language:
+The editor should preserve the premium VYDRA CORE visual language:
 - paper-like canvas
 - strong layout rhythm
 - visibly distinct question blocks
@@ -616,7 +616,7 @@ End-to-end validation should cover:
 
 ## Success Criteria
 
-BioMentor should ship an exam system that feels meaningfully more premium than the current quiz flow:
+VYDRA CORE should ship an exam system that feels meaningfully more premium than the current quiz flow:
 - educators can build rich scheduled papers in-product
 - students can take mixed-format proctored exams in one workspace
 - AI helps with question generation and grading without undermining teacher trust

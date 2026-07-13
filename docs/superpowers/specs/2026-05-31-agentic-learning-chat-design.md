@@ -4,7 +4,7 @@ Date: 2026-05-31
 
 ## Goal
 
-Upgrade BioMentor AI's existing Learning Chat so it can:
+Upgrade VYDRA CORE's existing Learning Chat so it can:
 
 1. answer from uploaded PDFs first
 2. automatically fall back to trusted academic web sources when PDFs are insufficient

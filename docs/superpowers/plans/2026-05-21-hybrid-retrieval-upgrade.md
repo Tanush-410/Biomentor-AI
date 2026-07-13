@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Strengthen BioMentor’s material-grounded QA and quiz generation using smarter hybrid retrieval while keeping the current Supabase/Postgres + Qdrant setup and avoiding new embedding infrastructure.
+**Goal:** Strengthen VYDRA CORE’s material-grounded QA and quiz generation using smarter hybrid retrieval while keeping the current Supabase/Postgres + Qdrant setup and avoiding new embedding infrastructure.
 
 **Architecture:** Keep Qdrant as the first-pass vector retriever and Postgres chunks as the lexical source of truth, but add multi-query retrieval, hybrid reranking, deduping, and diversity control in `document_context`. Then route QA and quiz generation through those stronger retrieval helpers so follow-up questions and quiz grounding improve immediately.
 

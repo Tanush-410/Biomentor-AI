@@ -6,7 +6,7 @@
 
 **Architecture:** Execute this as three linked tracks. First stabilize hosted document access and meeting media/transcript behavior in the current FastAPI + Next.js architecture. Next strengthen grading and anti-cheat by improving scoring/evidence services without changing the core classroom route model. Finally polish the educator authoring and review UI on top of those reliable backend and runtime paths.
 
-**Tech Stack:** FastAPI, SQLAlchemy, Next.js 14 pages router, React 18, browser WebRTC, browser MediaDevices / Canvas capture, existing BioMentor classroom APIs, Python unittest, Node test runner
+**Tech Stack:** FastAPI, SQLAlchemy, Next.js 14 pages router, React 18, browser WebRTC, browser MediaDevices / Canvas capture, existing VYDRA CORE classroom APIs, Python unittest, Node test runner
 
 ---
 

@@ -90,7 +90,7 @@ export default function Login() {
       <header className="border-b border-white/10 bg-[#2f2218]/50 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#f0dcc6]">BioMentor AI</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#f0dcc6]">VYDRA CORE</p>
             <h1 className="mt-2 text-2xl font-bold">Exam Preparation Workspace</h1>
           </div>
           <Link href="/" className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-stone-100 transition hover:border-[#f0dcc6] hover:text-[#f0dcc6]">
@@ -104,7 +104,7 @@ export default function Login() {
           <div className="max-w-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#f0dcc6]">Secure Sign In</p>
             <h2 className="mt-4 text-5xl font-bold leading-tight text-white">
-              Choose the right mode and enter the part of BioMentor built for you.
+              Choose the right mode and enter the part of VYDRA CORE built for you.
             </h2>
             <p className="mt-5 text-lg leading-8 text-slate-300">
               Students get study, quiz, and progress tools. Educators unlock class dashboards, live collaboration, alerts, and intervention workflows.

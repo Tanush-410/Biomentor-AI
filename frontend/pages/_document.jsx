@@ -5,10 +5,10 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <meta name="theme-color" content="#6d472d" />
-        <meta name="description" content="BioMentor AI - role-aware exam preparation with offline study, AI tutoring, educator analytics, and Bloom-guided assessment tools." />
+        <meta name="description" content="VYDRA CORE - role-aware exam preparation with offline study, AI tutoring, educator analytics, and Bloom-guided assessment tools." />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="BioMentor" />
+        <meta name="apple-mobile-web-app-title" content="VYDRA CORE" />
 
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

@@ -6,7 +6,7 @@
 
 **Architecture:** Add one shared backend study-coach service that aggregates student learning signals and exposes focused endpoints for each student page. Keep frontend surfaces thin by rendering those shared payloads as student-specific coaching panels and recommendation cards.
 
-**Tech Stack:** FastAPI, SQLAlchemy, Pydantic, Next.js pages router, React 18, existing BioMentor auth/API patterns, Node contract tests, Python unittest
+**Tech Stack:** FastAPI, SQLAlchemy, Pydantic, Next.js pages router, React 18, existing VYDRA CORE auth/API patterns, Node contract tests, Python unittest
 
 ---
 

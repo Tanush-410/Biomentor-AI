@@ -1,4 +1,4 @@
-// Service Worker for BioMentor - Offline Support & PWA Features
+// Service Worker for VYDRA CORE - Offline Support & PWA Features
 const CACHE_NAME = 'biomentor-v1'
 const RUNTIME_CACHE = 'biomentor-runtime'
 const DOCUMENTS_CACHE = 'biomentor-documents'

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a shared AI quality layer that improves grounding, confidence handling, fallback behavior, and output consistency across all existing AI features in BioMentor AI.
+**Goal:** Build a shared AI quality layer that improves grounding, confidence handling, fallback behavior, and output consistency across all existing AI features in VYDRA CORE.
 
 **Architecture:** Add four shared backend services for evidence assembly, generation, quality scoring, and evaluation, then refactor each existing AI feature to consume the shared layer. Keep the current page and API structure intact while extending backend payloads and frontend panels with confidence-aware UI.
 

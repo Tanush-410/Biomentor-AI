@@ -4,7 +4,7 @@ Date: 2026-05-31
 
 ## Goal
 
-Add an `AI Meeting Assistant` to BioMentor AI's built-in classroom meeting system so educators get a private live copilot during meetings, and students receive a clean post-meeting recap afterward.
+Add an `AI Meeting Assistant` to VYDRA CORE's built-in classroom meeting system so educators get a private live copilot during meetings, and students receive a clean post-meeting recap afterward.
 
 The assistant should:
 
@@ -359,4 +359,4 @@ This feature is successful when:
 - students are not distracted by private live AI notes
 - educators receive useful summaries and follow-up suggestions
 - students receive a clean summary after class
-- the meeting product feels more premium and more integrated with the rest of BioMentor AI
+- the meeting product feels more premium and more integrated with the rest of VYDRA CORE

@@ -140,7 +140,7 @@ export default function CommunicationHubPage() {
       <AISpotlightBanner
         eyebrow="Communication AI Surface"
         title="Copilot Response Center"
-        description="This hub is no longer just an inbox. BioMentor now drafts educator responses, highlights what is urgent, and helps you decide whether a signal should stay private, become a direct reply, or turn into a class-wide update."
+        description="This hub is no longer just an inbox. VYDRA CORE now drafts educator responses, highlights what is urgent, and helps you decide whether a signal should stay private, become a direct reply, or turn into a class-wide update."
         highlights={['Draft-ready replies', 'Escalation guidance', 'Inbox triage signals']}
         primaryAction={{ label: 'Open Copilot Drafts', href: '#educator-copilot' }}
         secondaryAction={{ label: 'Compose Response', href: '#compose-response' }}

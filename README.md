@@ -1,6 +1,6 @@
-# BioMentor AI
+# VYDRA CORE
 
-BioMentor AI is a full-stack learning and classroom platform that combines AI-guided study, classroom management, educator intervention, and quiz delivery in one workspace.
+VYDRA CORE is a full-stack learning and classroom platform that combines AI-guided study, classroom management, educator intervention, and quiz delivery in one workspace.
 
 The project includes:
 - a `FastAPI` backend
@@ -9,7 +9,7 @@ The project includes:
 - support for `Qdrant` for retrieval and document search
 - a local `SQLite` fallback for development when hosted database access is unavailable
 
-## What BioMentor AI Does
+## What VYDRA CORE Does
 
 ### Student experience
 - upload study material and reopen it later
@@ -18,7 +18,7 @@ The project includes:
 - fall back to trusted web sources automatically when uploaded material is insufficient
 - generate quizzes from uploaded material
 - take classroom exams with fixed-response and typed-answer flows
-- earn BioMentor-branded classroom certifications after completing tracks
+- earn VYDRA CORE-branded classroom certifications after completing tracks
 - join classrooms with invite codes
 - take classroom quizzes with protected attempts
 - track progress across practice activity
@@ -69,7 +69,7 @@ The project includes:
 - AI-assisted browser-side proctoring warnings and auto-debar after repeated violations
 - circular progress indicators across major student and educator pages
 
-## How to Use BioMentor AI
+## How to Use VYDRA CORE
 
 This guide is the recommended client walkthrough after the app is deployed and the backend health check is passing.
 
@@ -105,7 +105,7 @@ Educators should start from educator mode and use this flow:
 4. Use `Quiz Maker` to create manual quizzes or generate quizzes from uploaded material.
 5. Use `Exam Maker` to build structured exam papers, add fixed response boxes, attach images or diagrams, add grading keywords, and schedule the exam.
 6. Use `Live` to schedule or start an in-app WebRTC classroom meeting.
-7. Use `Certification` to create a course track from links or custom tasks, then issue BioMentor-branded certificates when students complete it.
+7. Use `Certification` to create a course track from links or custom tasks, then issue VYDRA CORE-branded certificates when students complete it.
 8. Review student progress, classroom intelligence, proctor events, exam answers, and anti-cheat evidence from the educator review surfaces.
 
 ### 4. Classroom workflow
@@ -137,7 +137,7 @@ If two people cannot see or hear each other on different networks, check that `N
 
 ### 6. Proctored quiz and exam workflow
 
-BioMentor supports protected attempts for classroom quizzes and exams.
+VYDRA CORE supports protected attempts for classroom quizzes and exams.
 
 Expected student flow:
 
@@ -164,11 +164,11 @@ Educators can create certification tracks for classroom learning outcomes.
 2. Create a course with teacher-provided links or custom completion tasks.
 3. Assign the course to a classroom or students.
 4. Students complete the required steps.
-5. BioMentor generates a branded certificate with the student name, course name, completion metadata, and platform branding.
+5. VYDRA CORE generates a branded certificate with the student name, course name, completion metadata, and platform branding.
 
 ### 8. AI workspace workflow
 
-BioMentor's AI tools are designed as visible workspaces, not hidden widgets.
+VYDRA CORE's AI tools are designed as visible workspaces, not hidden widgets.
 
 - `Material Intelligence Studio`: turns uploaded content into summaries, concept maps, misconception checks, viva prompts, and study paths.
 - `AI Study Coach`: helps students choose what to revise next.
@@ -193,7 +193,7 @@ Notes are tied to the exact page URL where they were created, so a note on one c
 
 ### 10. Client handoff checklist
 
-Before a client uses BioMentor in a real class, verify:
+Before a client uses VYDRA CORE in a real class, verify:
 
 - The backend `/health` endpoint returns a healthy response.
 - Render has production `DATABASE_URL`, Supabase keys, `SECRET_KEY`, Groq/Qdrant keys if used, and correct `CORS_ORIGINS`.
@@ -211,7 +211,7 @@ Before a client uses BioMentor in a real class, verify:
 
 ## Recent AI Platform Upgrades
 
-BioMentor AI now exposes its intelligence as explicit product workspaces instead of subtle helper text.
+VYDRA CORE now exposes its intelligence as explicit product workspaces instead of subtle helper text.
 
 ### Upgraded AI Workspaces
 - `Material Intelligence Studio`
@@ -307,7 +307,7 @@ These AI systems are part of the project and are implemented inside the `backend
 ├── frontend/                 Next.js web app
 ├── docs/                     specs and implementation plans
 ├── project-documents/        project writeups and delivery documents
-├── BioMentor AI Web App.docx source product reference
+├── VYDRA CORE Web App.docx source product reference
 ├── docker-compose.yml        local container setup
 ├── GETTING_STARTED.md        quick operational guide
 ├── QUICK_START.md            condensed startup reference
@@ -428,7 +428,7 @@ Frontend:
 
 ## Running with SQLite fallback
 
-If hosted Postgres is unavailable, BioMentor can run locally with SQLite by leaving `DATABASE_URL` empty in `backend/.env`.
+If hosted Postgres is unavailable, VYDRA CORE can run locally with SQLite by leaving `DATABASE_URL` empty in `backend/.env`.
 
 The backend health endpoint will then show:
 
@@ -463,7 +463,7 @@ If the backend connects correctly, `/health` will show:
 
 ## Production Deployment: Vercel + Render
 
-BioMentor AI should be deployed with:
+VYDRA CORE should be deployed with:
 - `Vercel` for the `frontend`
 - `Render` for the `backend`
 - `Supabase/Postgres` for production relational data

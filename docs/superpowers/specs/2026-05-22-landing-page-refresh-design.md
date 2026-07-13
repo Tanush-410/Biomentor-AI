@@ -1,8 +1,8 @@
-# BioMentor Landing Page Refresh Design
+# VYDRA CORE Landing Page Refresh Design
 
 ## Goal
 
-Refresh the existing BioMentor landing page so it reflects the product as it exists today: a balanced AI learning platform for students and a classroom-ready exam preparation system for educators. The page should keep the current overall structure and warm beige/brown/cream visual language, but present the product with stronger hierarchy, sharper copy, and a more premium sense of completeness.
+Refresh the existing VYDRA CORE landing page so it reflects the product as it exists today: a balanced AI learning platform for students and a classroom-ready exam preparation system for educators. The page should keep the current overall structure and warm beige/brown/cream visual language, but present the product with stronger hierarchy, sharper copy, and a more premium sense of completeness.
 
 ## Positioning
 
@@ -24,7 +24,7 @@ The core message is not "just another AI tutor" and not "just another classroom 
 
 ### Eyebrow
 
-`BioMentor AI`
+`VYDRA CORE`
 
 This stays prominent and should be visually larger than before.
 
@@ -54,7 +54,7 @@ The page should keep the same broad section rhythm as the current landing page, 
 ### 1. Hero
 
 Purpose:
-- establish BioMentor as a premium AI learning and classroom system
+- establish VYDRA CORE as a premium AI learning and classroom system
 - give immediate student and educator relevance
 - keep the existing CTA area
 
