@@ -309,10 +309,10 @@ export default function Dashboard() {
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#09090b,#27272a_52%,#52525b)] p-8 text-white shadow-2xl shadow-zinc-200">
-            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#a1a1aa]/12 blur-3xl" />
+          <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#d9c25c,#a88a26_52%,#f2e9c4)] p-8 text-zinc-950 shadow-2xl shadow-zinc-200">
+            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#f2e9c4]/12 blur-3xl" />
             <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-[#fafafa]/10 blur-3xl" />
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#fafafa]">Teacher/Admin Flow</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#fafafa]">Educator/Admin Flow</p>
             <h2 className="mt-4 text-4xl font-bold leading-tight">
               Access class overview, inspect student analytics, intervene quickly, then follow through with AI-guided collaboration.
             </h2>
@@ -321,10 +321,10 @@ export default function Dashboard() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/educator/classrooms" className="rounded-lg bg-white px-5 py-3 font-semibold text-slate-950">Open Classrooms</Link>
-              <Link href="/educator/quiz-maker" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-white">Build Classroom Quiz</Link>
-              <Link href="/check-difficulty" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-white">Open Bloom Studio</Link>
-              <Link href="/educator/class-insights" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-white">Inspect Class Insights</Link>
-              <Link href="/admin/analytics" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-white">Institution View</Link>
+              <Link href="/educator/quiz-maker" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-zinc-950">Build Classroom Quiz</Link>
+              <Link href="/check-difficulty" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-zinc-950">Open Bloom Studio</Link>
+              <Link href="/educator/class-insights" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-zinc-950">Inspect Class Insights</Link>
+              <Link href="/admin/analytics" className="rounded-lg border border-white/50 px-5 py-3 font-semibold text-zinc-950">Institution View</Link>
             </div>
           </div>
 
@@ -560,7 +560,7 @@ export default function Dashboard() {
       }
     >
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#09090b,#18181b_55%,#52525b)] p-8 text-white shadow-xl shadow-zinc-200">
+        <div className="card relative overflow-hidden bg-[linear-gradient(145deg,#d9c25c,#c9ab3f_55%,#f2e9c4)] p-8 text-zinc-950 shadow-xl shadow-zinc-200">
           <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
           <div className="max-w-2xl">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#fafafa]">AI Study Flow</p>
@@ -572,10 +572,10 @@ export default function Dashboard() {
               <Link href="/documents" className="rounded-lg bg-[#fafafa] px-5 py-3 font-semibold text-[#3f3f46] transition hover:bg-white">
                 Upload or Open Materials
               </Link>
-              <Link href="/start-quiz" className="rounded-lg border border-white/60 px-5 py-3 font-semibold text-white transition hover:bg-white/10">
+              <Link href="/start-quiz" className="rounded-lg border border-white/60 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-white/10">
                 Generate Quiz
               </Link>
-              <Link href="/learning-chat" className="rounded-lg border border-white/60 px-5 py-3 font-semibold text-white transition hover:bg-white/10">
+              <Link href="/learning-chat" className="rounded-lg border border-white/60 px-5 py-3 font-semibold text-zinc-950 transition hover:bg-white/10">
                 Learning Chat
               </Link>
             </div>
@@ -689,7 +689,7 @@ export default function Dashboard() {
                       stroke={8}
                       label="Average score"
                       caption={`${area.count} answers`}
-                      progressClassName="stroke-[#18181b]"
+                      progressClassName="stroke-[#c9ab3f]"
                       trackClassName="stroke-[#d4d4d8]"
                       tone="text-[#18181b]"
                     />
@@ -746,7 +746,7 @@ function StudentSignal({ label, value }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-4 backdrop-blur">
       <p className="text-xs uppercase tracking-[0.22em] text-[#fafafa]">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-white">{value}</p>
+      <p className="mt-2 text-2xl font-bold text-zinc-950">{value}</p>
     </div>
   )
 }

@@ -83,7 +83,7 @@ export default function MaterialIntelligencePanel({
                 {studyPath.map((step, index) => (
                   <div key={`${step.label}-${index}`} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex items-start gap-3">
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#18181b] text-sm font-bold text-white">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#c9ab3f] text-sm font-bold text-zinc-950">
                         {index + 1}
                       </span>
                       <div className="min-w-0">

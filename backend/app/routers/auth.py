@@ -1,4 +1,6 @@
 """Authentication router."""
+import hashlib
+import secrets
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -10,10 +12,27 @@ from jose import JWTError, jwt
 from app.core import settings
 from app.core.security import enforce_rate_limit, ensure_role, normalize_role
 from app.database import get_db
-from app.database.models import User
-from app.schemas import Token, UserLogin, UserRegister, UserResponse
+from app.database.models import PasswordResetToken, User
+from app.schemas import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+    Token,
+    UserLogin,
+    UserRegister,
+    UserResponse,
+)
+from app.services.email_service import send_password_reset_email
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+RESET_TOKEN_TTL_MINUTES = 30
+GENERIC_FORGOT_PASSWORD_MESSAGE = "If an account exists for that email, a reset link has been sent."
+
+
+def _hash_reset_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
 
 
 def hash_password(password: str) -> str:
@@ -131,6 +150,63 @@ async def login(user: UserLogin, request: Request, db: Session = Depends(get_db)
     access_token = create_access_token(data={"sub": db_user.id, "role": db_user.role})
 
     return {"access_token": access_token, "token_type": "bearer", "user": db_user}
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(request: ForgotPasswordRequest, http_request: Request, db: Session = Depends(get_db)):
+    """
+    Issue a password reset link if the email matches an account.
+
+    Always returns a generic success message, regardless of whether the
+    email is registered, so this endpoint cannot be used to enumerate users.
+    """
+    enforce_rate_limit(http_request, "auth-forgot-password", limit=5, window_seconds=300)
+
+    db_user = db.query(User).filter(User.email == request.email).first()
+    if db_user:
+        raw_token = secrets.token_urlsafe(32)
+        reset_token = PasswordResetToken(
+            user_id=db_user.id,
+            token_hash=_hash_reset_token(raw_token),
+            expires_at=datetime.utcnow() + timedelta(minutes=RESET_TOKEN_TTL_MINUTES),
+        )
+        db.add(reset_token)
+        db.commit()
+
+        reset_link = f"{settings.frontend_base_url.rstrip('/')}/reset-password?token={raw_token}"
+        send_password_reset_email(db_user.email, reset_link)
+
+    return ForgotPasswordResponse(message=GENERIC_FORGOT_PASSWORD_MESSAGE)
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(request: ResetPasswordRequest, http_request: Request, db: Session = Depends(get_db)):
+    """Consume a password reset token and set a new password."""
+    enforce_rate_limit(http_request, "auth-reset-password", limit=10, window_seconds=300)
+
+    token_hash = _hash_reset_token(request.token)
+    reset_token = db.query(PasswordResetToken).filter(PasswordResetToken.token_hash == token_hash).first()
+
+    if not reset_token or reset_token.used_at is not None or reset_token.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid or has expired.",
+        )
+
+    db_user = db.query(User).filter(User.id == reset_token.user_id).first()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid or has expired.",
+        )
+
+    db_user.hashed_password = hash_password(request.new_password)
+    db_user.failed_login_attempts = 0
+    db_user.locked_until = None
+    reset_token.used_at = datetime.utcnow()
+    db.commit()
+
+    return ResetPasswordResponse(message="Your password has been reset. You can now log in.")
 
 
 def get_current_user(

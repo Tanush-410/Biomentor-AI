@@ -153,7 +153,7 @@ export default function EducatorAnticheatBotPage() {
     <AppShell
       title="Anticheat Bot"
       eyebrow="Educator review desk"
-      description="Review final debarred or teacher-review-required cases with the last three evidence snapshots captured during protected quizzes and exams."
+      description="Review final debarred or educator-review-required cases with the last three evidence snapshots captured during protected quizzes and exams."
       actions={
         <>
           <Link href="/educator/exam-maker" className="btn btn-outline">Open Exam Maker</Link>
@@ -169,17 +169,17 @@ export default function EducatorAnticheatBotPage() {
         eyebrow="Integrity AI Surface"
         title="Final review cases, not noisy raw logs."
         description="The anti-cheat bot focuses the educator on the cases that matter: attempts ended automatically, why that happened, and the latest evidence snapshots attached to each review card."
-        highlights={['Final debarred cases', 'Last three evidence snapshots', 'Teacher review required posture']}
+        highlights={['Final debarred cases', 'Last three evidence snapshots', 'Educator review required posture']}
         primaryAction={{ label: 'Jump to Cases', href: '#anticheat-cases' }}
         secondaryAction={{ label: 'Build New Exam', href: '/educator/exam-maker' }}
-        status="Warnings alone do not decide guilt here. The product stores the final case and the evidence trail so the teacher stays in control of the decision."
+        status="Warnings alone do not decide guilt here. The product stores the final case and the evidence trail so the educator stays in control of the decision."
       />
 
       <section className="card p-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div>
             <p className="section-kicker text-[#18181b]">Review scope</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-950">Anti-cheat teacher review queue</h2>
+            <h2 className="mt-2 text-3xl font-bold text-slate-950">Anti-cheat educator review queue</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Choose a classroom to inspect the final review cases. Each case shows the assessment type, the reason the attempt ended, and the newest evidence still worth checking.
             </p>
@@ -211,7 +211,7 @@ export default function EducatorAnticheatBotPage() {
                 </div>
                 <h3 className="mt-4 text-2xl font-bold text-slate-950">{item.student_name || item.student_id}</h3>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Final case reason: <span className="font-semibold text-slate-900">{item.final_case_reason || 'teacher review required'}</span>
+                  Final case reason: <span className="font-semibold text-slate-900">{item.final_case_reason || 'educator review required'}</span>
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                   <InfoTile label="Warnings" value={String(item.latest_warning_count || 0)} />
@@ -301,7 +301,7 @@ export default function EducatorAnticheatBotPage() {
         <aside className="space-y-5">
           <div className="card p-6">
             <p className="section-kicker text-[#18181b]">Selected case</p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher action desk</h3>
+            <h3 className="mt-2 text-2xl font-bold text-slate-950">Educator action desk</h3>
             {caseLoading ? (
               <div className="mt-4 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">Loading selected case...</div>
             ) : !activeCase ? (
@@ -316,7 +316,7 @@ export default function EducatorAnticheatBotPage() {
                   <p className="section-kicker text-[#18181b]">Case decision summary</p>
                   <div className="mt-3 grid gap-3">
                     <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
-                      <p className="text-sm font-semibold text-slate-950">Teacher review required</p>
+                      <p className="text-sm font-semibold text-slate-950">Educator review required</p>
                       <p className="mt-2 text-sm text-slate-600">
                         {activeCase.teacher_review_required ? 'Yes, this case still needs an educator decision.' : 'No, this case has already been resolved.'}
                       </p>
@@ -350,7 +350,7 @@ export default function EducatorAnticheatBotPage() {
                 </div>
                 <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">Final reason</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-700">{activeCase.final_case_reason || 'teacher review required'}</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">{activeCase.final_case_reason || 'educator review required'}</p>
                   {activeCase.final_recommendation ? (
                     <p className="mt-3 text-sm font-semibold text-slate-900">{activeCase.final_recommendation}</p>
                   ) : null}
@@ -410,7 +410,7 @@ export default function EducatorAnticheatBotPage() {
             <p className="section-kicker text-[#18181b]">Review intent</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Why this desk exists</h3>
             <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Only the final case is elevated here, so teachers are not buried under every minor event.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Only the final case is elevated here, so educators are not buried under every minor event.</div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">The product keeps the last three snapshots because that is usually enough to validate the final call quickly.</div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Both quizzes and exams can feed this desk as protected assessments expand.</div>
             </div>
@@ -422,7 +422,7 @@ export default function EducatorAnticheatBotPage() {
               <h3 className="text-xl font-bold text-slate-950">Case handling rule</h3>
             </div>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Auto-ended attempts should stay in teacher review required until the educator confirms the final outcome. This keeps the anti-cheat system assertive without turning it into a silent judge.
+              Auto-ended attempts should stay in educator review required until the educator confirms the final outcome. This keeps the anti-cheat system assertive without turning it into a silent judge.
             </p>
           </div>
         </aside>

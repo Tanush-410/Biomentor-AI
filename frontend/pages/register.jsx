@@ -74,13 +74,13 @@ export default function Register() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-500">VYDRA CORE</p>
             <h1 className="mt-2 text-4xl font-bold text-slate-950">Create your workspace</h1>
           </div>
-          <Link href="/login" className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-black hover:bg-black hover:text-white">
+          <Link href="/login" className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-black hover:bg-zinc-950 hover:text-[#d9c25c]">
             Back to login
           </Link>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr]">
-          <section className="rounded-[32px] bg-[linear-gradient(180deg,#09090b_0%,#27272a_100%)] p-8 text-white shadow-xl shadow-zinc-300/40">
+          <section className="rounded-[32px] bg-[linear-gradient(180deg,#d9c25c_0%,#a88a26_100%)] p-8 text-zinc-950 shadow-xl shadow-zinc-300/40">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-300">Role Selection</p>
             <h2 className="mt-4 text-3xl font-bold">Pick the mode you want to grow into.</h2>
             <div className="mt-8 space-y-4">
@@ -193,7 +193,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="w-full rounded-2xl bg-zinc-950 px-5 py-3 font-semibold text-[#d9c25c] transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? 'Creating account...' : `Create ${formData.role === 'student' ? 'Student' : 'Educator'} Account`}
               </button>

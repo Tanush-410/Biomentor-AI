@@ -71,7 +71,7 @@ export default function AdminAnalyticsPage() {
                     stroke={8}
                     label="Average mastery"
                     caption={`${item.count} accounts`}
-                    progressClassName="stroke-[#18181b]"
+                    progressClassName="stroke-[#c9ab3f]"
                     trackClassName="stroke-[#d4d4d8]"
                     tone="text-[#18181b]"
                   />
@@ -122,7 +122,7 @@ export default function AdminAnalyticsPage() {
                       stroke={8}
                       label="Average mastery"
                       caption={`${item.student_count} students`}
-                      progressClassName="stroke-[#18181b]"
+                      progressClassName="stroke-[#c9ab3f]"
                       trackClassName="stroke-[#d4d4d8]"
                       tone="text-[#18181b]"
                     />

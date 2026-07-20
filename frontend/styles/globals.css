@@ -7,18 +7,18 @@ html {
 }
 
 :root {
-  --bm-bg: #f4f4f5;
-  --bm-bg-soft: #fafafa;
-  --bm-panel: rgba(255, 255, 255, 0.94);
-  --bm-panel-strong: rgba(255, 255, 255, 0.98);
+  --bm-bg: #d9c25c;
+  --bm-bg-soft: #f2e9c4;
+  --bm-panel: rgba(242, 233, 196, 0.94);
+  --bm-panel-strong: rgba(247, 241, 217, 0.98);
   --bm-ink: #0a0a0a;
-  --bm-muted: #525252;
-  --bm-line: rgba(24, 24, 27, 0.14);
-  --bm-primary: #111111;
-  --bm-secondary: #27272a;
-  --bm-accent: #000000;
-  --bm-accent-soft: #e5e5e5;
-  --bm-shadow: 0 18px 42px rgba(0, 0, 0, 0.1);
+  --bm-muted: #4a4522;
+  --bm-line: rgba(10, 10, 10, 0.14);
+  --bm-primary: #0a0a0a;
+  --bm-secondary: #1c1a08;
+  --bm-accent: #d9c25c;
+  --bm-accent-soft: #e3ce7a;
+  --bm-shadow: 0 18px 42px rgba(10, 10, 10, 0.12);
 }
 
 * {
@@ -28,9 +28,9 @@ html {
 body {
   @apply text-zinc-950;
   background:
-    radial-gradient(circle at top left, rgba(0, 0, 0, 0.08), transparent 24%),
-    radial-gradient(circle at 85% 12%, rgba(82, 82, 91, 0.12), transparent 20%),
-    linear-gradient(180deg, #ffffff 0%, #f4f4f5 46%, #e4e4e7 100%);
+    radial-gradient(circle at top left, rgba(10, 10, 10, 0.06), transparent 24%),
+    radial-gradient(circle at 85% 12%, rgba(10, 10, 10, 0.08), transparent 20%),
+    linear-gradient(180deg, #f2e9c4 0%, #d9c25c 46%, #dcc26a 100%);
   color: var(--bm-ink);
   font-family: "Source Sans 3", "Libre Franklin", sans-serif;
   min-height: 100vh;
@@ -79,15 +79,15 @@ button,
 }
 
 .btn-primary {
-  @apply btn border border-zinc-950 bg-gradient-to-r from-[#050505] to-[#2a2a2a] text-white shadow-md shadow-zinc-300/50 hover:-translate-y-0.5 hover:brightness-110;
+  @apply btn border border-zinc-950 bg-gradient-to-r from-[#d9c25c] to-[#c9ab3f] text-zinc-950 shadow-md shadow-zinc-300/50 hover:-translate-y-0.5 hover:brightness-105;
 }
 
 .btn-secondary {
-  @apply btn border border-zinc-700 bg-zinc-800 text-zinc-50 hover:-translate-y-0.5 hover:bg-zinc-700;
+  @apply btn border border-zinc-900 bg-[#e3ce7a] text-zinc-950 hover:-translate-y-0.5 hover:bg-[#c9ab3f];
 }
 
 .btn-outline {
-  @apply btn border border-zinc-300 bg-[rgba(255,255,255,0.92)] text-zinc-900 hover:-translate-y-0.5 hover:border-zinc-950 hover:bg-zinc-950 hover:text-white;
+  @apply btn border border-zinc-300 bg-[rgba(255,255,255,0.92)] text-zinc-900 hover:-translate-y-0.5 hover:border-zinc-950 hover:bg-[#d9c25c] hover:text-zinc-950;
 }
 
 .input {

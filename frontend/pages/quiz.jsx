@@ -114,7 +114,7 @@ export default function QuizPage() {
               <button
                 onClick={handleIdentifyLevel}
                 disabled={!question || analyzing}
-                className="flex-1 rounded-lg bg-[#18181b] py-3 font-semibold text-white transition hover:bg-[#76482b] disabled:bg-[#c7b5a5] flex items-center justify-center gap-2"
+                className="flex-1 rounded-lg bg-[#c9ab3f] py-3 font-semibold text-zinc-950 transition hover:bg-[#76482b] disabled:bg-[#c7b5a5] flex items-center justify-center gap-2"
               >
                 <Lightbulb className="w-5 h-5" />
                 {analyzing ? 'Analyzing...' : 'Identify Question Level'}
@@ -147,7 +147,7 @@ export default function QuizPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-slate-200 rounded-full h-2">
                     <div 
-                      className="h-2 rounded-full bg-[#18181b]" 
+                      className="h-2 rounded-full bg-[#c9ab3f]" 
                       style={{width: `${(analyzeResult.confidence || 0.7) * 100}%`}}
                     ></div>
                   </div>

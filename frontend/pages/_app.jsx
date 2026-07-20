@@ -39,7 +39,7 @@ function AppContent({ Component, pageProps }) {
             Loading your role-aware dashboard, study tools, and saved session state.
           </p>
           <div className="mt-6 h-2 overflow-hidden rounded-full bg-zinc-200">
-            <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-black via-zinc-700 to-zinc-400" />
+            <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-zinc-950 via-[#8a7a1f] to-[#d9c25c]" />
           </div>
         </div>
       </div>

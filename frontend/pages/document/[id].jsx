@@ -440,7 +440,7 @@ export default function StudyDocumentPage() {
                         <button
                           key={`${page.document_id}-${page.page_number}`}
                           onClick={() => openPage(page.page_number)}
-                          className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-5 text-left transition hover:border-[#71717a] hover:bg-[#f4f4f5]"
+                          className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-5 text-left transition hover:border-[#c9ab3f] hover:bg-[#f4f4f5]"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div>

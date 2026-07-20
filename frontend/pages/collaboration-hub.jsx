@@ -208,7 +208,7 @@ export default function CollaborationHubPage() {
     <AppShell
       title="AI Collaboration Hub"
       eyebrow="Shared Collaboration Flow"
-      description="Teachers and students can launch live sessions, run polls and quick checks, ask questions, and let the AI hub surface shared biology learning gaps."
+      description="Educators and students can launch live sessions, run polls and quick checks, ask questions, and let the AI hub surface shared biology learning gaps."
       contentClassName="space-y-8"
     >
       {error && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-900">{error}</div>}
@@ -322,7 +322,7 @@ export default function CollaborationHubPage() {
                     key={session.id}
                     onClick={() => openSession(session.id)}
                     className={`w-full rounded-2xl border p-4 text-left transition ${
-                      activeSession?.id === session.id ? 'border-[#52525b] bg-[#e4e4e7]' : 'border-slate-200 bg-white hover:border-zinc-300'
+                      activeSession?.id === session.id ? 'border-[#f2e9c4] bg-[#e4e4e7]' : 'border-slate-200 bg-white hover:border-zinc-300'
                     }`}
                   >
                     <p className="text-lg font-bold text-slate-950">{session.title}</p>
@@ -436,7 +436,7 @@ function StructuredEventCard({ event, isEducator, userId, onRespond }) {
             onClick={() => !hasResponded && onRespond(event.id, option)}
             disabled={hasResponded}
             className={`rounded-xl border px-4 py-3 text-left text-sm transition ${
-              hasResponded ? 'border-slate-200 bg-white text-slate-500' : 'border-slate-300 bg-white text-slate-900 hover:border-[#18181b]'
+              hasResponded ? 'border-slate-200 bg-white text-slate-500' : 'border-slate-300 bg-white text-slate-900 hover:border-[#c9ab3f]'
             }`}
           >
             <div className="flex items-center justify-between gap-4">

@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <meta name="theme-color" content="#09090b" />
+        <meta name="theme-color" content="#d9c25c" />
         <meta name="description" content="VYDRA CORE - role-aware exam preparation with offline study, AI tutoring, educator analytics, and Bloom-guided assessment tools." />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

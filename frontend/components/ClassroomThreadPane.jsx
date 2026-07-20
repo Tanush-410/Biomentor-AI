@@ -36,10 +36,10 @@ export default function ClassroomThreadPane({
       <div className="card flex min-h-[560px] flex-col p-4">
         <div className="border-b border-zinc-200/80 pb-4">
           <p className="section-kicker text-[#18181b]">Private contacts</p>
-          <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher-student threads</h3>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">Educator-student threads</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {role === 'student'
-              ? 'Only your classroom teachers appear here. Chat history stays with your account.'
+              ? 'Only your classroom educators appear here. Chat history stays with your account.'
               : 'Choose a student to start or continue a private thread.'}
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function ClassroomThreadPane({
                   className={`w-full rounded-[22px] border p-4 text-left transition ${
                     active
                       ? 'border-[#c49a76] bg-[#e4e4e7]'
-                      : 'border-zinc-200 bg-[#fafafa] hover:border-[#a1a1aa]'
+                      : 'border-zinc-200 bg-[#fafafa] hover:border-[#f2e9c4]'
                   }`}
                 >
                   <p className="text-sm font-semibold text-slate-950">{counterparty?.full_name || 'Conversation'}</p>
@@ -100,7 +100,7 @@ export default function ClassroomThreadPane({
               : 'Choose a thread'}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Message history stays available after login and remains private to the teacher-student pair.
+            Message history stays available after login and remains private to the educator-student pair.
           </p>
         </div>
 
@@ -117,7 +117,7 @@ export default function ClassroomThreadPane({
                 key={message.id}
                 className={`max-w-[85%] rounded-[24px] px-4 py-3 ${
                   message.sender?.role === role
-                    ? 'ml-auto bg-[#18181b] text-[#fafafa]'
+                    ? 'ml-auto bg-[#c9ab3f] text-[#fafafa]'
                     : 'bg-[#e4e4e7] text-slate-900'
                 }`}
               >

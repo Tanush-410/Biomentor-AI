@@ -61,6 +61,19 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class PasswordResetToken(Base):
+    """One-time token issued for a forgot-password request."""
+
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String, primary_key=True, default=new_id)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String, nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Document(Base):
     """Uploaded document model."""
 
@@ -725,6 +738,29 @@ class SupportComplaint(Base):
     status = Column(String, default="open", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     resolved_at = Column(DateTime, nullable=True)
+
+
+class Feedback(Base):
+    """Feedback exchanged between a student and the educator of a shared classroom.
+
+    Always scoped to a classroom so an educator teaching multiple classes can
+    see feedback broken down per class, and a student enrolled in multiple
+    classes can send feedback to each class's educator independently.
+    """
+
+    __tablename__ = "feedback"
+
+    id = Column(String, primary_key=True, default=new_id)
+    classroom_id = Column(String, ForeignKey("classrooms.id"), nullable=False, index=True)
+    from_user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    from_role = Column(String, nullable=False)
+    to_user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    to_role = Column(String, nullable=False)
+    rating = Column(Integer, nullable=True)
+    message = Column(Text, nullable=False)
+    category = Column(String, default="general", nullable=False)
+    is_anonymous = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
 class LiveSession(Base):

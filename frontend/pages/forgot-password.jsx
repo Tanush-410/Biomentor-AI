@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 
+import { requestBackendJson } from '../lib/backendApi'
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -14,11 +16,14 @@ export default function ForgotPassword() {
     setMessage('')
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setMessage('Password reset link sent to your email.')
+      const payload = await requestBackendJson('/auth/forgot-password', {
+        method: 'POST',
+        body: { email }
+      })
+      setMessage(payload?.message || 'If an account exists for that email, a reset link has been sent.')
       setEmail('')
     } catch (err) {
-      setError('Failed to send reset link. Please try again.')
+      setError(err.message || 'Failed to send reset link. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -36,7 +41,7 @@ export default function ForgotPassword() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <section className="card bg-[linear-gradient(180deg,#09090b_0%,#27272a_100%)] p-8 text-white">
+          <section className="card bg-[linear-gradient(180deg,#d9c25c_0%,#a88a26_100%)] p-8 text-zinc-950">
             <p className="section-kicker text-[#fafafa]">Account recovery</p>
             <h2 className="mt-4 text-3xl font-bold">Get back into your learning workspace without friction.</h2>
             <p className="mt-4 text-sm leading-7 text-zinc-200">

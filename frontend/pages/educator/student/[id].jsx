@@ -97,7 +97,7 @@ export default function StudentAnalyticsPage() {
                     stroke={8}
                     label="Mastery"
                     caption={`${item.count} answers`}
-                    progressClassName="stroke-[#27272a]"
+                    progressClassName="stroke-[#a88a26]"
                     trackClassName="stroke-[#d4d4d8]"
                     tone="text-[#27272a]"
                   />

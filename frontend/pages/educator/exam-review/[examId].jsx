@@ -109,7 +109,7 @@ export default function EducatorExamReviewPage() {
     checklist: [
       {
         id: 'scores-reviewed',
-        label: 'Every question has a teacher-reviewed or AI-confirmed released score.',
+        label: 'Every question has a educator-reviewed or AI-confirmed released score.',
         complete: Boolean(activeAttempt?.question_reviews?.length),
       },
       {
@@ -119,7 +119,7 @@ export default function EducatorExamReviewPage() {
       },
       {
         id: 'feedback-ready',
-        label: 'Overall teacher feedback is ready for the learner release step.',
+        label: 'Overall educator feedback is ready for the learner release step.',
         complete: Boolean(reviewDraft.overall_feedback?.trim()),
       }
     ]
@@ -159,9 +159,9 @@ export default function EducatorExamReviewPage() {
         ...current,
         attempts: (current?.attempts || []).map((attempt) => (attempt.attempt_id === payload.attempt.attempt_id ? payload.attempt : attempt))
       }))
-      setMessage('Teacher review saved and final score updated.')
+      setMessage('Educator review saved and final score updated.')
     } catch (err) {
-      setError(err.message || 'Could not save teacher review.')
+      setError(err.message || 'Could not save educator review.')
     } finally {
       setSaving(false)
     }
@@ -171,7 +171,7 @@ export default function EducatorExamReviewPage() {
     <AppShell
       title="Exam Review"
       eyebrow="Educator grading desk"
-      description="Review descriptive classroom exam answers question by question, adjust marks, and finalize the teacher score with the AI draft as a guide."
+      description="Review descriptive classroom exam answers question by question, adjust marks, and finalize the educator score with the AI draft as a guide."
       actions={
         <>
           <Link href="/educator/exam-maker" className="btn btn-outline">Open Exam Maker</Link>
@@ -184,13 +184,13 @@ export default function EducatorExamReviewPage() {
       {message && <div className="rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-zinc-700">{message}</div>}
 
       <AISpotlightBanner
-        eyebrow="Teacher review surface"
-        title="AI suggests. Teacher decides."
-        description="This workspace turns submitted descriptive exam answers into a real grading desk: AI score, confidence, keywords, student response, teacher override, and final release."
-        highlights={['Per-question grading control', 'Image answer review', 'Final teacher score release']}
+        eyebrow="Educator review surface"
+        title="AI suggests. Educator decides."
+        description="This workspace turns submitted descriptive exam answers into a real grading desk: AI score, confidence, keywords, student response, educator override, and final release."
+        highlights={['Per-question grading control', 'Image answer review', 'Final educator score release']}
         primaryAction={{ label: 'Jump to Attempts', href: '#exam-review-attempts' }}
         secondaryAction={{ label: 'Open Exam Builder', href: '/educator/exam-maker' }}
-        status="Teacher review now lives in a dedicated surface instead of staying trapped inside a hidden summary object."
+        status="Educator review now lives in a dedicated surface instead of staying trapped inside a hidden summary object."
       />
 
       <section className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]" id="exam-review-attempts">
@@ -208,7 +208,7 @@ export default function EducatorExamReviewPage() {
             {loading ? (
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">Loading attempts...</div>
             ) : visibleAttemptList.length === 0 ? (
-              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">No submitted exam attempts are ready for teacher grading yet.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4 text-sm text-slate-600">No submitted exam attempts are ready for educator grading yet.</div>
             ) : (
               <div className="space-y-3">
                 <label className="flex items-center gap-3 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] px-4 py-3 text-sm font-semibold text-slate-900">
@@ -217,7 +217,7 @@ export default function EducatorExamReviewPage() {
                     checked={showPendingOnly}
                     onChange={(event) => setShowPendingOnly(event.target.checked)}
                   />
-                  Show only pending teacher review
+                  Show only pending educator review
                 </label>
                 {visibleAttemptList.map((attempt) => (
                   <button
@@ -226,7 +226,7 @@ export default function EducatorExamReviewPage() {
                     onClick={() => loadAttempt(attempt.attempt_id)}
                     className={`w-full rounded-3xl border p-4 text-left transition ${
                       activeAttemptId === attempt.attempt_id
-                        ? 'border-[#52525b] bg-[#fafafa]'
+                        ? 'border-[#f2e9c4] bg-[#fafafa]'
                         : 'border-[#d4d4d8] bg-white hover:bg-[#fafafa]'
                     }`}
                   >
@@ -246,13 +246,13 @@ export default function EducatorExamReviewPage() {
 
         <div className="space-y-6">
           {!activeAttempt ? (
-            <div className="card p-8 text-sm text-slate-600">Choose a submitted attempt to begin the teacher grading review.</div>
+            <div className="card p-8 text-sm text-slate-600">Choose a submitted attempt to begin the educator grading review.</div>
           ) : (
             <>
               <section className="card p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="section-kicker text-[#18181b]">Teacher grading review</p>
+                    <p className="section-kicker text-[#18181b]">Educator grading review</p>
                     <h2 className="mt-2 text-3xl font-bold text-slate-950">{activeAttempt.student_name}</h2>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
                       Review the descriptive response quality, attached handwritten images, and AI confidence question by question before finalizing the released score.
@@ -289,7 +289,7 @@ export default function EducatorExamReviewPage() {
                           </div>
                           <p className="mt-3 text-sm font-semibold text-slate-950">{item.prompt_preview || 'Prompt preview will appear here.'}</p>
                           <p className="mt-2 text-sm text-slate-600">
-                            {item.teacher_review_required ? 'Still requires teacher review.' : 'Ready for score release.'}
+                            {item.teacher_review_required ? 'Still requires educator review.' : 'Ready for score release.'}
                           </p>
                         </div>
                       ))}
@@ -297,9 +297,9 @@ export default function EducatorExamReviewPage() {
                   </div>
 
                   <div className="rounded-3xl border border-[#d4d4d8] bg-[#fafafa] p-5">
-                    <p className="section-kicker text-[#18181b]">Teacher release checklist</p>
+                    <p className="section-kicker text-[#18181b]">Educator release checklist</p>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
-                      Keep this visible while you grade so the final release step stays deliberate and teacher-led.
+                      Keep this visible while you grade so the final release step stays deliberate and educator-led.
                     </p>
                     <div className="mt-4 space-y-3">
                       {releaseSummary.checklist.map((item) => (
@@ -415,7 +415,7 @@ export default function EducatorExamReviewPage() {
                           </div>
 
                           <label className="space-y-2">
-                            <span className="text-sm font-semibold text-slate-900">Teacher score</span>
+                            <span className="text-sm font-semibold text-slate-900">Educator score</span>
                             <input
                               type="number"
                               min="0"
@@ -428,7 +428,7 @@ export default function EducatorExamReviewPage() {
                           </label>
 
                           <label className="space-y-2">
-                            <span className="text-sm font-semibold text-slate-900">Teacher feedback</span>
+                            <span className="text-sm font-semibold text-slate-900">Educator feedback</span>
                             <textarea
                               value={feedbackValue}
                               onChange={(event) => updateResponseDraft(question.response_id, { teacher_feedback: event.target.value })}
@@ -445,9 +445,9 @@ export default function EducatorExamReviewPage() {
 
               <section className="card p-6">
                 <p className="section-kicker text-[#18181b]">Release summary</p>
-                <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher summary</h3>
+                <h3 className="mt-2 text-2xl font-bold text-slate-950">Educator summary</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Finalize Teacher Review only when the released score, per-question overrides, and the classroom-facing feedback are ready to send back to the learner.
+                  Finalize Educator Review only when the released score, per-question overrides, and the classroom-facing feedback are ready to send back to the learner.
                 </p>
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                   <Metric label="Release reviewed score" value={`${releaseSummary.release_score}`} />
@@ -463,7 +463,7 @@ export default function EducatorExamReviewPage() {
                 <div className="mt-5 flex flex-wrap gap-3">
                   <button type="button" onClick={handleSaveReview} disabled={saving} className="btn btn-primary inline-flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4" />
-                    {saving ? 'Saving review...' : 'Finalize Teacher Review'}
+                    {saving ? 'Saving review...' : 'Finalize Educator Review'}
                   </button>
                   {nextReviewAttempt && (
                     <button

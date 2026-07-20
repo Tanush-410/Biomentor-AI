@@ -40,6 +40,18 @@ class Settings(BaseSettings):
     # Ollama (Local LLM)
     ollama_base_url: str = "http://localhost:11434"
 
+    # Outbound email (password reset, notifications)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_from_name: str = "VYDRA CORE"
+    smtp_use_tls: bool = True
+
+    # Public frontend origin used to build links inside outbound emails
+    frontend_base_url: str = "http://localhost:3000"
+
     # Agentic web fallback
     trusted_search_domains: List[str] = [
         "khanacademy.org",

@@ -15,7 +15,7 @@ function ScoreRing({ score }) {
           cx="40"
           cy="40"
           r={radius}
-          stroke="#18181b"
+          stroke="#c9ab3f"
           strokeWidth={stroke}
           fill="none"
           strokeLinecap="round"

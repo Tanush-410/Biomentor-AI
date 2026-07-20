@@ -46,7 +46,7 @@ export default function ClassroomShell({
               <p className="section-kicker text-zinc-500">Classroom hub</p>
               <h2 className="mt-2 text-4xl font-bold text-zinc-950">{classroom?.name || 'Loading classroom'}</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-600">
-                {classroom?.description || 'Class-wide updates, classwork, direct teacher contact, and live session access live here.'}
+                {classroom?.description || 'Class-wide updates, classwork, direct educator contact, and live session access live here.'}
               </p>
             </div>
 
@@ -101,7 +101,7 @@ export default function ClassroomShell({
                   href={href}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                     active
-                      ? 'bg-black text-white shadow-md shadow-black/10'
+                      ? 'bg-zinc-950 text-[#d9c25c] shadow-md shadow-black/10'
                       : 'text-zinc-600 hover:bg-zinc-100 hover:text-black'
                   }`}
                 >

@@ -86,14 +86,14 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_35%),linear-gradient(135deg,_#000000,_#18181b_52%,_#3f3f46)] text-white">
-      <header className="border-b border-white/10 bg-black/55 px-6 py-4 backdrop-blur">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(10,10,10,0.06),_transparent_35%),linear-gradient(135deg,_#d9c25c,_#e3ce7a_52%,_#dcc26a)] text-zinc-950">
+      <header className="border-b border-black/10 bg-white/55 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-300">VYDRA CORE</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-700">VYDRA CORE</p>
             <h1 className="mt-2 text-2xl font-bold">Exam Preparation Workspace</h1>
           </div>
-          <Link href="/" className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-zinc-100 transition hover:border-white hover:bg-white hover:text-black">
+          <Link href="/" className="rounded-full border border-black/15 px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:border-black hover:bg-black hover:text-[#d9c25c]">
             Back Home
           </Link>
         </div>
@@ -102,11 +102,11 @@ export default function Login() {
       <main className="mx-auto grid min-h-[calc(100vh-89px)] max-w-6xl gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <section className="space-y-8">
           <div className="max-w-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-zinc-300">Secure Sign In</p>
-            <h2 className="mt-4 text-5xl font-bold leading-tight text-white">
+            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-zinc-700">Secure Sign In</p>
+            <h2 className="mt-4 text-5xl font-bold leading-tight text-zinc-950">
               Choose the right mode and enter the part of VYDRA CORE built for you.
             </h2>
-            <p className="mt-5 text-lg leading-8 text-slate-300">
+            <p className="mt-5 text-lg leading-8 text-zinc-700">
               Students get study, quiz, and progress tools. Educators unlock class dashboards, live collaboration, alerts, and intervention workflows.
             </p>
           </div>
@@ -122,17 +122,17 @@ export default function Login() {
                   onClick={() => setMode(item.value)}
                   className={`rounded-[28px] border p-5 text-left transition ${
                     active
-                      ? 'border-white bg-white/12 shadow-lg shadow-black/25'
-                      : 'border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/10'
+                      ? 'border-black bg-black/8 shadow-lg shadow-black/15'
+                      : 'border-black/10 bg-white/40 hover:border-black/30 hover:bg-white/70'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`rounded-2xl p-3 ${active ? 'bg-white text-black' : 'bg-zinc-950 text-zinc-200'}`}>
+                    <div className={`rounded-2xl p-3 ${active ? 'bg-black text-[#d9c25c]' : 'bg-zinc-100 text-zinc-700'}`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold">{item.label}</h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-300">{item.description}</p>
+                      <h3 className="text-lg font-bold text-zinc-950">{item.label}</h3>
+                      <p className="mt-2 text-sm leading-6 text-zinc-700">{item.description}</p>
                     </div>
                   </div>
                 </button>
@@ -141,15 +141,15 @@ export default function Login() {
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-white/10 bg-black/55 p-8 shadow-2xl shadow-black/30 backdrop-blur">
-          <h3 className="text-2xl font-bold text-white">Sign in to continue</h3>
-          <p className="mt-3 text-sm leading-6 text-slate-300">
-            You are signing in with <span className="font-semibold text-white">{mode === 'student' ? 'Student Mode' : 'Educator Mode'}</span>.
+        <section className="rounded-[32px] border border-black/10 bg-white/55 p-8 shadow-2xl shadow-black/10 backdrop-blur">
+          <h3 className="text-2xl font-bold text-zinc-950">Sign in to continue</h3>
+          <p className="mt-3 text-sm leading-6 text-zinc-700">
+            You are signing in with <span className="font-semibold text-zinc-950">{mode === 'student' ? 'Student Mode' : 'Educator Mode'}</span>.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             {error && (
-              <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white">
+              <div className="rounded-2xl border border-black/20 bg-black/5 px-4 py-3 text-sm text-zinc-950">
                 {error}
               </div>
             )}
@@ -172,12 +172,12 @@ export default function Login() {
               required
             />
 
-            <label className="flex items-center gap-3 text-sm text-slate-300">
+            <label className="flex items-center gap-3 text-sm text-zinc-700">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-white/20 bg-white/5 accent-white"
+                className="h-4 w-4 rounded border-black/20 bg-white accent-black"
               />
               Remember my email on this device
             </label>
@@ -185,18 +185,18 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-2xl bg-white px-5 py-3 font-semibold text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-2 w-full rounded-2xl bg-zinc-950 px-5 py-3 font-semibold text-[#d9c25c] transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? 'Signing in...' : `Enter ${mode === 'student' ? 'Student' : 'Educator'} Workspace`}
             </button>
           </form>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-300">
-            <Link href="/forgot-password" className="text-white hover:text-zinc-300">
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-zinc-700">
+            <Link href="/forgot-password" className="text-zinc-950 hover:text-zinc-600">
               Forgot Password?
             </Link>
-            <span className="text-slate-500">•</span>
-            <Link href="/register" className="text-white hover:text-zinc-300">
+            <span className="text-zinc-400">•</span>
+            <Link href="/register" className="text-zinc-950 hover:text-zinc-600">
               Create account
             </Link>
           </div>
