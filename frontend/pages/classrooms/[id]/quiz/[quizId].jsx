@@ -570,7 +570,7 @@ export default function ClassroomQuizPage() {
               </div>
 
               <div className="mb-6 w-full rounded-full bg-zinc-200 h-2">
-                <div className="h-2 rounded-full bg-gradient-to-r from-[#18181b] to-[#71717a] transition-all" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
+                <div className="h-2 rounded-full bg-gradient-to-r from-[#c9ab3f] to-[#c9ab3f] transition-all" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
               </div>
 
               <h4 className="text-xl font-bold text-slate-950">{activeQuestion.text}</h4>
@@ -590,7 +590,7 @@ export default function ClassroomQuizPage() {
                     className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
                       answers[activeQuestion.id] === option.id
                         ? 'border-[#18181b] bg-[#f4f4f5] text-[#18181b]'
-                        : 'border-zinc-200 bg-white text-slate-800 hover:border-[#a1a1aa]'
+                        : 'border-zinc-200 bg-white text-slate-800 hover:border-[#f2e9c4]'
                     }`}
                   >
                     <span className="font-semibold mr-2">{option.id}.</span>
@@ -664,7 +664,7 @@ export default function ClassroomQuizPage() {
                     <p className="text-sm text-slate-600">Students must keep the webcam feed available during a proctored attempt.</p>
                   </div>
                 </div>
-                <div className="mt-4 overflow-hidden rounded-2xl bg-[#09090b]">
+                <div className="mt-4 overflow-hidden rounded-2xl bg-[#d9c25c]">
                   <video ref={videoRef} autoPlay muted playsInline className="h-48 w-full object-cover" />
                 </div>
               </div>

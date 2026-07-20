@@ -13,11 +13,11 @@ import { requestBackendJson } from '../lib/backendApi'
 
 const LEVEL_COLORS = {
   1: 'stroke-slate-500',
-  2: 'stroke-[#71717a]',
-  3: 'stroke-[#52525b]',
-  4: 'stroke-[#a1a1aa]',
-  5: 'stroke-[#18181b]',
-  6: 'stroke-[#18181b]'
+  2: 'stroke-[#c9ab3f]',
+  3: 'stroke-[#f2e9c4]',
+  4: 'stroke-[#f2e9c4]',
+  5: 'stroke-[#c9ab3f]',
+  6: 'stroke-[#c9ab3f]'
 }
 
 export default function ProgressPage() {
@@ -164,7 +164,7 @@ export default function ProgressPage() {
                         stroke={8}
                         label="Average score"
                         caption={`${item.count} answers recorded`}
-                        progressClassName={LEVEL_COLORS[item.level] || 'stroke-[#18181b]'}
+                        progressClassName={LEVEL_COLORS[item.level] || 'stroke-[#c9ab3f]'}
                         trackClassName="stroke-[#d4d4d8]"
                         tone="text-[#18181b]"
                       />

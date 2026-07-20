@@ -80,7 +80,7 @@ export default function ClassroomStreamPage() {
       <AISpotlightBanner
         eyebrow="Classroom AI Surface"
         title="Classroom AI Board"
-        description="This classroom now has a visible AI layer that explains what the whole group is struggling with, what students should focus on next, and which signals deserve a teacher move before the class falls behind."
+        description="This classroom now has a visible AI layer that explains what the whole group is struggling with, what students should focus on next, and which signals deserve a educator move before the class falls behind."
         highlights={['Class focus signals', 'Reteach recommendations', 'Student focus moves']}
         primaryAction={{ label: 'Open AI Board', href: '#classroom-intelligence' }}
         secondaryAction={{ label: 'Jump to Classwork', href: `/classrooms/${classroomId}/classwork` }}
@@ -135,7 +135,7 @@ export default function ClassroomStreamPage() {
                   <p className="whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{post.content}</p>
 
                   {post.document && (
-                    <Link href={`/document/${post.document.id}`} className="surface-subtle block p-4 transition hover:border-[#a1a1aa]">
+                    <Link href={`/document/${post.document.id}`} className="surface-subtle block p-4 transition hover:border-[#f2e9c4]">
                       <p className="text-sm font-semibold text-slate-950">{post.document.title}</p>
                       <p className="mt-1 text-sm text-slate-600">{post.document.file_name}</p>
                     </Link>

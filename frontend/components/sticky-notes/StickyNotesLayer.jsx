@@ -361,7 +361,7 @@ export default function StickyNotesLayer() {
         y_ratio: clamp(contextMenu.y / viewport.height, 0, 1),
         x_position: Math.round(xPosition),
         y_position: Math.round(yPosition),
-        title: `${user?.role === 'educator' ? 'Teacher' : 'Study'} note`,
+        title: `${user?.role === 'educator' ? 'Educator' : 'Study'} note`,
         content: '',
       })
       setNotes((current) => [...current, created])
@@ -629,7 +629,7 @@ export default function StickyNotesLayer() {
           </div>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-2xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-[#d9c25c] transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             onClick={() => void handleCreateNote()}
             disabled={isSaving}
           >

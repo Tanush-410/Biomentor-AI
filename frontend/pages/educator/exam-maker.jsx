@@ -13,7 +13,7 @@ const BLOCK_TYPES = [
   { value: 'text', label: 'Instruction text' },
   { value: 'image', label: 'Diagram / image' },
   { value: 'section', label: 'Section divider' },
-  { value: 'callout', label: 'Teacher callout' },
+  { value: 'callout', label: 'Educator callout' },
   { value: 'spacer', label: 'Spacing block' }
 ]
 
@@ -79,7 +79,7 @@ function getPreviewTextForBlock(block) {
     return block.title || block.content?.text || 'Section divider'
   }
   if (block.block_type === 'callout') {
-    return block.content?.text || 'Teacher callout'
+    return block.content?.text || 'Educator callout'
   }
   if (block.block_type === 'spacer') {
     return 'Spacing block'
@@ -115,7 +115,7 @@ export default function EducatorExamMakerPage() {
     allow_late_entries: false,
     linked_material_ids: [],
     grading_notes: {
-      teacher_keywords_intent: 'Use per-question keywords to guide AI grading before teacher review.'
+      teacher_keywords_intent: 'Use per-question keywords to guide AI grading before educator review.'
     },
     anticheat_policy: {
       end_on_major_violation: true,
@@ -523,8 +523,8 @@ export default function EducatorExamMakerPage() {
       <AISpotlightBanner
         eyebrow="Assessment AI Surface"
         title="Build a classroom exam that feels authored, not generated."
-        description="Use blocks for instructions and diagrams, combine fixed-answer descriptive questions with objective checks, then let AI pre-grade with teacher review still in control."
-        highlights={['Mini document layout', 'Per-question grading keywords', 'Teacher-review anti-cheat endings']}
+        description="Use blocks for instructions and diagrams, combine fixed-answer descriptive questions with objective checks, then let AI pre-grade with educator review still in control."
+        highlights={['Mini document layout', 'Per-question grading keywords', 'Educator-review anti-cheat endings']}
         primaryAction={{ label: 'Jump to Exam Questions', href: '#exam-question-studio' }}
         secondaryAction={{ label: 'Review Anticheat Policy', href: '#anticheat-policy' }}
         status="The MVP supports mixed authored exams today: manual authoring, AI-aware grading structure, scheduling, and proctored delivery in classrooms."
@@ -622,7 +622,7 @@ export default function EducatorExamMakerPage() {
                   }}
                   onDragEnd={() => setDraggedBlockId('')}
                   className={`rounded-3xl border bg-[#fafafa] p-5 transition ${
-                    draggedBlockId === block.local_id ? 'border-[#52525b] shadow-lg' : 'border-[#d4d4d8]'
+                    draggedBlockId === block.local_id ? 'border-[#f2e9c4] shadow-lg' : 'border-[#d4d4d8]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -674,7 +674,7 @@ export default function EducatorExamMakerPage() {
                             type="file"
                             accept="image/*"
                             onChange={(event) => handleBlockImageUpload(block.local_id, event.target.files?.[0] || null)}
-                            className="input cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-[#18181b] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                            className="input cursor-pointer file:mr-4 file:rounded-full file:border-0 file:bg-[#c9ab3f] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-zinc-950"
                           />
                         </label>
                         <label className="space-y-2">
@@ -779,7 +779,7 @@ export default function EducatorExamMakerPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="section-kicker text-[#18181b]">Document preview</p>
-                <h3 className="mt-2 text-2xl font-bold text-slate-950">Preview the teacher-facing paper layout</h3>
+                <h3 className="mt-2 text-2xl font-bold text-slate-950">Preview the educator-facing paper layout</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
                   This preview mirrors the authored order so the paper feels more like a real exam document instead of a hidden JSON draft.
                 </p>
@@ -866,7 +866,7 @@ export default function EducatorExamMakerPage() {
                       style={{ minHeight: `${Math.max(Number(answerBoxPreviewQuestion.response_config?.rows || 6), 3) * 28}px` }}
                     >
                       {answerBoxPreviewQuestion.response_mode === 'typed_or_image'
-                        ? 'Students can type here or upload an answer image if the teacher allows both.'
+                        ? 'Students can type here or upload an answer image if the educator allows both.'
                         : answerBoxPreviewQuestion.response_mode === 'image_upload'
                           ? 'Students will upload an image response for this question.'
                           : answerBoxPreviewQuestion.response_config?.placeholder || 'Students answer in a fixed response box here.'}
@@ -895,7 +895,7 @@ export default function EducatorExamMakerPage() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#18181b]">Question {index + 1}</p>
-                      <p className="mt-1 text-sm text-slate-600">Teachers choose the answer mode per question and define grading keywords for AI review.</p>
+                      <p className="mt-1 text-sm text-slate-600">Educators choose the answer mode per question and define grading keywords for AI review.</p>
                     </div>
                     <button type="button" onClick={() => removeQuestion(question.local_id)} className="rounded-2xl border border-[#d4d4d8] p-3 text-[#18181b] transition hover:bg-[#fafafa]">
                       <Trash2 className="h-4 w-4" />
@@ -949,7 +949,7 @@ export default function EducatorExamMakerPage() {
 
                     <label className="space-y-2 md:col-span-2">
                       <span className="text-sm font-semibold text-slate-900">Answer key or model answer</span>
-                      <textarea value={question.answer_key} onChange={(event) => updateQuestion(question.local_id, { answer_key: event.target.value })} className="input min-h-[120px]" placeholder="Used for AI-assisted review and for teacher guidance during manual grading." />
+                      <textarea value={question.answer_key} onChange={(event) => updateQuestion(question.local_id, { answer_key: event.target.value })} className="input min-h-[120px]" placeholder="Used for AI-assisted review and for educator guidance during manual grading." />
                     </label>
                   </div>
 
@@ -974,7 +974,7 @@ export default function EducatorExamMakerPage() {
             <p className="section-kicker text-[#18181b]">AI suggestion mode</p>
             <h3 className="mt-2 text-2xl font-bold text-slate-950">Material-backed question drafting</h3>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              In AI-assisted mode, the linked materials define what the suggestion layer should pull from when generating draft prompts for the teacher to refine.
+              In AI-assisted mode, the linked materials define what the suggestion layer should pull from when generating draft prompts for the educator to refine.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -1038,13 +1038,13 @@ export default function EducatorExamMakerPage() {
 
           <section id="anticheat-policy" className="card p-6">
             <p className="section-kicker text-[#18181b]">Anticheat policy</p>
-            <h3 className="mt-2 text-2xl font-bold text-slate-950">Teacher-review endings, not silent failures</h3>
+            <h3 className="mt-2 text-2xl font-bold text-slate-950">Educator-review endings, not silent failures</h3>
             <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 Major warnings capture a snapshot and append it to the anti-cheat case.
               </div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
-                If the attempt is ended automatically, the final outcome becomes teacher review required.
+                If the attempt is ended automatically, the final outcome becomes educator review required.
               </div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">
                 The anti-cheat bot keeps the final debarred case plus the last three evidence snapshots.

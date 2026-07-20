@@ -10,6 +10,8 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  MessageCircle,
+  Box,
   PanelLeftClose,
   PanelLeftOpen,
   Users,
@@ -25,7 +27,9 @@ const STUDENT_NAV_ITEMS = [
   { href: '/learning-chat', label: 'Learning Chat', icon: MessageSquare, match: ['/learning-chat'] },
   { href: '/start-quiz', label: 'Quiz Generator', icon: Brain, match: ['/start-quiz', '/quiz-session'] },
   { href: '/progress', label: 'Progress', icon: BarChart3, match: ['/progress'] },
-  { href: '/collaboration-hub', label: 'Collaboration', icon: MessageSquare, match: ['/collaboration-hub'] }
+  { href: '/collaboration-hub', label: 'Collaboration', icon: MessageSquare, match: ['/collaboration-hub'] },
+  { href: '/3d-studio', label: '3D Studio', icon: Box, match: ['/3d-studio'] },
+  { href: '/feedback/student', label: 'Feedback', icon: MessageCircle, match: ['/feedback/student'] }
 ]
 
 const EDUCATOR_NAV_ITEMS = [
@@ -39,7 +43,9 @@ const EDUCATOR_NAV_ITEMS = [
   { href: '/educator/class-insights', label: 'Class Insights', icon: BarChart3, match: ['/educator/class-insights'] },
   { href: '/communication-hub', label: 'Communication Hub', icon: MessageSquare, match: ['/communication-hub'] },
   { href: '/collaboration-hub', label: 'Collaboration', icon: Brain, match: ['/collaboration-hub'] },
-  { href: '/admin/analytics', label: 'Admin Analytics', icon: FileStack, match: ['/admin/analytics'], adminOnly: true }
+  { href: '/admin/analytics', label: 'Admin Analytics', icon: FileStack, match: ['/admin/analytics'], adminOnly: true },
+  { href: '/3d-studio', label: '3D Studio', icon: Box, match: ['/3d-studio'] },
+  { href: '/feedback/educator', label: 'Feedback', icon: MessageCircle, match: ['/feedback/educator'] }
 ]
 
 function isActiveItem(item, pathname) {
@@ -102,8 +108,8 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
           compact ? 'justify-center px-3 py-3' : 'gap-3 px-4 py-3'
         } ${
           active
-            ? 'bg-white text-black shadow-md shadow-black/10'
-            : 'text-zinc-300 hover:bg-white/10 hover:text-white'
+            ? 'bg-zinc-950 text-[#d9c25c] shadow-md shadow-black/10'
+            : 'text-zinc-800 hover:bg-black/5 hover:text-zinc-950'
         }`}
       >
         <Icon className="h-4 w-4 shrink-0" />
@@ -127,19 +133,19 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute inset-0 bg-slate-950/50"
+            className="absolute inset-0 bg-black/40"
             aria-label="Close navigation overlay"
           />
-          <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-black text-zinc-100 shadow-2xl">
-            <div className="flex items-start justify-between border-b border-white/10 px-6 py-6">
+          <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#d9c25c] text-zinc-950 shadow-2xl">
+            <div className="flex items-start justify-between border-b border-black/10 px-6 py-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-400">VYDRA CORE</p>
-                <h2 className="mt-3 text-2xl font-bold text-white">{workspaceTitle}</h2>
-                <p className="mt-3 text-xs uppercase tracking-[0.24em] text-zinc-500">{roleLabel}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-700">VYDRA CORE</p>
+                <h2 className="mt-3 text-2xl font-bold text-zinc-950">{workspaceTitle}</h2>
+                <p className="mt-3 text-xs uppercase tracking-[0.24em] text-zinc-600">{roleLabel}</p>
               </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="rounded-xl border border-white/10 p-2 text-zinc-200 transition hover:bg-white/10"
+                className="rounded-xl border border-black/10 p-2 text-zinc-700 transition hover:bg-black/5"
                 aria-label="Close navigation"
               >
                 <X className="h-4 w-4" />
@@ -152,10 +158,10 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
               </div>
             </nav>
 
-            <div className="border-t border-white/10 p-4">
+            <div className="border-t border-black/10 p-4">
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-zinc-100 transition hover:border-white/30 hover:bg-white/10"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-black/10 px-4 py-3 text-sm font-semibold text-zinc-800 transition hover:border-black/30 hover:bg-black/5"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -165,27 +171,27 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
         </div>
       )}
 
-      <aside className="hidden border-r border-zinc-800 bg-black text-zinc-100 md:flex md:min-h-screen md:flex-col">
-        <div className={`border-b border-white/10 py-6 ${isCollapsed ? 'px-3' : 'px-6'}`}>
+      <aside className="hidden border-r border-black/10 bg-[#d9c25c] text-zinc-950 md:flex md:min-h-screen md:flex-col">
+        <div className={`border-b border-black/10 py-6 ${isCollapsed ? 'px-3' : 'px-6'}`}>
           <div className={`flex ${isCollapsed ? 'justify-center' : 'items-start justify-between gap-3'}`}>
             <div className={isCollapsed ? 'hidden' : 'block'}>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-400">VYDRA CORE</p>
-              <h2 className="mt-3 text-2xl font-bold text-white">{workspaceTitle}</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">{roleSupportCopy}</p>
-              <div className="role-pill mt-4 border-white/10 bg-white/10 text-zinc-200">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-700">VYDRA CORE</p>
+              <h2 className="mt-3 text-2xl font-bold text-zinc-950">{workspaceTitle}</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-700">{roleSupportCopy}</p>
+              <div className="role-pill mt-4 border-black/10 bg-black/5 text-zinc-800">
                 {roleLabel}
               </div>
             </div>
 
             {isCollapsed && (
-              <div className="rounded-2xl bg-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-zinc-200">
+              <div className="rounded-2xl bg-black/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-zinc-800">
                 VC
               </div>
             )}
 
             <button
               onClick={() => setIsCollapsed((current) => !current)}
-              className={`rounded-xl border border-white/10 p-2 text-zinc-200 transition hover:bg-white/10 ${
+              className={`rounded-xl border border-black/10 p-2 text-zinc-700 transition hover:bg-black/5 ${
                 isCollapsed ? 'absolute left-1/2 -translate-x-1/2 opacity-0 pointer-events-none' : ''
               }`}
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -198,7 +204,7 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => setIsCollapsed(false)}
-                className="rounded-xl border border-white/10 p-2 text-zinc-200 transition hover:bg-white/10"
+                className="rounded-xl border border-black/10 p-2 text-zinc-700 transition hover:bg-black/5"
                 aria-label="Expand sidebar"
               >
                 <PanelLeftOpen className="h-4 w-4" />
@@ -214,9 +220,9 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
         </nav>
 
         {!isCollapsed && (
-          <div className="mx-4 mb-4 rounded-[24px] border border-white/10 bg-white/5 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">Workspace Focus</p>
-            <p className="mt-3 text-sm leading-6 text-zinc-300">
+          <div className="mx-4 mb-4 rounded-[24px] border border-black/10 bg-black/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-zinc-600">Workspace Focus</p>
+            <p className="mt-3 text-sm leading-6 text-zinc-700">
               {user?.role === 'student'
                 ? 'Keep materials, chat, quizzes, and progress moving in a single guided loop.'
                 : 'Move from alerts to intervention with fewer clicks and clearer next actions.'}
@@ -224,11 +230,11 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
           </div>
         )}
 
-        <div className={`border-t border-white/10 p-4 ${isCollapsed ? 'px-3' : ''}`}>
+        <div className={`border-t border-black/10 p-4 ${isCollapsed ? 'px-3' : ''}`}>
           <button
             onClick={handleLogout}
             title="Logout"
-            className={`flex w-full items-center rounded-2xl border border-white/10 text-sm font-semibold text-zinc-100 transition hover:border-white/30 hover:bg-white/10 ${
+            className={`flex w-full items-center rounded-2xl border border-black/10 text-sm font-semibold text-zinc-800 transition hover:border-black/30 hover:bg-black/5 ${
               isCollapsed ? 'justify-center px-3 py-3' : 'justify-center gap-2 px-4 py-3'
             }`}
           >

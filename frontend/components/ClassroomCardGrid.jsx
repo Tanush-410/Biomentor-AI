@@ -3,10 +3,10 @@ import Link from 'next/link'
 import { ArrowRight, Bell, Users } from 'lucide-react'
 
 const BANNERS = [
-  'from-[#09090b] via-[#27272a] to-[#71717a]',
-  'from-[#18181b] via-[#3f3f46] to-[#a1a1aa]',
-  'from-[#000000] via-[#27272a] to-[#d4d4d8]',
-  'from-[#111111] via-[#3f3f46] to-[#fafafa]'
+  'from-[#d9c25c] via-[#3f3f2a] to-[#d9c25c]',
+  'from-[#c9ab3f] via-[#8a7a1f] to-[#e3ce7a]',
+  'from-[#d9c25c] via-[#5a5220] to-[#dcc26a]',
+  'from-[#111111] via-[#6b6320] to-[#f2e9c4]'
 ]
 
 export default function ClassroomCardGrid({ classrooms = [], role = 'student' }) {
@@ -24,12 +24,12 @@ export default function ClassroomCardGrid({ classrooms = [], role = 'student' })
         <Link
           key={classroom.id}
           href={`/classrooms/${classroom.id}/stream`}
-          className="group overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-lg shadow-zinc-200/50 transition hover:-translate-y-1 hover:border-[#71717a]"
+          className="group overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-lg shadow-zinc-200/50 transition hover:-translate-y-1 hover:border-[#c9ab3f]"
         >
           <div className={`h-36 bg-gradient-to-br ${BANNERS[index % BANNERS.length]} p-5 text-[#fafafa]`}>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/75">{classroom.subject || 'Classroom'}</p>
-            <h3 className="mt-3 line-clamp-2 text-3xl font-bold text-white">{classroom.name}</h3>
-            <p className="mt-2 text-sm text-white/85">{role === 'student' ? 'Open class stream, classwork, messages, and live sessions.' : 'Manage public updates, classwork, people, and live sessions.'}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-zinc-800/75">{classroom.subject || 'Classroom'}</p>
+            <h3 className="mt-3 line-clamp-2 text-3xl font-bold text-zinc-950">{classroom.name}</h3>
+            <p className="mt-2 text-sm text-zinc-800/85">{role === 'student' ? 'Open class stream, classwork, messages, and live sessions.' : 'Manage public updates, classwork, people, and live sessions.'}</p>
           </div>
 
           <div className="space-y-4 p-5">

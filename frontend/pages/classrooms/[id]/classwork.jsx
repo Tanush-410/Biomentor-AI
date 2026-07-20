@@ -168,7 +168,7 @@ export default function ClassroomClassworkPage() {
                   <div className="surface-subtle p-4 text-sm text-slate-600">No classroom materials yet.</div>
                 ) : (
                   materials.map((material) => (
-                    <Link key={material.id} href={`/document/${material.document_id}`} className="surface-quiet block p-4 transition hover:border-[#a1a1aa]">
+                    <Link key={material.id} href={`/document/${material.document_id}`} className="surface-quiet block p-4 transition hover:border-[#f2e9c4]">
                       <p className="text-sm font-semibold text-slate-950">{material.title}</p>
                       <p className="mt-1 text-sm text-slate-600">{material.file_name}</p>
                       {material.description && <p className="mt-3 text-sm leading-6 text-slate-600">{material.description}</p>}

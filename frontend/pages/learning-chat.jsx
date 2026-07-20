@@ -6,6 +6,7 @@ import { Bot, Send, Sparkles } from 'lucide-react'
 import AppShell from '../components/AppShell'
 import AISpotlightBanner from '../components/AISpotlightBanner'
 import QuickCheckCard from '../components/QuickCheckCard'
+import ChatMarkdown from '../components/ChatMarkdown'
 import { StudyCoachPanel } from '../components/StudyCoachPanel'
 import { useAuth } from '../context/AuthContext'
 import { normalizeListPayload, requestBackendJson } from '../lib/backendApi'
@@ -217,7 +218,7 @@ export default function LearningChatPage() {
                 <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-3xl min-w-0 rounded-2xl px-5 py-4 shadow-sm ${
                     message.role === 'user'
-                      ? 'bg-[#18181b] text-white'
+                      ? 'bg-[#c9ab3f] text-zinc-950'
                       : 'bg-[#fafafa] border border-zinc-200 text-slate-900'
                   }`}>
                     <div className="flex items-start gap-3">
@@ -227,7 +228,7 @@ export default function LearningChatPage() {
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="whitespace-pre-wrap break-words leading-7">{message.content}</p>
+                        <ChatMarkdown content={message.content} />
                         {message.role === 'assistant' && message.answerOrigin ? (
                           <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#18181b]">
                             {message.sourceBadge || (message.answerOrigin === 'material'

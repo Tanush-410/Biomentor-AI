@@ -195,7 +195,7 @@ export default function DocumentsPage() {
       }
     >
         <section className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
-          <div className="card p-8 bg-[linear-gradient(145deg,#09090b_0%,#27272a_56%,#52525b_100%)] text-white">
+          <div className="card p-8 bg-[linear-gradient(145deg,#d9c25c_0%,#a88a26_56%,#f2e9c4_100%)] text-zinc-950">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#fafafa] mb-3">Upload once, learn anywhere</p>
             <h2 className="text-4xl font-bold leading-tight mb-4">
               Open your uploaded material, save it offline, and turn it into quizzes from the same screen.
@@ -215,7 +215,7 @@ export default function DocumentsPage() {
                 <select
                   value={uploadOptions.storageMode}
                   onChange={(e) => setUploadOptions((current) => ({ ...current, storageMode: e.target.value }))}
-                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white focus:border-[#fafafa] focus:outline-none"
+                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-zinc-950 focus:border-[#fafafa] focus:outline-none"
                 >
                   <option value="full" className="text-slate-900">Full upload with offline PDF viewer</option>
                   <option value="text_only" className="text-slate-900">Low-data text-only study mode</option>
@@ -224,7 +224,7 @@ export default function DocumentsPage() {
                   value={uploadOptions.selectedPages}
                   onChange={(e) => setUploadOptions((current) => ({ ...current, selectedPages: e.target.value }))}
                   placeholder="Optional pages: 1-5,8,10-12"
-                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-[#fafafa]/70 focus:border-[#fafafa] focus:outline-none"
+                  className="rounded-xl border border-white/18 bg-white/10 px-4 py-3 text-sm text-zinc-950 placeholder:text-[#fafafa]/70 focus:border-[#fafafa] focus:outline-none"
                 />
               </div>
             </div>

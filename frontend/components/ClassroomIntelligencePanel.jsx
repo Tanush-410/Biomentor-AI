@@ -50,7 +50,7 @@ function BriefCard({ brief }) {
 
   return (
     <div className="min-w-0 rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-5">
-      <p className="section-kicker text-[#18181b]">Teacher brief</p>
+      <p className="section-kicker text-[#18181b]">Educator brief</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#18181b]">Now</p>

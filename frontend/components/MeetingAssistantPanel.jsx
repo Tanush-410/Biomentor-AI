@@ -28,10 +28,10 @@ export default function MeetingAssistantPanel({ snapshot, isLoading = false, tra
   return (
     <aside className="rounded-[28px] border border-[rgba(0,0,0,0.12)] bg-[#fafafa] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.06)]">
       <p className="section-kicker text-[#18181b]">AI Meeting Assistant</p>
-      <h3 className="mt-2 text-3xl font-bold text-slate-950">Teacher Copilot</h3>
+      <h3 className="mt-2 text-3xl font-bold text-slate-950">Mentor Copilot</h3>
       <p className="mt-3 text-sm leading-6 text-slate-600">
         {transcriptSupported
-          ? 'Transcript snippets and teacher meeting events are shaping this copilot in real time.'
+          ? 'Transcript snippets and mentor meeting events are shaping this copilot in real time.'
           : 'Transcript capture is unavailable, so the copilot is leaning on explicit meeting flags and saved cues.'}
       </p>
       {confidenceReason ? (
@@ -41,7 +41,7 @@ export default function MeetingAssistantPanel({ snapshot, isLoading = false, tra
       ) : null}
       {isLoading ? (
         <div className="mt-4 rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-3 text-sm text-slate-600">
-          Refreshing teacher copilot guidance...
+          Refreshing mentor copilot guidance...
         </div>
       ) : null}
 
@@ -51,7 +51,7 @@ export default function MeetingAssistantPanel({ snapshot, isLoading = false, tra
         <SectionCard title="Action Items" items={snapshot?.action_items?.items ?? []} />
 
         <section className="rounded-[22px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4">
-          <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#18181b]">Teacher Moves</h4>
+          <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#18181b]">Mentor Moves</h4>
           <div className="mt-3 space-y-3">
             {teacherMoves.length
               ? teacherMoves.map((move) => <MoveCard key={`${move.label}-${move.reason}`} move={move} />)

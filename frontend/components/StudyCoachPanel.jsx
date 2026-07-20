@@ -21,7 +21,7 @@ function CoachStepList({ title, items }) {
         {items.map((item, index) => (
           <div key={`${item.label}-${index}`} className="rounded-2xl border border-[#d4d4d8] bg-[#ffffff] p-4">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#18181b] text-sm font-bold text-white">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#c9ab3f] text-sm font-bold text-zinc-950">
                 {index + 1}
               </span>
               <div className="min-w-0 flex-1">

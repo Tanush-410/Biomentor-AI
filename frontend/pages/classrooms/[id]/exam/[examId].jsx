@@ -417,7 +417,7 @@ export default function ClassroomExamPage() {
       }
       if (payload?.terminated) {
         violationSentRef.current = true
-        setLatestWarning('Repeated anti-cheat warnings ended this exam automatically. The teacher must now review the case.')
+        setLatestWarning('Repeated anti-cheat warnings ended this exam automatically. The educator must now review the case.')
         setError('This exam was ended automatically after repeated anti-cheat warnings.')
         setAttemptState('terminated')
         clearLocalDraft()
@@ -457,7 +457,7 @@ export default function ClassroomExamPage() {
       stopCamera()
       setAttempt(payload.attempt)
       setAttemptState('terminated')
-      setError('This exam was ended automatically because a proctoring rule was broken. The case has been sent for teacher review.')
+      setError('This exam was ended automatically because a proctoring rule was broken. The case has been sent for educator review.')
     } catch (err) {
       setError(err.message || 'The exam could not continue after a proctoring event.')
     } finally {
@@ -730,7 +730,7 @@ export default function ClassroomExamPage() {
                   <div>
                     <h2 className="text-3xl font-bold text-slate-950">Exam submitted</h2>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
-                      Objective and descriptive scoring have been captured. If teacher review is required, the educator will validate the final result before publishing it.
+                      Objective and descriptive scoring have been captured. If educator review is required, the educator will validate the final result before publishing it.
                     </p>
                   </div>
                 </div>
@@ -760,7 +760,7 @@ export default function ClassroomExamPage() {
             <p className="mt-3 text-sm leading-7 text-slate-600">
               Protected exams keep the camera and microphone open while the attempt is active. Leaving fullscreen or the tab ends the attempt automatically.
             </p>
-            <div className="mt-5 overflow-hidden rounded-[28px] border border-[#d4d4d8] bg-[#09090b]">
+            <div className="mt-5 overflow-hidden rounded-[28px] border border-[#d4d4d8] bg-[#d9c25c]">
               <video ref={videoRef} autoPlay muted playsInline className="h-[260px] w-full object-cover" />
             </div>
             {cameraError && <div className="mt-4 rounded-2xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-sm text-zinc-900">{cameraError}</div>}
@@ -775,7 +775,7 @@ export default function ClassroomExamPage() {
             <p className="section-kicker text-[#18181b]">Answer mode</p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Fixed response boxes</h2>
             <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
-              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Teachers choose the response mode per question.</div>
+              <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Educators choose the response mode per question.</div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Descriptive answers stay inside fixed boxes for cleaner grading review.</div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">Image answers can be attached for handwritten work or diagrams.</div>
               <div className="rounded-2xl border border-[#d4d4d8] bg-[#fafafa] p-4">While the attempt stays active, typed and selected answers autosave locally on this device.</div>

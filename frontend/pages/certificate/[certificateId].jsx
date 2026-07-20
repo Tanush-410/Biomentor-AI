@@ -160,7 +160,7 @@ export default function CertificateDetailPage() {
                   <p>This certificate was generated inside the VYDRA CORE classroom workflow after the required checkpoints were completed and reviewed.</p>
                   <div className="flex flex-wrap gap-2">
                     <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">VYDRA CORE branded</span>
-                    <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">Teacher issued</span>
+                    <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">Educator issued</span>
                     <span className="role-pill border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]">Classroom verified</span>
                   </div>
                 </div>

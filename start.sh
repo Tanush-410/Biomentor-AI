@@ -1,44 +1,53 @@
 #!/bin/bash
-# Quick Start Script - Smart Learning Assistant
+# Start VYDRA CORE locally: launches the backend (FastAPI) and frontend
+# (Next.js) dev servers in the background and prints their URLs.
+set -e
 
-echo "🚀 Smart Learning Assistant - Quick Start"
-echo "=========================================="
-echo ""
+cd "$(dirname "$0")"
 
-# Check if .env exists
 if [ ! -f "backend/.env" ]; then
-    echo "❌ No backend/.env file found"
-    echo "📝 Creating from template..."
+    echo "No backend/.env file found - creating from template."
     cp backend/.env.example backend/.env
-    echo "✅ Created backend/.env - Update with your API keys!"
+    echo "Created backend/.env - add your GROQ_API_KEY (and any other keys) before continuing."
     exit 1
 fi
 
-# Activate venv
-echo "📦 Activating Python environment..."
-source .venv/bin/activate
+if [ ! -d ".venv" ]; then
+    echo "No .venv found - creating one and installing backend dependencies..."
+    python3 -m venv .venv
+    ./.venv/bin/pip install -r backend/requirements.txt
+fi
 
-# Backend
-echo "🔧 Starting Backend (port 8000)..."
-cd backend
-python -c "from app.database import init_db; init_db()"
-echo "✅ Database initialized"
+if [ ! -d "frontend/node_modules" ]; then
+    echo "Installing frontend dependencies..."
+    (cd frontend && npm install)
+fi
+
+if [ ! -f "frontend/.env.local" ]; then
+    cp frontend/.env.example frontend/.env.local
+    echo "Created frontend/.env.local from template."
+fi
+
+mkdir -p .run
+
+echo "Initializing database..."
+(cd backend && ../.venv/bin/python -c "from app.database import init_db; init_db()")
+
+echo "Starting backend on http://127.0.0.1:8000 ..."
+(cd backend && nohup ../.venv/bin/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 \
+    > ../.run/backend.log 2>&1 & echo $! > ../.run/backend.pid)
+
+echo "Starting frontend on http://127.0.0.1:3000 ..."
+(cd frontend && nohup npm run dev -- --hostname 127.0.0.1 --port 3000 \
+    > ../.run/frontend.log 2>&1 & echo $! > ../.run/frontend.pid)
+
+sleep 3
 
 echo ""
-echo "🚀 Run these commands in separate terminals:"
+echo "VYDRA CORE is starting up:"
+echo "  Frontend: http://127.0.0.1:3000"
+echo "  Backend health: http://127.0.0.1:8000/health"
+echo "  API docs: http://127.0.0.1:8000/api/docs"
 echo ""
-echo "Terminal 1 (Backend):"
-echo "  cd backend"
-echo "  source ../.venv/bin/activate"
-echo "  python -m uvicorn app.main:app --reload"
-echo ""
-echo "Terminal 2 (Frontend):"
-echo "  cd frontend"
-echo "  npm install (first time only)"
-echo "  npm run dev"
-echo ""
-echo "Then visit:"
-echo "  🌐 Frontend: http://localhost:3000"
-echo "  📚 API Docs: http://localhost:8000/api/docs"
-echo ""
-echo "✨ Happy learning!"
+echo "Logs: .run/backend.log and .run/frontend.log"
+echo "Stop both with: ./stop.sh"

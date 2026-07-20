@@ -179,7 +179,7 @@ export default function QuizSessionPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f4f4f5] via-[#f4f4f5] to-[#e4e4e7] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#18181b] mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#c9ab3f] mb-4"></div>
           <p className="text-[#52525b]">Loading quiz...</p>
         </div>
       </div>
@@ -264,7 +264,7 @@ export default function QuizSessionPage() {
             stroke={8}
             label={`Question ${currentIndex + 1} of ${questions.length}`}
             caption={`${answeredCount} answered`}
-            progressClassName="stroke-[#18181b]"
+            progressClassName="stroke-[#c9ab3f]"
             trackClassName="stroke-[#d4d4d8]"
             tone="text-[#18181b]"
           />
@@ -316,18 +316,18 @@ export default function QuizSessionPage() {
                 disabled={submitted}
                 className={`w-full p-4 text-left rounded-lg border-2 transition ${
                   answers[currentQuestion.id] === option.id
-                    ? 'border-[#18181b] bg-[#f4f4f5]'
-                    : 'border-[#d4d4d8] hover:border-[#71717a] bg-[#fafafa]'
+                    ? 'border-[#c9ab3f] bg-[#f4f4f5]'
+                    : 'border-[#d4d4d8] hover:border-[#c9ab3f] bg-[#fafafa]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     answers[currentQuestion.id] === option.id
-                      ? 'border-[#18181b] bg-[#18181b]'
+                      ? 'border-[#c9ab3f] bg-[#c9ab3f]'
                       : 'border-[#d4d4d8]'
                   }`}>
                     {answers[currentQuestion.id] === option.id && (
-                      <span className="text-white text-sm">✓</span>
+                      <span className="text-zinc-950 text-sm">✓</span>
                     )}
                   </div>
                   <span>{option.id}. {option.text}</span>
@@ -349,7 +349,7 @@ export default function QuizSessionPage() {
             {currentIndex === questions.length - 1 ? (
               <button
                 onClick={handleSubmitQuiz}
-                className="flex-1 bg-[#18181b] hover:bg-[#27272a] text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
+                className="flex-1 bg-[#c9ab3f] hover:bg-[#a88a26] text-zinc-950 font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
               >
                 <CheckCircle className="w-5 h-5" />
                 Submit Quiz
@@ -357,7 +357,7 @@ export default function QuizSessionPage() {
             ) : (
               <button
                 onClick={handleNext}
-                className="flex-1 bg-[#18181b] hover:bg-[#27272a] text-white font-semibold py-3 rounded-lg transition"
+                className="flex-1 bg-[#c9ab3f] hover:bg-[#a88a26] text-zinc-950 font-semibold py-3 rounded-lg transition"
               >
                 Next →
               </button>
@@ -375,7 +375,7 @@ export default function QuizSessionPage() {
                 onClick={() => setCurrentIndex(idx)}
                 className={`aspect-square rounded font-semibold transition ${
                   idx === currentIndex
-                    ? 'bg-[#18181b] text-white'
+                    ? 'bg-[#c9ab3f] text-zinc-950'
                     : answers[questions[idx].id]
                     ? 'bg-[#e4e4e7] text-[#3f3f46]'
                     : 'bg-[#e4e4e7] text-[#3f3f46] hover:bg-[#d4d4d8]'

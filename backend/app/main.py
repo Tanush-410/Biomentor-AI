@@ -10,6 +10,7 @@ from app.routers import (
     collaboration_router,
     documents_router,
     educator_router,
+    feedback_router,
     quiz_router,
     qa_router,
     sticky_notes_router,
@@ -74,6 +75,7 @@ app.include_router(quiz_router)
 app.include_router(qa_router)
 app.include_router(learning_router)
 app.include_router(educator_router)
+app.include_router(feedback_router)
 app.include_router(collaboration_router)
 app.include_router(sticky_notes_router)
 

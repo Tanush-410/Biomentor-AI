@@ -91,7 +91,7 @@ export default function ClassInsightsPage() {
                       stroke={8}
                       label="Topic mastery"
                       caption={`${item.students_measured} students`}
-                      progressClassName="stroke-[#18181b]"
+                      progressClassName="stroke-[#c9ab3f]"
                       trackClassName="stroke-[#d4d4d8]"
                       tone="text-[#18181b]"
                     />

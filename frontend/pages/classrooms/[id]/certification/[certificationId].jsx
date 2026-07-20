@@ -147,7 +147,7 @@ export default function ClassroomCertificationDetailPage() {
         proof_url: draft.proof_url || null,
         text_note: draft.text_note || null
       })
-      setSuccess('Proof submitted for teacher review.')
+      setSuccess('Proof submitted for educator review.')
       await loadPage()
     } catch (err) {
       setError(err.message || 'Could not submit proof.')
@@ -246,7 +246,7 @@ export default function ClassroomCertificationDetailPage() {
               </div>
               <div className="surface-subtle p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#18181b]">Approval mode</p>
-                <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.requires_teacher_approval ? 'Teacher review' : 'Auto progression'}</p>
+                <p className="mt-3 text-lg font-semibold text-slate-950">{certification?.requires_teacher_approval ? 'Educator review' : 'Auto progression'}</p>
               </div>
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function ClassroomCertificationDetailPage() {
                         <div className="mt-5 grid gap-4 rounded-[22px] border border-[#d4d4d8] bg-[#fafafa] p-4">
                           <div>
                             <p className="text-sm font-semibold text-slate-900">Submit external completion proof</p>
-                            <p className="mt-1 text-sm text-slate-600">Paste a proof link and a short teacher note so your educator can review it.</p>
+                            <p className="mt-1 text-sm text-slate-600">Paste a proof link and a short educator note so your educator can review it.</p>
                           </div>
                           <input
                             className="input"
@@ -335,7 +335,7 @@ export default function ClassroomCertificationDetailPage() {
                             className="input min-h-[100px]"
                             value={draft.text_note}
                             onChange={(event) => updateProofDraft(step.id, { text_note: event.target.value })}
-                            placeholder="What did you complete and what should your teacher check?"
+                            placeholder="What did you complete and what should your educator check?"
                           />
                           <div>
                             <button type="button" className="btn btn-primary" disabled={actionLoading || (!draft.proof_url && !draft.text_note)} onClick={() => handleSubmitProof(step)}>
@@ -437,7 +437,7 @@ export default function ClassroomCertificationDetailPage() {
                       <div className="rounded-[24px] border border-[#d4d4d8] bg-[#fafafa] p-4">
                         <div className="flex items-center gap-2">
                           <ClipboardCheck className="h-4 w-4 text-[#18181b]" />
-                          <p className="text-sm font-semibold text-slate-950">Teacher review queue</p>
+                          <p className="text-sm font-semibold text-slate-950">Educator review queue</p>
                         </div>
                         {entry.proof_submissions?.length ? (
                           <div className="mt-4 space-y-3">

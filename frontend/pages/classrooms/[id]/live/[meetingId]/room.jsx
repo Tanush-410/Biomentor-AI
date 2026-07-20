@@ -217,7 +217,7 @@ export default function DedicatedMeetingRoomPage() {
                       <Link
                         key={action.label}
                         href={action.href}
-                        className="flex items-start gap-3 rounded-[22px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4 transition hover:border-[#71717a] hover:bg-white"
+                        className="flex items-start gap-3 rounded-[22px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4 transition hover:border-[#c9ab3f] hover:bg-white"
                       >
                         <div className="rounded-2xl bg-[#e4e4e7] p-3 text-[#18181b]">
                           <Icon className="h-4 w-4" />
@@ -249,7 +249,7 @@ export default function DedicatedMeetingRoomPage() {
                   </p>
                   <p className="rounded-[20px] border border-[rgba(0,0,0,0.12)] bg-white/80 px-4 py-4">
                     <Users className="mb-2 h-4 w-4 text-[#18181b]" />
-                    Teachers and students can stay in the room while hopping back to classwork and messages through the tool panel.
+                    Educators and students can stay in the room while hopping back to classwork and messages through the tool panel.
                   </p>
                 </div>
               </div>

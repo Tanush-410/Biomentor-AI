@@ -37,7 +37,7 @@ const STEP_TYPES = [
   { value: 'quiz', label: 'Quiz checkpoint' },
   { value: 'exam', label: 'Exam checkpoint' },
   { value: 'external_link', label: 'External course proof' },
-  { value: 'custom_checkpoint', label: 'Manual teacher checkpoint' }
+  { value: 'custom_checkpoint', label: 'Manual educator checkpoint' }
 ]
 
 export default function EducatorCertificationPage() {
@@ -254,7 +254,7 @@ export default function EducatorCertificationPage() {
         requires_teacher_approval: form.requires_teacher_approval,
         certificate_template: {
           theme: 'biomentor-premium',
-          accent: '#18181b',
+          accent: '#c9ab3f',
           seal_label: 'VYDRA CORE'
         },
         ai_notes: {
@@ -309,10 +309,10 @@ export default function EducatorCertificationPage() {
         eyebrow="Certification AI Surface"
         title="Turn classroom outcomes into branded completion paths."
         description="Mix VYDRA CORE checkpoints with optional external course proof, let AI suggest milestone order from uploaded material, and issue certificates from the same workflow."
-        highlights={['AI certification draft', 'VYDRA CORE-branded certificate', 'Teacher issue control']}
+        highlights={['AI certification draft', 'VYDRA CORE-branded certificate', 'Educator issue control']}
         primaryAction={{ label: 'Jump to builder', href: '#certification-builder' }}
         secondaryAction={{ label: 'Open classwork', href: `/classrooms/${form.classroom_id || ''}/classwork` }}
-        status="Teachers can choose a pure VYDRA CORE path or combine it with external course completion proof."
+        status="Educators can choose a pure VYDRA CORE path or combine it with external course completion proof."
       />
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_380px]">
@@ -347,7 +347,7 @@ export default function EducatorCertificationPage() {
               <input className="input" value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Advanced Cell Biology Certificate" />
             </label>
             <label className="space-y-2 md:col-span-2">
-              <span className="text-sm font-semibold text-slate-800">Teacher outcome prompt</span>
+              <span className="text-sm font-semibold text-slate-800">Educator outcome prompt</span>
               <textarea className="input min-h-[110px]" value={form.target_outcome} onChange={(event) => setForm((current) => ({ ...current, target_outcome: event.target.value }))} placeholder="Describe what the learner should be able to do to earn the certificate." />
             </label>
             <label className="space-y-2 md:col-span-2">
@@ -366,7 +366,7 @@ export default function EducatorCertificationPage() {
               <>
                 <label className="space-y-2">
                   <span className="text-sm font-semibold text-slate-800">Provider name</span>
-                  <input className="input" value={form.provider_name} onChange={(event) => setForm((current) => ({ ...current, provider_name: event.target.value }))} placeholder="Coursera / Teacher-set provider" />
+                  <input className="input" value={form.provider_name} onChange={(event) => setForm((current) => ({ ...current, provider_name: event.target.value }))} placeholder="Coursera / Educator-set provider" />
                 </label>
                 <label className="space-y-2">
                   <span className="text-sm font-semibold text-slate-800">External course URL</span>
@@ -397,7 +397,7 @@ export default function EducatorCertificationPage() {
                         ? current.linked_material_ids.filter((item) => item !== document.id)
                         : [...current.linked_material_ids, document.id]
                     }))}
-                    className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-[#18181b] bg-white shadow-sm' : 'border-[#d4d4d8] bg-[#fafafa]'}`}
+                    className={`rounded-2xl border p-4 text-left transition ${selected ? 'border-[#c9ab3f] bg-white shadow-sm' : 'border-[#d4d4d8] bg-[#fafafa]'}`}
                   >
                     <p className="font-semibold text-slate-950">{document.title}</p>
                     <p className="mt-1 text-sm text-slate-600">{document.file_name}</p>
@@ -539,7 +539,7 @@ export default function EducatorCertificationPage() {
               {form.course_mode === 'external_course' ? (
                 <div className="surface-quiet p-4">
                   <div className="flex items-center gap-2 text-slate-950 font-semibold"><ExternalLink className="h-4 w-4 text-[#18181b]" /> External proof mode</div>
-                  <p className="mt-2">Learners can submit external completion proof for teacher review before certificate issue.</p>
+                  <p className="mt-2">Learners can submit external completion proof for educator review before certificate issue.</p>
                 </div>
               ) : null}
             </div>

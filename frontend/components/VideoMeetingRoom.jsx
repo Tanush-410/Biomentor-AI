@@ -33,7 +33,7 @@ function VideoTile({ title, stream, muted = false }) {
 
   return (
     <div className="surface-quiet overflow-hidden rounded-[28px] border border-[rgba(0,0,0,0.18)]">
-      <div className="aspect-video bg-[#09090b]">
+      <div className="aspect-video bg-[#d9c25c]">
         <video ref={ref} autoPlay playsInline muted={muted} className="h-full w-full object-cover" />
       </div>
       <div className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-900">
@@ -195,8 +195,8 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
       <AISpotlightBanner
         eyebrow="Live AI Surface"
         title="AI Teaching Room"
-        description="The meeting room is now a dedicated teaching surface: run the live session, watch who is present, and let the meeting assistant turn discussion into teacher moves, doubts, and follow-up study assets."
-        highlights={['Live teacher copilot', 'Doubt flags', 'Post-meeting recap']}
+        description="The meeting room is now a dedicated teaching surface: run the live session, watch who is present, and let the meeting assistant turn discussion into educator moves, doubts, and follow-up study assets."
+        highlights={['Live educator copilot', 'Doubt flags', 'Post-meeting recap']}
         primaryAction={isTeacher ? { label: 'Open Meeting Copilot', href: '#meeting-copilot' } : undefined}
         secondaryAction={{ label: 'Return to Live Lobby', href: `/classrooms/${classroomId}/live` }}
         status="Use the room for the session itself. Use the copilot to capture what happened and what the class should do next."
@@ -205,13 +205,13 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
       {isTeacher ? (
         <div id="meeting-copilot" className="card p-6">
           <p className="section-kicker text-[#18181b]">Meeting Copilot</p>
-          <h3 className="mt-2 text-2xl font-bold text-slate-950">Live teacher guidance during the session.</h3>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">Live educator guidance during the session.</h3>
           <p className="mt-3 text-sm leading-7 text-slate-600">
             VYDRA CORE is reading transcript snippets and your explicit meeting flags to suggest what to reteach, what students are still unsure about, and what should happen after the room ends.
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="surface-subtle p-4 text-sm text-slate-700">Use <strong>Flag Doubt</strong> when a concept remains unresolved.</div>
-            <div className="surface-subtle p-4 text-sm text-slate-700">The teacher copilot refreshes automatically while the room stays open.</div>
+            <div className="surface-subtle p-4 text-sm text-slate-700">The educator copilot refreshes automatically while the room stays open.</div>
             <div className="surface-subtle p-4 text-sm text-slate-700">Ended meetings publish a cleaner student-safe recap back in the class live page.</div>
           </div>
         </div>

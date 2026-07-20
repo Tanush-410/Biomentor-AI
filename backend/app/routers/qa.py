@@ -1,11 +1,13 @@
 """Question answering router backed by uploaded materials."""
 from datetime import datetime
 import json
+import logging
 import re
-from typing import List
+from typing import List, Optional
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core import settings
@@ -29,9 +31,95 @@ from app.services.document_context import build_context_window, fallback_preview
 from app.services.web_retrieval import DuckDuckGoSearchClient, retrieve_web_contexts
 
 router = APIRouter(prefix="/api/qa", tags=["qa"])
+logger = logging.getLogger(__name__)
 
 COMPLEXITY_HINTS = ("compare", "analyze", "evaluate", "why", "how", "difference", "complex", "mechanism")
 CONFIDENCE_WEB_BONUS = 0.08
+
+
+class ImageSearchRequest(BaseModel):
+    query: str
+
+
+class ImageSearchResponse(BaseModel):
+    image_url: Optional[str] = None
+    source: str = "wikimedia"
+
+
+def _wikimedia_search_once(query: str) -> Optional[str]:
+    """Single Wikimedia Commons lookup. Returns a thumbnail/full URL or None."""
+    try:
+        response = requests.get(
+            "https://commons.wikimedia.org/w/api.php",
+            params={
+                "action": "query",
+                "format": "json",
+                "prop": "imageinfo",
+                "generator": "search",
+                "gsrsearch": query,
+                "gsrlimit": 5,
+                "iiprop": "url",
+                "iiurlwidth": 768,
+            },
+            timeout=6,
+        )
+        response.raise_for_status()
+        data = response.json()
+        pages = (data.get("query") or {}).get("pages") or {}
+        for page in pages.values():
+            imageinfo = page.get("imageinfo") or []
+            if not imageinfo:
+                continue
+            info = imageinfo[0]
+            return info.get("thumburl") or info.get("url")
+        return None
+    except Exception:
+        return None
+
+
+def search_wikimedia_image(query: str) -> Optional[str]:
+    """Look up a real image on Wikimedia Commons for the given query.
+
+    Tries the query as given first, then progressively shorter keyword
+    variants (Commons' search does much better on 2-4 keywords than on a
+    full descriptive sentence). Returns a thumbnail URL (falling back to the
+    full-size URL) for the first matching result, or None if nothing was
+    found across all attempts.
+    """
+    if not query or not query.strip():
+        return None
+
+    tried = set()
+    candidates = [query.strip()]
+
+    words = [w for w in re.findall(r"[A-Za-z0-9]+", query) if len(w) > 2]
+    if len(words) > 4:
+        candidates.append(" ".join(words[:4]))
+    if len(words) > 2:
+        candidates.append(" ".join(words[:2]))
+
+    for candidate in candidates:
+        key = candidate.lower()
+        if key in tried:
+            continue
+        tried.add(key)
+        result = _wikimedia_search_once(candidate)
+        if result:
+            return result
+
+    return None
+
+
+@router.post("/image-search", response_model=ImageSearchResponse)
+async def image_search(
+    request: ImageSearchRequest,
+    http_request: Request,
+    current_user=Depends(get_current_user),
+):
+    """Find a real illustrative image on Wikimedia Commons for a chat-requested image block."""
+    enforce_rate_limit(http_request, "qa-image-search", limit=60, window_seconds=300)
+    image_url = search_wikimedia_image(request.query)
+    return ImageSearchResponse(image_url=image_url, source="wikimedia")
 
 
 @router.post("/answer", response_model=AnswerGenerationResponse)
@@ -88,7 +176,7 @@ def build_answer_response(
         user_id,
         request.question,
         request.document_ids,
-        top_k=5,
+        top_k=8,
         conversation_history=conversation_history,
     )
     answer_origin = "material"
@@ -119,7 +207,7 @@ def build_answer_response(
             detail="No uploaded material is available for answering this question."
         )
 
-    evidence_items = trim_evidence_items(dedupe_evidence_items(contexts), max_chars=2600)
+    evidence_items = trim_evidence_items(dedupe_evidence_items(contexts), max_chars=6000)
     answer_text, confidence = _generate_answer_from_context(request.question, evidence_items, conversation_history)
     if answer_origin != "material":
         confidence = min(0.92, confidence + CONFIDENCE_WEB_BONUS)
@@ -211,7 +299,7 @@ def _generate_answer_from_context(question: str, contexts, conversation_history=
 
 
 def _generate_with_groq(question: str, contexts, conversation_history):
-    context_text = build_context_window(contexts[:4], max_chars=7000)
+    context_text = build_context_window(contexts[:6], max_chars=9000)
     conversation_text = _format_conversation_history(conversation_history)
     payload = {
         "model": "llama-3.3-70b-versatile",
@@ -220,11 +308,54 @@ def _generate_with_groq(question: str, contexts, conversation_history):
             {
                 "role": "system",
                 "content": (
-                    "Answer using only the provided study material. "
-                    "Be concise, accurate, student-friendly, and mention uncertainty if the material is incomplete. "
+                    "You are a study assistant. Ground your answer in the provided study material first: use it as "
+                    "your primary source, quote or paraphrase it, and cite what it says. "
+                    "If the study material only partially covers the question, or does not cover it at all, do NOT "
+                    "just say the material doesn't cover it and stop there -- briefly note that in one short sentence "
+                    "at most, then immediately go on to actually answer the question fully and confidently using your "
+                    "own general knowledge, the same way a knowledgeable tutor would. The student asked a question and "
+                    "expects a real, complete answer every time, not a refusal or a mostly-empty response padded with "
+                    "caveats. Never end an answer early just because the material was thin -- keep going until the "
+                    "question is genuinely answered. "
+                    "Be concise, accurate, and student-friendly. "
                     "Treat the recent conversation as context for follow-up questions like 'shorter', 'explain that', "
                     "'what about the next part', or 'simplify it'. "
-                    "If the user asks a follow-up, preserve the topic from the conversation and answer from the study material."
+                    "If the user asks a follow-up, preserve the topic from the conversation. "
+                    "Formatting rules: "
+                    "1) Write every mathematical, physics, chemistry, or biology formula, equation, or notation in LaTeX. "
+                    "Use $...$ for a short inline expression (e.g. $E = mc^2$) and $$...$$ on its own line for a longer "
+                    "or displayed equation. Never write formulas as plain text or ASCII when LaTeX can express them. "
+                    "2) Only include a diagram if the student's message explicitly asks for one -- e.g. 'diagram', "
+                    "'flowchart', 'flow chart', 'visualize', 'draw this', 'show me a diagram', 'map this out', or "
+                    "similar. Do not add a diagram on your own initiative just because the topic could be visualized -- "
+                    "answer in prose by default, and only draw something when asked to. When it is requested, draw it "
+                    "yourself using a fenced ```diagram code block containing valid Mermaid syntax (flowchart, "
+                    "sequenceDiagram, classDiagram, or graph). Mermaid syntax rules you must follow exactly: "
+                    "(a) always wrap every node label in double quotes, e.g. A[\"Override run() method\"] not "
+                    "A[Override run() method] -- required whenever a label contains parentheses, colons, pipes, quotes, "
+                    "or any punctuation, and safe to do for every label even when not strictly required; never leave a "
+                    "square-bracket, round-bracket, or curly-brace label unquoted if it contains anything other than "
+                    "plain words and numbers. "
+                    "(b) an edge label uses exactly this syntax: A -->|Label text| B -- the label sits between two pipe "
+                    "characters directly after the arrow, and nothing else follows the closing pipe. Never write "
+                    "A -->|Label|> B or add any '>' character after the closing pipe -- that is invalid and will fail "
+                    "to render. "
+                    "Mentally re-check every line of Mermaid syntax against these two rules before including it. "
+                    "3) Only include a real picture if the student's message explicitly asks for one -- e.g. 'picture', "
+                    "'photo', 'image', 'show me what it looks like', or similar. Do not add an image on your own "
+                    "initiative. When it is requested, request one with a fenced ```image code block. That query is "
+                    "used to search a real photo library first (Wikimedia "
+                    "Commons), so its body must be a SHORT, concrete search phrase of 2-6 keywords naming the exact "
+                    "subject -- the way you would type into an image search box -- not a full descriptive sentence. "
+                    "Good: \"human eye anatomy diagram\", \"plant leaf cross section\", \"Eiffel Tower\". Bad: \"a "
+                    "detailed cross-section illustration showing the cuticle, epidermis, mesophyll, and stomata of a "
+                    "plant leaf, labeled\" -- that phrasing rarely matches a real photo's title or description, so it "
+                    "fails the search and falls back to a generic AI illustration instead of a real, accurate photo. "
+                    "If the student needs specific labeled parts, put those labels in your diagram or prose instead of "
+                    "cramming them into the image search phrase. Use ```diagram for structured flows, cycles, or "
+                    "relationships between concepts, and ```image for anything that should look like a real photo or "
+                    "drawing -- never use both for the same visual, and use whichever (or both, for different parts of "
+                    "the answer) genuinely helps the student understand."
                 )
             },
             {
@@ -253,7 +384,15 @@ def _generate_with_groq(question: str, contexts, conversation_history):
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"].strip()
+    except requests.exceptions.HTTPError:
+        logger.error(
+            "Groq answer request failed with HTTP %s: %s",
+            response.status_code,
+            response.text[:500],
+        )
+        return None
     except Exception:
+        logger.exception("Groq answer request failed")
         return None
 
 
@@ -376,6 +515,7 @@ def _generate_quick_check_with_groq(question: str, contexts, answer_text: str):
         parsed = json.loads(content)
         return parsed
     except Exception:
+        logger.exception("Groq quick-check request failed")
         return None
 
 

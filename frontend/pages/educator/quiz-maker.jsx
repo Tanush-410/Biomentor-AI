@@ -288,7 +288,7 @@ export default function EducatorQuizMakerPage() {
             <button
               type="button"
               onClick={() => updateForm('quiz_mode', 'generated')}
-              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'generated' ? 'border-[#18181b] bg-[#f4f4f5] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d4d4d8]'}`}
+              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'generated' ? 'border-[#c9ab3f] bg-[#f4f4f5] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d4d4d8]'}`}
             >
               <div className="flex items-center gap-3">
                 <ListChecks className="h-5 w-5 text-[#18181b]" />
@@ -301,7 +301,7 @@ export default function EducatorQuizMakerPage() {
             <button
               type="button"
               onClick={() => updateForm('quiz_mode', 'manual')}
-              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'manual' ? 'border-[#18181b] bg-[#f4f4f5] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d4d4d8]'}`}
+              className={`rounded-2xl border p-5 text-left transition ${form.quiz_mode === 'manual' ? 'border-[#c9ab3f] bg-[#f4f4f5] shadow-sm' : 'border-slate-200 bg-white hover:border-[#d4d4d8]'}`}
             >
               <div className="flex items-center gap-3">
                 <PencilLine className="h-5 w-5 text-[#18181b]" />
@@ -545,7 +545,7 @@ export default function EducatorQuizMakerPage() {
                 <FileQuestion className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">
-                    {form.quiz_mode === 'manual' ? `${authoredQuestionCount} teacher-authored questions` : `${form.num_questions} generated questions`}
+                    {form.quiz_mode === 'manual' ? `${authoredQuestionCount} educator-authored questions` : `${form.num_questions} generated questions`}
                   </p>
                   <p className="text-slate-600">
                     {form.quiz_mode === 'manual'
