@@ -10,7 +10,7 @@ pypdf==4.0.1
 python-jose[cryptography]==3.3.0
 bcrypt==5.0.0
 email-validator==2.1.0
-requests==2.31.0
+requests==2.32.3
 numpy==2.2.6
 aiohttp==3.9.1
 sympy==1.12
