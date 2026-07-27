@@ -1414,3 +1414,109 @@ class ProctorReviewResponse(BaseModel):
     educator_recommendations: List[str] = Field(default_factory=list)
     confidence: Optional[str] = None
     confidence_reason: Optional[str] = None
+
+
+# ===== MATH LAB (SymPy) SCHEMAS =====
+class MathLabRequest(BaseModel):
+    """A symbolic math request -- solve, simplify, differentiate, integrate, or evaluate."""
+    operation: str = Field(..., description="One of: solve, simplify, derivative, integral, evaluate")
+    expression: str = Field(..., min_length=1, max_length=500)
+    variable: str = "x"
+
+
+class MathLabResponse(BaseModel):
+    """Result of a symbolic math computation, ready to display or hand to a grapher."""
+    operation: str
+    input_expression: str
+    variable: str
+    result: str
+    result_latex: Optional[str] = None
+    numeric_approx: Optional[str] = None
+
+
+class MathLabPlotRequest(BaseModel):
+    """Request to sample a function over a range for plotting."""
+    expression: str = Field(..., min_length=1, max_length=500)
+    variable: str = "x"
+    x_min: float = -10
+    x_max: float = 10
+    points: int = Field(default=200, ge=10, le=1000)
+
+
+class MathLabPlotResponse(BaseModel):
+    """Sampled (x, y) points for a function, skipping points where it's undefined."""
+    expression: str
+    variable: str
+    x_values: List[float]
+    y_values: List[Optional[float]]
+
+
+# ===== QUANTUM LAB (Qiskit + Cirq) SCHEMAS =====
+class QuantumGateOp(BaseModel):
+    """A single gate application in a circuit builder."""
+    gate: str = Field(..., description="One of: h, x, y, z, s, t, sdg, tdg, rx, ry, rz, cx, cz, swap")
+    qubits: List[int] = Field(..., min_length=1, max_length=2)
+    angle: Optional[float] = Field(default=None, description="Rotation angle in radians, required for rx/ry/rz")
+
+
+class QuantumCircuitRequest(BaseModel):
+    """A small circuit to simulate -- kept intentionally small (<=4 qubits,
+    <=50 gates) since this drives an in-browser 3D Bloch sphere per qubit,
+    not a research-scale simulation."""
+    num_qubits: int = Field(..., ge=1, le=4)
+    gates: List[QuantumGateOp] = Field(default_factory=list, max_length=50)
+
+
+class QuantumBlochVector(BaseModel):
+    """A qubit's reduced single-qubit state, expressed as a Bloch vector.
+    Length 1 = pure state; shorter than 1 means this qubit is entangled
+    with (or classically mixed with) another qubit in the circuit."""
+    qubit: int
+    x: float
+    y: float
+    z: float
+    purity: float
+
+
+class QuantumCircuitResponse(BaseModel):
+    num_qubits: int
+    basis_states: List[str]
+    probabilities: List[float]
+    bloch_vectors: List[QuantumBlochVector]
+    qiskit_probabilities: List[float]
+    cirq_probabilities: List[float]
+    engines_agree: bool
+
+
+# ===== BIO LAB (reaction-kinetics ODE simulator) SCHEMAS =====
+class BioSpecies(BaseModel):
+    """One chemical species in the reaction network, with its starting
+    concentration."""
+    name: str = Field(..., min_length=1, max_length=40, pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
+    initial_concentration: float = Field(..., ge=0, le=1e6)
+
+
+class BioReactionParticipant(BaseModel):
+    species: str = Field(..., min_length=1, max_length=40, pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
+    stoichiometry: int = Field(default=1, ge=1, le=10)
+
+
+class BioReaction(BaseModel):
+    """A single mass-action reaction: reactants -> products at some rate
+    constant. Reversible reactions are just two BioReaction entries."""
+    reactants: List[BioReactionParticipant] = Field(..., min_length=1, max_length=5)
+    products: List[BioReactionParticipant] = Field(default_factory=list, max_length=5)
+    rate_constant: float = Field(..., gt=0, le=1e6)
+
+
+class BioSimulationRequest(BaseModel):
+    species: List[BioSpecies] = Field(..., min_length=1, max_length=20)
+    reactions: List[BioReaction] = Field(..., min_length=1, max_length=30)
+    duration: float = Field(default=10.0, gt=0, le=100000)
+    points: int = Field(default=200, ge=10, le=2000)
+
+
+class BioSimulationResponse(BaseModel):
+    species_names: List[str]
+    time_points: List[float]
+    concentrations: Dict[str, List[float]]

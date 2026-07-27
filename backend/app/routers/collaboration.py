@@ -324,7 +324,18 @@ async def create_session_event(
         LiveSessionParticipant.user_id == current_user.id,
     ).first()
     if participant:
-        participant.engagement_score = (participant.engagement_score or 0.0) + 5.0
+        # Shared 3D Studio actions ride this same generic events endpoint.
+        # shape_update in particular is fired many times per second while a
+        # shape is being dragged (throttled client-side, but still far more
+        # often than a chat message or poll vote), so it must not earn full
+        # engagement credit or dragging one shape around would dwarf every
+        # other form of participation on the leaderboard.
+        if payload.event_type == "shape_update":
+            participant.engagement_score = (participant.engagement_score or 0.0) + 0.2
+        elif payload.event_type in {"shape_create", "shape_connect", "shape_delete", "shape_disconnect", "shape_clear"}:
+            participant.engagement_score = (participant.engagement_score or 0.0) + 2.0
+        else:
+            participant.engagement_score = (participant.engagement_score or 0.0) + 5.0
 
     db.commit()
     db.refresh(event)

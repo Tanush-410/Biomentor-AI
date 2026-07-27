@@ -1,10 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
-import { CheckCircle2, Send, Users } from 'lucide-react'
+import { Boxes, CheckCircle2, Send, Users } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import SharedShapeStudio from '../components/SharedShapeStudio'
 import { useAuth } from '../context/AuthContext'
 import { requestBackendJson, toWebSocketBase } from '../lib/backendApi'
+import {
+  applySceneEvent,
+  createEmptyScene,
+  isSceneEvent,
+  replaySceneEvents,
+  sceneBondsArray,
+  sceneShapesArray
+} from '../lib/sceneEvents'
+
+let sceneIdCounter = 0
+function nextSceneId(prefix) {
+  sceneIdCounter += 1
+  return `${prefix}-${Date.now()}-${sceneIdCounter}`
+}
+
+function createSceneShape(type) {
+  const offset = (sceneIdCounter % 5) * 0.4 - 0.8
+  return {
+    id: nextSceneId('shape'),
+    type,
+    color: '#d9c25c',
+    label: '',
+    position: [offset, 0.65, 0],
+    rotation: [0, 0, 0],
+    scale: [1, 1, 1]
+  }
+}
 
 export default function CollaborationHubPage() {
   const router = useRouter()
@@ -20,8 +48,13 @@ export default function CollaborationHubPage() {
   const [summary, setSummary] = useState(null)
   const [error, setError] = useState('')
   const socketRef = useRef(null)
+  const [sceneState, setSceneState] = useState(createEmptyScene())
+  const transformDebounceRef = useRef({})
+  const labelDebounceRef = useRef({})
 
   const isEducator = user?.role === 'educator' || user?.role === 'admin'
+  const sceneShapes = sceneShapesArray(sceneState)
+  const sceneBonds = sceneBondsArray(sceneState)
 
   useEffect(() => {
     if (authLoading) return
@@ -46,7 +79,14 @@ export default function CollaborationHubPage() {
       try {
         const payload = JSON.parse(event.data)
         if (payload.type === 'event' && payload.event) {
-          setEvents((prev) => [...prev, payload.event])
+          // Shape/bond actions from the shared 3D Studio ride the same
+          // event stream as chat/poll events, but they update the scene
+          // reducer instead of the chat feed -- keep them out of the feed.
+          if (isSceneEvent(payload.event)) {
+            setSceneState((current) => applySceneEvent(current, payload.event))
+          } else {
+            setEvents((prev) => [...prev, payload.event])
+          }
         }
         if (payload.type === 'event_update' && payload.event) {
           setEvents((prev) => prev.map((item) => (item.id === payload.event.id ? payload.event : item)))
@@ -79,8 +119,18 @@ export default function CollaborationHubPage() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setActiveSession(payload)
-      setEvents(payload.events || [])
+      setEvents((payload.events || []).filter((event) => !isSceneEvent(event)))
       loadSummary(sessionId)
+
+      // The session's embedded event list is capped (recent history only),
+      // which is fine for the chat feed but not for the shared 3D scene --
+      // that needs every shape_* event ever fired in this session to
+      // reconstruct the current scene correctly. Fetch the full history.
+      setSceneState(createEmptyScene())
+      const fullEvents = await requestBackendJson(`/collaboration/sessions/${sessionId}/events`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setSceneState(replaySceneEvents(fullEvents.events || []))
     } catch (err) {
       setError(err.message || 'Could not open session')
     }
@@ -203,6 +253,64 @@ export default function CollaborationHubPage() {
       setError(err.message || 'Could not send response')
     }
   }
+
+  // --- Shared 3D Studio -----------------------------------------------
+  // Every shape/bond action is sent as a plain collaboration event
+  // (event_type starting with "shape_"), reusing the exact same endpoint
+  // and websocket broadcast as chat messages, polls, and quick checks.
+  // It's applied to local state immediately for responsiveness, then
+  // posted to the server, which broadcasts it back to every participant
+  // (including the sender -- re-applying it is a harmless no-op).
+  const broadcastSceneEvent = async (eventType, metadata, content = '') => {
+    if (!activeSession) return
+    setSceneState((current) => applySceneEvent(current, { event_type: eventType, metadata }))
+    try {
+      await requestBackendJson(`/collaboration/sessions/${activeSession.id}/events`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: { event_type: eventType, content, metadata }
+      })
+    } catch (err) {
+      setError(err.message || 'Could not sync that 3D scene change.')
+    }
+  }
+
+  // Dragging a shape fires this on every animation frame. Apply it to local
+  // state immediately so the drag feels instant, but only broadcast the
+  // trailing value after a short pause so the websocket isn't flooded with
+  // one message per frame.
+  const transformSceneShape = (id, patch) => {
+    setSceneState((current) => applySceneEvent(current, { event_type: 'shape_update', metadata: { shapeId: id, patch } }))
+    if (!activeSession) return
+    clearTimeout(transformDebounceRef.current[id])
+    transformDebounceRef.current[id] = setTimeout(() => {
+      requestBackendJson(`/collaboration/sessions/${activeSession.id}/events`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: { event_type: 'shape_update', content: '', metadata: { shapeId: id, patch } }
+      }).catch((err) => setError(err.message || 'Could not sync that 3D scene change.'))
+    }, 150)
+  }
+
+  const setSceneShapeLabel = (id, label) => {
+    setSceneState((current) => applySceneEvent(current, { event_type: 'shape_update', metadata: { shapeId: id, patch: { label } } }))
+    if (!activeSession) return
+    clearTimeout(labelDebounceRef.current[id])
+    labelDebounceRef.current[id] = setTimeout(() => {
+      requestBackendJson(`/collaboration/sessions/${activeSession.id}/events`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: { event_type: 'shape_update', content: '', metadata: { shapeId: id, patch: { label } } }
+      }).catch((err) => setError(err.message || 'Could not sync that 3D scene change.'))
+    }, 400)
+  }
+
+  const addSceneShape = (type) => broadcastSceneEvent('shape_create', { shape: createSceneShape(type) }, `added a ${type}`)
+  const setSceneShapeColor = (id, color) => broadcastSceneEvent('shape_update', { shapeId: id, patch: { color } })
+  const deleteSceneShape = (id) => broadcastSceneEvent('shape_delete', { shapeId: id })
+  const addSceneBond = (points) => broadcastSceneEvent('shape_connect', { bond: { id: nextSceneId('bond'), points } })
+  const removeSceneBond = (bondId) => broadcastSceneEvent('shape_disconnect', { bondId })
+  const clearScene = () => broadcastSceneEvent('shape_clear', {})
 
   return (
     <AppShell
@@ -415,6 +523,37 @@ export default function CollaborationHubPage() {
           )}
         </div>
       </section>
+
+      {activeSession && (
+        <section className="card p-6">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-2xl bg-zinc-950 p-3 text-[#d9c25c]">
+              <Boxes className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="section-kicker text-[#18181b]">Shared 3D Studio</p>
+              <h2 className="text-xl font-bold text-slate-950">Build together, live</h2>
+            </div>
+          </div>
+          <p className="mb-5 text-sm leading-6 text-slate-600">
+            Same shape-building tools as the standalone 3D Studio -- anyone in this session can add, move, label, color,
+            bond, or delete shapes, and everyone else sees it update in real time.
+          </p>
+          <SharedShapeStudio
+            shapes={sceneShapes}
+            bonds={sceneBonds}
+            participantCount={activeSession.participants?.length || 0}
+            onAddShape={addSceneShape}
+            onTransform={transformSceneShape}
+            onDeleteShape={deleteSceneShape}
+            onSetColor={setSceneShapeColor}
+            onSetLabel={setSceneShapeLabel}
+            onAddBond={addSceneBond}
+            onRemoveBond={removeSceneBond}
+            onClear={clearScene}
+          />
+        </section>
+      )}
     </AppShell>
   )
 }

@@ -5,12 +5,15 @@ from app.core import settings
 from app.database import get_database_backend, init_db
 from app.routers import (
     auth_router,
+    bio_lab_router,
     certificates_router,
     classrooms_router,
     collaboration_router,
     documents_router,
     educator_router,
     feedback_router,
+    math_lab_router,
+    quantum_lab_router,
     quiz_router,
     qa_router,
     sticky_notes_router,
@@ -76,6 +79,9 @@ app.include_router(qa_router)
 app.include_router(learning_router)
 app.include_router(educator_router)
 app.include_router(feedback_router)
+app.include_router(math_lab_router)
+app.include_router(quantum_lab_router)
+app.include_router(bio_lab_router)
 app.include_router(collaboration_router)
 app.include_router(sticky_notes_router)
 
