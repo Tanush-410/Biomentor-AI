@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
+  Atom,
   BarChart3,
   BookOpen,
   Brain,
+  Calculator,
   FileStack,
+  FlaskConical,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -29,6 +32,9 @@ const STUDENT_NAV_ITEMS = [
   { href: '/progress', label: 'Progress', icon: BarChart3, match: ['/progress'] },
   { href: '/collaboration-hub', label: 'Collaboration', icon: MessageSquare, match: ['/collaboration-hub'] },
   { href: '/3d-studio', label: '3D Studio', icon: Box, match: ['/3d-studio'] },
+  { href: '/math-lab', label: 'Math Lab', icon: Calculator, match: ['/math-lab'] },
+  { href: '/quantum-lab', label: 'Quantum Lab', icon: Atom, match: ['/quantum-lab'] },
+  { href: '/bio-lab', label: 'Bio Lab', icon: FlaskConical, match: ['/bio-lab'] },
   { href: '/feedback/student', label: 'Feedback', icon: MessageCircle, match: ['/feedback/student'] }
 ]
 
@@ -45,6 +51,9 @@ const EDUCATOR_NAV_ITEMS = [
   { href: '/collaboration-hub', label: 'Collaboration', icon: Brain, match: ['/collaboration-hub'] },
   { href: '/admin/analytics', label: 'Admin Analytics', icon: FileStack, match: ['/admin/analytics'], adminOnly: true },
   { href: '/3d-studio', label: '3D Studio', icon: Box, match: ['/3d-studio'] },
+  { href: '/math-lab', label: 'Math Lab', icon: Calculator, match: ['/math-lab'] },
+  { href: '/quantum-lab', label: 'Quantum Lab', icon: Atom, match: ['/quantum-lab'] },
+  { href: '/bio-lab', label: 'Bio Lab', icon: FlaskConical, match: ['/bio-lab'] },
   { href: '/feedback/educator', label: 'Feedback', icon: MessageCircle, match: ['/feedback/educator'] }
 ]
 
