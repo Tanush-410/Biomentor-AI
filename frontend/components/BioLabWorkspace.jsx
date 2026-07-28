@@ -11,7 +11,7 @@ function emptyParticipant() {
   return { species: '', stoichiometry: 1 }
 }
 
-export default function BioLabWorkspace() {
+export default function BioLabWorkspace({ onResult } = {}) {
   const { token } = useAuth()
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
 
@@ -115,6 +115,7 @@ export default function BioLabWorkspace() {
         body: { species, reactions, duration: Number(duration), points: Number(points) }
       })
       setResult(payload)
+      onResult?.(payload)
     } catch (err) {
       setError(err.message || 'Could not simulate that reaction network.')
     } finally {

@@ -60,6 +60,9 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
   const [participants, setParticipants] = useState([])
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOff, setIsCameraOff] = useState(false)
+  // { tool, presenterId, presenterName, state } | null -- the tool currently
+  // being live-presented in this meeting, if any.
+  const [sharedTool, setSharedTool] = useState(null)
 
   const signalingRef = useRef(null)
   const peerConnectionsRef = useRef(new Map())
@@ -196,6 +199,36 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
         for (const participant of nextParticipants) {
           await syncParticipantConnection(participant)
         }
+        // Joining mid-presentation: catch up on whatever's currently shared
+        // instead of waiting for the presenter's next action.
+        if (message.shared_tool) {
+          setSharedTool({
+            tool: message.shared_tool.tool,
+            presenterId: message.shared_tool.presenter_id,
+            presenterName: message.shared_tool.presenter_name,
+            state: message.shared_tool.state
+          })
+        }
+        return
+      }
+
+      if (message.type === 'tool_shared') {
+        setSharedTool({
+          tool: message.tool,
+          presenterId: message.presenter_id,
+          presenterName: message.presenter_name,
+          state: null
+        })
+        return
+      }
+
+      if (message.type === 'tool_state') {
+        setSharedTool((current) => (current ? { ...current, state: message.state } : current))
+        return
+      }
+
+      if (message.type === 'tool_closed') {
+        setSharedTool(null)
         return
       }
 
@@ -376,6 +409,29 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
     setConnectionState('ending')
   }
 
+  // Start live-presenting a tool (Math Lab, Quantum Lab, Bio Lab, 3D Studio)
+  // to everyone else in the meeting. Applied locally right away since the
+  // server broadcast excludes the sender (the presenter already knows).
+  const shareToolOpen = (tool) => {
+    signalingRef.current?.send({ type: 'share_tool_open', payload: { tool } })
+    setSharedTool({ tool, presenterId: user?.id, presenterName: user?.full_name, state: null })
+  }
+
+  // Push the presenter's latest tool state to everyone else. The server
+  // silently ignores this unless it's coming from the current presenter, so
+  // it's safe to call freely.
+  const shareToolState = (state) => {
+    signalingRef.current?.send({ type: 'share_tool_state', payload: { state } })
+    setSharedTool((current) => (current ? { ...current, state } : current))
+  }
+
+  const shareToolClose = () => {
+    signalingRef.current?.send({ type: 'share_tool_close', payload: {} })
+    setSharedTool(null)
+  }
+
+  const isPresenting = Boolean(sharedTool && user?.id && sharedTool.presenterId === user.id)
+
   return {
     connectionState,
     error,
@@ -387,6 +443,11 @@ export function useWebRTCMeeting({ meetingId, token, user, enabled = true }) {
     toggleMute,
     toggleCamera,
     leaveMeeting,
-    endMeeting
+    endMeeting,
+    sharedTool,
+    isPresenting,
+    shareToolOpen,
+    shareToolState,
+    shareToolClose
   }
 }

@@ -37,7 +37,7 @@ const GATE_LABELS = Object.fromEntries(ALL_GATES.map((g) => [g.value, g.label]))
 
 const BLOCH_COLORS = ['#d9c25c', '#2563eb', '#16a34a', '#dc2626']
 
-export default function QuantumLabWorkspace() {
+export default function QuantumLabWorkspace({ onResult } = {}) {
   const { token } = useAuth()
   const [numQubits, setNumQubits] = useState(2)
   const [gates, setGates] = useState([])
@@ -90,6 +90,7 @@ export default function QuantumLabWorkspace() {
         body: { num_qubits: numQubits, gates }
       })
       setResult(payload)
+      onResult?.({ numQubits, gates, ...payload })
     } catch (err) {
       setError(err.message || 'Could not simulate that circuit.')
     } finally {
