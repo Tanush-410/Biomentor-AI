@@ -143,6 +143,9 @@ from app.services.meeting_signaling import MeetingSignalingManager
 router = APIRouter(prefix="/api/classrooms", tags=["classrooms"])
 meeting_signaling_manager = MeetingSignalingManager()
 
+# Tools that can be live-presented inside a classroom video call.
+SHARABLE_TOOLS = {"math-lab", "quantum-lab", "bio-lab", "3d-studio"}
+
 
 @router.get("/notifications")
 async def list_notifications(
@@ -2668,6 +2671,10 @@ async def classroom_meeting_socket(
                 "meeting_id": meeting.id,
                 "participants": meeting_signaling_manager.list_participants(meeting.id),
                 "status": meeting.status,
+                # A participant joining mid-presentation gets caught up
+                # immediately instead of seeing a blank panel until the
+                # presenter's next action.
+                "shared_tool": meeting_signaling_manager.get_shared_tool(meeting.id),
             }
         )
 
@@ -2708,6 +2715,52 @@ async def classroom_meeting_socket(
                     },
                     exclude_user_id=current_user.id,
                 )
+            elif event_type == "share_tool_open":
+                if current_user.role not in {"educator", "admin"}:
+                    await websocket.send_json({"type": "error", "detail": "Only teachers can share a tool."})
+                    continue
+                tool = payload.get("payload", {}).get("tool")
+                if tool not in SHARABLE_TOOLS:
+                    await websocket.send_json({"type": "error", "detail": f"Unknown tool '{tool}'."})
+                    continue
+                meeting_signaling_manager.start_shared_tool(meeting.id, current_user.id, current_user.full_name, tool)
+                await meeting_signaling_manager.broadcast(
+                    meeting.id,
+                    {
+                        "type": "tool_shared",
+                        "meeting_id": meeting.id,
+                        "tool": tool,
+                        "presenter_id": current_user.id,
+                        "presenter_name": current_user.full_name,
+                    },
+                    exclude_user_id=current_user.id,
+                )
+            elif event_type == "share_tool_state":
+                state = payload.get("payload", {}).get("state")
+                updated = meeting_signaling_manager.update_shared_tool_state(meeting.id, current_user.id, state)
+                if not updated:
+                    # Silently ignored rather than erroring: a stale/late
+                    # message from a presenter who has already stopped
+                    # sharing isn't worth surfacing as an error to the user.
+                    continue
+                await meeting_signaling_manager.broadcast(
+                    meeting.id,
+                    {
+                        "type": "tool_state",
+                        "meeting_id": meeting.id,
+                        "presenter_id": current_user.id,
+                        "state": state,
+                    },
+                    exclude_user_id=current_user.id,
+                )
+            elif event_type == "share_tool_close":
+                cleared = meeting_signaling_manager.clear_shared_tool(meeting.id, current_user.id)
+                if cleared:
+                    await meeting_signaling_manager.broadcast(
+                        meeting.id,
+                        {"type": "tool_closed", "meeting_id": meeting.id},
+                        exclude_user_id=current_user.id,
+                    )
             elif event_type == "end_meeting":
                 if current_user.role not in {"educator", "admin"}:
                     await websocket.send_json({"type": "error", "detail": "Only teachers can end meetings."})
@@ -2728,7 +2781,15 @@ async def classroom_meeting_socket(
         pass
     finally:
         if current_user and meeting:
+            # If the presenter drops mid-share, don't leave everyone else
+            # staring at a frozen panel -- clear it and let them know.
+            was_presenting = meeting_signaling_manager.clear_shared_tool(meeting.id, current_user.id)
             meeting_signaling_manager.disconnect(meeting.id, current_user.id)
+            if was_presenting:
+                await meeting_signaling_manager.broadcast(
+                    meeting.id,
+                    {"type": "tool_closed", "meeting_id": meeting.id},
+                )
             await meeting_signaling_manager.broadcast(
                 meeting.id,
                 {

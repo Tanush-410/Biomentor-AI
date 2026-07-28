@@ -1,14 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { AlertCircle, Camera, Mic, PhoneOff, Video } from 'lucide-react'
+import { AlertCircle, Atom, Box, Calculator, Camera, FlaskConical, Mic, MonitorPlay, PhoneOff, Video } from 'lucide-react'
 
 import MeetingAssistantPanel from './MeetingAssistantPanel'
 import AISpotlightBanner from './AISpotlightBanner'
+import SharedToolPanel from './SharedToolPanel'
 import { useWebRTCMeeting } from '../hooks/useWebRTCMeeting'
 import { getMeetingAssistantSnapshot, postMeetingAudioTranscript, postMeetingEvent, postMeetingTranscript } from '../lib/classroomApi'
 import { isHostedFrontend } from '../lib/backendApi'
 import { createMeetingAudioTranscriber } from '../lib/meetingAudioTranscriber'
 import { createMeetingTranscriptClient } from '../lib/meetingTranscriptClient'
+
+const SHARABLE_TOOLS = [
+  { value: 'math-lab', label: 'Math Lab', icon: Calculator },
+  { value: 'quantum-lab', label: 'Quantum Lab', icon: Atom },
+  { value: 'bio-lab', label: 'Bio Lab', icon: FlaskConical },
+  { value: '3d-studio', label: '3D Studio', icon: Box }
+]
 
 function VideoTile({ title, stream, muted = false }) {
   const ref = useRef(null)
@@ -56,13 +64,19 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
     toggleMute,
     toggleCamera,
     leaveMeeting,
-    endMeeting
+    endMeeting,
+    sharedTool,
+    isPresenting,
+    shareToolOpen,
+    shareToolState,
+    shareToolClose
   } = useWebRTCMeeting({
     meetingId: meeting?.id,
     token,
     user,
     enabled: Boolean(meeting?.id)
   })
+  const [showToolMenu, setShowToolMenu] = useState(false)
   const [assistantSnapshot, setAssistantSnapshot] = useState(null)
   const [assistantLoading, setAssistantLoading] = useState(false)
   const [assistantError, setAssistantError] = useState('')
@@ -219,7 +233,18 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
 
       <div className={`grid gap-5 ${isTeacher ? '2xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
         <div className="space-y-5">
-          <div className="grid gap-5 xl:grid-cols-2">
+          {sharedTool ? (
+            <div className="h-[520px]">
+              <SharedToolPanel
+                sharedTool={sharedTool}
+                isPresenting={isPresenting}
+                onState={shareToolState}
+                onClose={shareToolClose}
+              />
+            </div>
+          ) : null}
+
+          <div className={`grid gap-5 ${sharedTool ? 'grid-cols-3 sm:grid-cols-4' : 'xl:grid-cols-2'}`}>
             <VideoTile title={`${user?.full_name || 'You'} (You)`} stream={localStream} muted />
             {remoteParticipants.length === 0 ? (
               <div className="surface-subtle flex aspect-video items-center justify-center rounded-[28px] border border-dashed border-[rgba(0,0,0,0.25)] text-sm text-slate-600">
@@ -251,6 +276,39 @@ export default function VideoMeetingRoom({ classroomId, meeting, token, user, is
                   <AlertCircle className="h-4 w-4" />
                   Flag Doubt
                 </button>
+              ) : null}
+              {isTeacher ? (
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => (sharedTool ? shareToolClose() : setShowToolMenu((current) => !current))}
+                  >
+                    <MonitorPlay className="h-4 w-4" />
+                    {sharedTool ? 'Stop sharing' : 'Share a tool'}
+                  </button>
+                  {showToolMenu && !sharedTool && (
+                    <div className="absolute bottom-full left-0 z-20 mb-2 w-48 rounded-2xl border border-zinc-200 bg-white p-2 shadow-lg">
+                      {SHARABLE_TOOLS.map((tool) => {
+                        const Icon = tool.icon
+                        return (
+                          <button
+                            key={tool.value}
+                            type="button"
+                            onClick={() => {
+                              shareToolOpen(tool.value)
+                              setShowToolMenu(false)
+                            }}
+                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-zinc-700 transition hover:bg-[#f4f4f5]"
+                          >
+                            <Icon className="h-4 w-4" />
+                            {tool.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               ) : null}
             </div>
             <div className="flex flex-wrap gap-3">

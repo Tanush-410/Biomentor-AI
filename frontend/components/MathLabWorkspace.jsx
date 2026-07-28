@@ -32,7 +32,7 @@ const OPERATIONS = [
   { value: 'evaluate', label: 'Evaluate' }
 ]
 
-export default function MathLabWorkspace() {
+export default function MathLabWorkspace({ onResult } = {}) {
   const { token } = useAuth()
   const [appMode, setAppMode] = useState('graphing')
 
@@ -62,6 +62,7 @@ export default function MathLabWorkspace() {
         body: { operation, expression: expression.trim(), variable: variable.trim() || 'x' }
       })
       setResult(payload)
+      onResult?.(payload)
     } catch (err) {
       setError(err.message || 'Could not compute that expression.')
     } finally {

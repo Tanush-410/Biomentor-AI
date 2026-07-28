@@ -13,6 +13,7 @@ import {
   Disc3
 } from 'lucide-react'
 import AppShell from '../components/AppShell'
+import HowToUseCard from '../components/HowToUseCard'
 
 // Three.js needs a real browser canvas, so the scene is client-only.
 const ShapeStudioScene = dynamic(() => import('../components/ShapeStudioScene'), {
@@ -42,6 +43,14 @@ const TRANSFORM_TOOLS = [
 const COLOR_SWATCHES = ['#d9c25c', '#f2e9c4', '#e3ce7a', '#dcc26a', '#c9ab3f', '#a88a26', '#0a0a0a', '#2563eb', '#16a34a', '#dc2626', '#7c3aed', '#ffffff']
 
 const AXIS_LABELS = ['X', 'Y', 'Z']
+
+const HOW_TO_STEPS = [
+  'Click a shape (cube, sphere, cylinder, cone, torus) in "Add a shape" to drop it into the scene.',
+  'Select a shape, then use Move/Rotate/Scale and drag the gizmo in the viewport -- or type exact numbers into the Position and Width/Height/Depth fields.',
+  'Give a shape a label (e.g. an atom symbol like "H" or "O") -- it renders as text under the shape and moves with it.',
+  'Switch to "Draw Line" mode and click two shapes to bond them, or use the "Connect shapes" dropdowns for the same result without clicking in the viewport.',
+  'Bonds stay attached and move with the shapes as you drag them -- handy for sketching a molecule structure.'
+]
 
 let shapeCounter = 0
 function createShape(type) {
@@ -187,6 +196,8 @@ export default function ShapeStudioPage() {
       title="Build and view shapes in 3D"
       description="A CAD-style workspace: drop in shapes, then move, rotate, or scale them with the gizmo, or switch to the line tool to bond shapes together -- handy for sketching molecule structures, with bonds that stay attached and move with the atoms as you drag them."
     >
+      <div className="space-y-6">
+      <HowToUseCard steps={HOW_TO_STEPS} />
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="space-y-6">
           <div className="card p-5">
@@ -437,6 +448,7 @@ export default function ShapeStudioPage() {
             />
           </div>
         </div>
+      </div>
       </div>
     </AppShell>
   )
