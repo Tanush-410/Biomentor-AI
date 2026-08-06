@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 import requests
 
-from app.agents.bloom_classifier import BLOOM_TAXONOMY
+from app.agents.solo_classifier import SOLO_TAXONOMY
 from app.core import settings
 
 
@@ -188,7 +188,7 @@ class QuestionGenerator:
         return f"""
 Create exactly {num_questions} multiple-choice questions from the study material below.
 
-Target Bloom levels in order: {target_levels}
+Target SOLO levels in order: {target_levels}
 
 Rules:
 - Use only information grounded in the material.
@@ -258,7 +258,7 @@ Study material:
             return None
 
         bloom_level = item.get("bloom_level", fallback_level)
-        if not isinstance(bloom_level, int) or bloom_level not in BLOOM_TAXONOMY:
+        if not isinstance(bloom_level, int) or bloom_level not in SOLO_TAXONOMY:
             bloom_level = fallback_level
 
         return {
@@ -268,7 +268,7 @@ Study material:
             "document_reference": QuestionGenerator._clean_text(item.get("source_document", "")) or None,
             "page_number": QuestionGenerator._safe_int(item.get("page_number")),
             "bloom_level": bloom_level,
-            "bloom_level_name": BLOOM_TAXONOMY[bloom_level]["name"],
+            "bloom_level_name": SOLO_TAXONOMY[bloom_level]["name"],
             "options": options,
             "explanation": explanation or None,
             "source_excerpt": QuestionGenerator._clean_text(item.get("source_excerpt", "")) or None,
@@ -340,12 +340,11 @@ Study material:
 
         subject = fact["subject"]
         stems = {
-            1: f"What best defines {subject}?",
-            2: f"Which option best explains {subject}?",
-            3: f"Which example best shows how {subject} is used?",
-            4: f"Which option best distinguishes {subject}?",
-            5: f"Which statement about {subject} is best supported by the material?",
-            6: f"Which new task could be designed using the concept of {subject}?",
+            1: f"What is {subject}?",
+            2: f"Which option best describes {subject}?",
+            3: f"Which of these details about {subject} is accurate?",
+            4: f"Which option best explains how {subject} relates to the broader concept?",
+            5: f"Which statement best generalizes {subject} to a new situation?",
         }
 
         return {
@@ -355,7 +354,7 @@ Study material:
             "document_reference": fact.get("document_title"),
             "page_number": fact.get("page_number"),
             "bloom_level": bloom_level,
-            "bloom_level_name": BLOOM_TAXONOMY[bloom_level]["name"],
+            "bloom_level_name": SOLO_TAXONOMY[bloom_level]["name"],
             "options": options,
             "explanation": f"{fact['subject']} is {fact['object']}.",
             "source_excerpt": fact.get("source_excerpt"),
@@ -481,7 +480,7 @@ Study material:
     @staticmethod
     def _expand_levels(num_questions: int, bloom_levels: List[int]) -> List[int]:
         levels = []
-        valid = [level for level in bloom_levels if level in BLOOM_TAXONOMY] or [2, 3, 4]
+        valid = [level for level in bloom_levels if level in SOLO_TAXONOMY] or [2, 3, 4]
         for index in range(num_questions):
             levels.append(valid[index % len(valid)])
         return levels

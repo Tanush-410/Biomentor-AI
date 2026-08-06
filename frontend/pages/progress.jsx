@@ -16,8 +16,7 @@ const LEVEL_COLORS = {
   2: 'stroke-[#c9ab3f]',
   3: 'stroke-[#f2e9c4]',
   4: 'stroke-[#f2e9c4]',
-  5: 'stroke-[#c9ab3f]',
-  6: 'stroke-[#c9ab3f]'
+  5: 'stroke-[#c9ab3f]'
 }
 
 export default function ProgressPage() {
@@ -38,10 +37,10 @@ export default function ProgressPage() {
     fetchProgress()
   }, [authLoading, token])
 
-  const bloomStats = useMemo(() => {
-    if (!progress?.bloomLevelStats) return []
+  const soloStats = useMemo(() => {
+    if (!progress?.soloLevelStats) return []
 
-    return Object.entries(progress.bloomLevelStats)
+    return Object.entries(progress.soloLevelStats)
       .map(([level, stats]) => ({
         level: Number(level),
         name: stats.name,
@@ -51,7 +50,7 @@ export default function ProgressPage() {
       .sort((a, b) => a.level - b.level)
   }, [progress])
 
-  const weakest = bloomStats
+  const weakest = soloStats
     .filter((item) => item.count > 0)
     .sort((a, b) => a.average - b.average)
     .slice(0, 2)
@@ -60,7 +59,7 @@ export default function ProgressPage() {
     if (!progress) return []
     const items = []
     if (weakest[0]) {
-      items.push(`Prioritize ${weakest[0].name} practice next. It is currently your lowest-performing Bloom's level.`)
+      items.push(`Prioritize ${weakest[0].name} practice next. It is currently your lowest-performing SOLO level.`)
     }
     if (weakest[1]) {
       items.push(`Follow up with ${weakest[1].name} questions to strengthen higher-order understanding.`)
@@ -105,7 +104,7 @@ export default function ProgressPage() {
   return (
     <AppShell
       title="Progress Tracker"
-      description="Track Bloom's Taxonomy mastery from real quiz history, review recent attempts, and focus on the levels that need the most attention."
+      description="Track SOLO Taxonomy mastery from real quiz history, review recent attempts, and focus on the levels that need the most attention."
       contentClassName="space-y-8"
       actions={
         <>
@@ -123,10 +122,10 @@ export default function ProgressPage() {
         <AISpotlightBanner
           eyebrow="Progress AI Surface"
           title="Progress Strategy Board"
-          description="Your progress page now behaves like an AI planning board: it explains what the scores mean, which Bloom levels need recovery first, and what sequence gives you the strongest next improvement."
-          highlights={['Bloom mastery strategy', 'Checkpoint guidance', 'Practice order']}
+          description="Your progress page now behaves like an AI planning board: it explains what the scores mean, which SOLO levels need recovery first, and what sequence gives you the strongest next improvement."
+          highlights={['SOLO mastery strategy', 'Checkpoint guidance', 'Practice order']}
           primaryAction={{ label: 'Open Progress Coach', href: '#progress-coach' }}
-          secondaryAction={{ label: 'Jump to Bloom Mastery', href: '#bloom-mastery' }}
+          secondaryAction={{ label: 'Jump to SOLO Mastery', href: '#solo-mastery' }}
           status="Use this board before starting the next quiz so you practice with intent instead of repeating the same weak cycle."
         />
 
@@ -134,23 +133,23 @@ export default function ProgressPage() {
           <SummaryCard icon={<BrainCircuit className="w-5 h-5" />} label="Quizzes Completed" value={progress?.totalQuizzes || 0} />
           <SummaryCard icon={<Target className="w-5 h-5" />} label="Average Score" value={`${Math.round(progress?.averageScore || 0)}%`} />
           <SummaryCard icon={<BarChart3 className="w-5 h-5" />} label="Questions Answered" value={progress?.totalQuestionsAnswered || 0} />
-          <SummaryCard icon={<TrendingUp className="w-5 h-5" />} label="Tracked Levels" value={bloomStats.filter((item) => item.count > 0).length} />
+          <SummaryCard icon={<TrendingUp className="w-5 h-5" />} label="Tracked Levels" value={soloStats.filter((item) => item.count > 0).length} />
         </section>
 
         <section className="grid lg:grid-cols-[1.3fr_1fr] gap-6">
-          <div id="bloom-mastery" className="card p-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Bloom’s Taxonomy Mastery</h2>
+          <div id="solo-mastery" className="card p-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">SOLO Taxonomy Mastery</h2>
             <p className="text-slate-600 mb-6">Performance grouped by cognitive level instead of hardcoded topic placeholders.</p>
 
             {loading ? (
               <p className="text-slate-500">Loading progress metrics...</p>
-            ) : bloomStats.length === 0 ? (
+            ) : soloStats.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-slate-600">
-                No quiz data yet. Once you complete a quiz from your material, your Bloom’s progress will appear here.
+                No quiz data yet. Once you complete a quiz from your material, your SOLO progress will appear here.
               </div>
             ) : (
               <div className="space-y-4">
-                {bloomStats.map((item) => (
+                {soloStats.map((item) => (
                   <div key={item.level} className="rounded-xl border border-slate-200 p-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
@@ -231,7 +230,7 @@ export default function ProgressPage() {
             <div id="progress-coach">
               <StudyCoachPanel
                 title="Practice guidance"
-                summary={coachProgress?.summary || 'The coach interprets your weakest Bloom levels so you know what to practice next.'}
+                summary={coachProgress?.summary || 'The coach interprets your weakest SOLO levels so you know what to practice next.'}
                 confidenceReason={coachProgress?.confidence_reason}
                 actionLabel="Open Learning Chat"
                 actionHref="/learning-chat"
@@ -263,7 +262,7 @@ export default function ProgressPage() {
                     <StudyCoachActionList
                       actions={(coachProgress.recommendations || []).map((item) => ({
                         label: item,
-                        reason: 'This order is based on your lowest-mastery Bloom levels.',
+                        reason: 'This order is based on your lowest-mastery SOLO levels.',
                         target_url: '/start-quiz'
                       }))}
                     />

@@ -256,7 +256,7 @@ export default function QuizSessionPage() {
               <li>✓ Your score has been recorded for progress tracking</li>
               <li>✓ Review your performance in the Progress page</li>
               <li>✓ Upload more materials to practice with different content</li>
-              <li>✓ Ask your educator to use Bloom&apos;s tools for cross-level question conversion</li>
+              <li>✓ Ask your educator to use SOLO tools for cross-level question conversion</li>
             </ul>
           </div>
       </AppShell>

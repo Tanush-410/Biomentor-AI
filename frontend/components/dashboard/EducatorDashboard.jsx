@@ -191,7 +191,7 @@ export default function EducatorDashboard() {
         <>
           <Link href="/educator/classrooms" className="btn btn-outline">Classrooms</Link>
           <Link href="/educator/quiz-maker" className="btn btn-primary">Quiz Maker</Link>
-          <Link href="/check-difficulty" className="btn btn-outline">Bloom Studio</Link>
+          <Link href="/check-difficulty" className="btn btn-outline">SOLO Studio</Link>
           <Link href="/collaboration-hub" className="btn btn-primary">Launch Session</Link>
           <Link href="/communication-hub" className="btn btn-outline">Send Update</Link>
         </>

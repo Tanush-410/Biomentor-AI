@@ -47,7 +47,7 @@ class QuizQualityServiceTest(unittest.TestCase):
         self.assertTrue(payload["fix_first"])
         self.assertTrue(payload["remediation_plan"])
 
-    def test_generated_quiz_review_flags_missing_document_and_mixed_bloom(self):
+    def test_generated_quiz_review_flags_missing_document_and_mixed_solo(self):
         payload = build_quiz_quality_review(
             {
                 "quiz_mode": "generated",

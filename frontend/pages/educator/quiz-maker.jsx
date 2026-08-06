@@ -10,14 +10,13 @@ import { useAuth } from '../../context/AuthContext'
 import { normalizeListPayload, requestBackendJson } from '../../lib/backendApi'
 import { createClassroomQuiz, listClassrooms, listDocuments } from '../../lib/classroomApi'
 
-const BLOOM_LEVELS = [
-  { value: '', label: 'Mixed Bloom levels' },
-  { value: '1', label: 'Remember' },
-  { value: '2', label: 'Understand' },
-  { value: '3', label: 'Apply' },
-  { value: '4', label: 'Analyze' },
-  { value: '5', label: 'Evaluate' },
-  { value: '6', label: 'Create' }
+const SOLO_LEVELS = [
+  { value: '', label: 'Mixed SOLO levels' },
+  { value: '1', label: 'Prestructural' },
+  { value: '2', label: 'Unistructural' },
+  { value: '3', label: 'Multistructural' },
+  { value: '4', label: 'Relational' },
+  { value: '5', label: 'Extended Abstract' }
 ]
 
 const MANUAL_OPTION_IDS = ['A', 'B', 'C', 'D']
@@ -268,7 +267,7 @@ export default function EducatorQuizMakerPage() {
         eyebrow="Assessment AI Surface"
         title="Assessment Intelligence Studio"
         description="Design, review, schedule, and harden classroom quizzes from one visible AI assessment workspace. The quality layer now checks what the quiz is really measuring before you release it."
-        highlights={['Quality review', 'Bloom coverage', 'Release risk']}
+        highlights={['Quality review', 'SOLO coverage', 'Release risk']}
         primaryAction={{ label: 'Open Assessment Review', href: '#assessment-release-gate' }}
         secondaryAction={{ label: 'Jump to Authoring Form', href: '#quiz-authoring-studio' }}
         status="Use this studio before publishing any classroom quiz so the assessment feels intentional, defensible, and aligned with the material it came from."
@@ -294,7 +293,7 @@ export default function EducatorQuizMakerPage() {
                 <ListChecks className="h-5 w-5 text-[#18181b]" />
                 <div>
                   <p className="font-semibold text-slate-900">Generate from Material</p>
-                  <p className="text-sm text-slate-600">Use your uploaded study content and Bloom settings to assemble the quiz automatically.</p>
+                  <p className="text-sm text-slate-600">Use your uploaded study content and SOLO settings to assemble the quiz automatically.</p>
                 </div>
               </div>
             </button>
@@ -350,9 +349,9 @@ export default function EducatorQuizMakerPage() {
           {form.quiz_mode === 'generated' ? (
             <div className="grid gap-4 md:grid-cols-3">
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-slate-800">Bloom level</span>
+                <span className="text-sm font-semibold text-slate-800">SOLO level</span>
                 <select value={form.bloom_level} onChange={(event) => updateForm('bloom_level', event.target.value)} className="input">
-                  {BLOOM_LEVELS.map((level) => (
+                  {SOLO_LEVELS.map((level) => (
                     <option key={level.label} value={level.value}>{level.label}</option>
                   ))}
                 </select>
@@ -439,13 +438,13 @@ export default function EducatorQuizMakerPage() {
                         </select>
                       </label>
                       <label className="space-y-2">
-                        <span className="text-sm font-semibold text-slate-800">Bloom level</span>
+                        <span className="text-sm font-semibold text-slate-800">SOLO level</span>
                         <select
                           value={question.bloom_level}
                           onChange={(event) => updateManualQuestion(question.local_id, { bloom_level: event.target.value })}
                           className="input"
                         >
-                          {BLOOM_LEVELS.slice(1).map((level) => (
+                          {SOLO_LEVELS.slice(1).map((level) => (
                             <option key={level.value} value={level.value}>{level.label}</option>
                           ))}
                         </select>
@@ -550,7 +549,7 @@ export default function EducatorQuizMakerPage() {
                   <p className="text-slate-600">
                     {form.quiz_mode === 'manual'
                       ? 'Autograding will use the educator-defined answer key for each question.'
-                      : 'Questions will be generated from the linked material and Bloom settings.'}
+                      : 'Questions will be generated from the linked material and SOLO settings.'}
                   </p>
                 </div>
               </div>

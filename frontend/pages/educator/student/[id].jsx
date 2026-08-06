@@ -7,7 +7,7 @@ import ProctorReviewPanel from '../../../components/ProctorReviewPanel'
 import { useAuth } from '../../../context/AuthContext'
 import { requestBackendJson } from '../../../lib/backendApi'
 
-const BLOOM_ORDER = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create']
+const SOLO_ORDER = ['Prestructural', 'Unistructural', 'Multistructural', 'Relational', 'Extended Abstract']
 
 export default function StudentAnalyticsPage() {
   const router = useRouter()
@@ -31,9 +31,9 @@ export default function StudentAnalyticsPage() {
     loadAnalytics()
   }, [authLoading, id, token, user])
 
-  const bloomBars = useMemo(() => {
-    const stats = analytics?.progress?.bloomLevelStats || {}
-    return BLOOM_ORDER.map((name, index) => {
+  const soloBars = useMemo(() => {
+    const stats = analytics?.progress?.soloLevelStats || {}
+    return SOLO_ORDER.map((name, index) => {
       const level = index + 1
       return { level, name, average: Math.round(stats[level]?.average || 0), count: stats[level]?.count || 0 }
     })
@@ -75,21 +75,21 @@ export default function StudentAnalyticsPage() {
     <AppShell
       title={analytics?.student?.full_name || 'Student Analytics'}
       eyebrow="Educator Intervention"
-      description="Inspect Bloom’s mastery, identify gap alerts, and assign tailored reinforcement lessons."
+      description="Inspect SOLO mastery, identify gap alerts, and assign tailored reinforcement lessons."
       contentClassName="space-y-8"
     >
       {error && <div className="rounded-xl border border-[#d4d4d8] bg-[#f4f4f5] px-4 py-3 text-[#27272a]">{error}</div>}
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="card p-6">
-          <h2 className="text-xl font-bold text-slate-950">Mastery by Bloom’s Level</h2>
+          <h2 className="text-xl font-bold text-slate-950">Mastery by SOLO Level</h2>
           <div className="mt-5 space-y-4">
-            {bloomBars.map((item) => (
+            {soloBars.map((item) => (
               <div key={item.level} className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <span className="font-semibold text-slate-800">Level {item.level} • {item.name}</span>
-                    <p className="mt-2 text-sm text-slate-600">{item.count} answers recorded at this Bloom level.</p>
+                    <p className="mt-2 text-sm text-slate-600">{item.count} answers recorded at this SOLO level.</p>
                   </div>
                   <CircularProgress
                     value={item.average}
@@ -140,7 +140,7 @@ export default function StudentAnalyticsPage() {
               onChange={(e) => setLessonForm((prev) => ({ ...prev, target_bloom_level: e.target.value }))}
               className="input"
             >
-              {BLOOM_ORDER.map((name, index) => (
+              {SOLO_ORDER.map((name, index) => (
                 <option key={name} value={index + 1}>Level {index + 1} • {name}</option>
               ))}
             </select>

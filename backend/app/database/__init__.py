@@ -78,6 +78,7 @@ def init_db():
     """Initialize database tables."""
     Base.metadata.create_all(bind=engine)
     _ensure_incremental_columns()
+    _ensure_solo_level_range()
 
 
 def get_db():
@@ -211,6 +212,37 @@ def _ensure_incremental_columns():
                 connection.execute(text(statement))
 
     _ensure_sticky_note_constraints(inspect(engine))
+
+
+# Columns that used to store a Bloom's Taxonomy level (1-6) and now store a
+# SOLO Taxonomy level (1-5). Levels 5 (Evaluate) and 6 (Create) both collapse
+# into SOLO's top level, 5 (Extended Abstract).
+_SOLO_LEVEL_COLUMNS = [
+    ("quiz_sessions", "bloom_level"),
+    ("quiz_answers", "bloom_level"),
+    ("generated_questions", "bloom_level"),
+    ("classroom_quizzes", "bloom_level"),
+    ("reinforcement_lessons", "target_bloom_level"),
+]
+
+
+def _ensure_solo_level_range():
+    """Clamp any pre-SOLO-migration level values (1-6) down to the SOLO range (1-5).
+
+    This is intentionally a simple `MIN(column, 5)` clamp rather than a
+    one-shot data migration script: it is idempotent (re-running it after the
+    range is already 1-5 is a no-op), so it's safe to run on every startup
+    the same way `_ensure_incremental_columns` adds missing columns, without
+    needing a migration-tracking table.
+    """
+    table_names = set(inspect(engine).get_table_names())
+    with engine.begin() as connection:
+        for table, column in _SOLO_LEVEL_COLUMNS:
+            if table not in table_names:
+                continue
+            connection.execute(
+                text(f'UPDATE "{table}" SET "{column}" = 5 WHERE "{column}" > 5')
+            )
 
 
 def _ensure_sticky_note_constraints(inspector):

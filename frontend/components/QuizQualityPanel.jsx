@@ -69,7 +69,7 @@ export default function QuizQualityPanel({ review, loading, error, onReview }) {
           <p className="section-kicker text-[#18181b]">AI Quiz Quality Layer</p>
           <h3 className="mt-2 break-words text-2xl font-bold text-slate-950">Run an assessment command review before you publish.</h3>
           <p className="mt-2 break-words text-sm leading-6 text-slate-600">
-            Review Bloom balance, distractor strength, timing fairness, remediation readiness, and release risk before students see the quiz.
+            Review SOLO balance, distractor strength, timing fairness, remediation readiness, and release risk before students see the quiz.
           </p>
           {review?.confidence_reason ? <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-[#18181b]">{review.confidence_reason}</p> : null}
         </div>
@@ -109,7 +109,7 @@ export default function QuizQualityPanel({ review, loading, error, onReview }) {
                 <RiskBadge risk={review.release_risk} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {(review.bloom_distribution || []).map((item) => (
+                {(review.solo_distribution || []).map((item) => (
                   <span key={`${item.level}-${item.label}`} className="role-pill border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]">
                     {item.label}: {item.percentage}%
                   </span>

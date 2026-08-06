@@ -1,7 +1,7 @@
 {
   "name": "VYDRA CORE - Intelligent Learning Platform",
   "short_name": "VYDRA CORE",
-  "description": "AI-powered learning platform for biology with Bloom's taxonomy-based quizzes and offline support",
+  "description": "AI-powered learning platform for biology with SOLO taxonomy-based quizzes and offline support",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

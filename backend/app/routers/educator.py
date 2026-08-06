@@ -162,7 +162,7 @@ async def get_educator_dashboard(
     alerts = []
     for student in student_snapshots[:5]:
         if student["risk"] != "stable":
-            gap_text = student["top_gap"]["level"] if student["top_gap"] else "Bloom reinforcement"
+            gap_text = student["top_gap"]["level"] if student["top_gap"] else "SOLO reinforcement"
             alerts.append(
                 {
                     "student_id": student["student_id"],

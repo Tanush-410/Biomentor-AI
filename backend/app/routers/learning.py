@@ -114,9 +114,9 @@ async def detect_knowledge_gaps(
 ):
     """Analyze submitted quiz-level results to estimate immediate gaps."""
     try:
-        bloom_levels = quiz_responses.get("bloom_levels", []) if isinstance(quiz_responses, dict) else []
+        solo_levels = quiz_responses.get("solo_levels", []) if isinstance(quiz_responses, dict) else []
         gaps = []
-        for item in bloom_levels:
+        for item in solo_levels:
             total = max(int(item.get("total", 0)), 1)
             correct = max(int(item.get("correct", 0)), 0)
             label = item.get("level") or "Unknown"
@@ -135,7 +135,7 @@ async def detect_knowledge_gaps(
             "analysis": (
                 f"Your largest current gap is in {gaps[0]['level']} questions."
                 if gaps else
-                "No Bloom-level response data was provided."
+                "No SOLO-level response data was provided."
             ),
         }
     except Exception as exc:
@@ -147,7 +147,7 @@ async def get_knowledge_gaps(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get the user's persisted Bloom-level gap list."""
+    """Get the user's persisted SOLO-level gap list."""
     try:
         progress_payload = build_progress_payload(db, current_user.id)
         gaps = build_gap_list(progress_payload)
@@ -170,17 +170,17 @@ async def get_progress_tracker(
             "average_score": progress_payload["averageScore"],
             "mastered_topics": sum(
                 1
-                for stats in progress_payload["bloomLevelStats"].values()
+                for stats in progress_payload["soloLevelStats"].values()
                 if stats["count"] > 0 and stats["average"] >= 80
             ),
             "study_streak": min(progress_payload["totalQuizzes"], 7),
-            "bloom_levels": {
+            "solo_levels": {
                 stats["name"]: {
                     "correct": round((stats["average"] / 100) * stats["count"]),
                     "total": stats["count"],
                     "percentage": round(stats["average"]),
                 }
-                for stats in progress_payload["bloomLevelStats"].values()
+                for stats in progress_payload["soloLevelStats"].values()
             },
             "topic_mastery": [
                 {"topic": gap["level"], "mastery": round(100 - gap["gap_percentage"])}
@@ -288,23 +288,23 @@ async def get_resources(
             "id": 1,
             "title": "Review With Learning Chat",
             "type": "chat",
-            "difficulty": "Understand",
+            "difficulty": "Unistructural",
             "topic": "Uploaded Material",
             "description": "Ask a source-grounded question about your uploaded document.",
         },
         {
             "id": 2,
-            "title": "Bloom's Quiz Practice",
+            "title": "SOLO Quiz Practice",
             "type": "quiz",
-            "difficulty": "Apply",
-            "topic": "Bloom's Taxonomy",
-            "description": "Generate a quiz from your uploaded material and focus on one Bloom level.",
+            "difficulty": "Multistructural",
+            "topic": "SOLO Taxonomy",
+            "description": "Generate a quiz from your uploaded material and focus on one SOLO level.",
         },
         {
             "id": 3,
             "title": "Offline PDF Review",
             "type": "document",
-            "difficulty": "Remember",
+            "difficulty": "Prestructural",
             "topic": "Study Review",
             "description": "Open a saved PDF offline and revisit the cited sections before retrying a quiz.",
         },

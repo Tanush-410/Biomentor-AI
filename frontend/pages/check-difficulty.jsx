@@ -7,13 +7,12 @@ import AppShell from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
 import { requestBackendJson } from '../lib/backendApi'
 
-const BLOOM_LEVELS = [
-  { level: 1, name: 'Remember', tone: 'border-zinc-200 bg-zinc-50 text-zinc-700' },
-  { level: 2, name: 'Understand', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]' },
-  { level: 3, name: 'Apply', tone: 'border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]' },
-  { level: 4, name: 'Analyze', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#27272a]' },
-  { level: 5, name: 'Evaluate', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#3f3f46]' },
-  { level: 6, name: 'Create', tone: 'border-[#52525b] bg-[#f4f4f5] text-[#18181b]' }
+const SOLO_LEVELS = [
+  { level: 1, name: 'Prestructural', tone: 'border-zinc-200 bg-zinc-50 text-zinc-700' },
+  { level: 2, name: 'Unistructural', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#18181b]' },
+  { level: 3, name: 'Multistructural', tone: 'border-[#d4d4d8] bg-[#e4e4e7] text-[#3f3f46]' },
+  { level: 4, name: 'Relational', tone: 'border-[#d4d4d8] bg-[#f4f4f5] text-[#27272a]' },
+  { level: 5, name: 'Extended Abstract', tone: 'border-[#52525b] bg-[#f4f4f5] text-[#18181b]' }
 ]
 
 export default function CheckDifficultyPage() {
@@ -41,7 +40,7 @@ export default function CheckDifficultyPage() {
   }, [authLoading, token, user, router])
 
   const identifiedLevelMeta = useMemo(
-    () => BLOOM_LEVELS.find((item) => item.level === analyzeResult?.level) || null,
+    () => SOLO_LEVELS.find((item) => item.level === analyzeResult?.level) || null,
     [analyzeResult]
   )
 
@@ -93,14 +92,14 @@ export default function CheckDifficultyPage() {
         level: data.identified_level,
         level_name: data.identified_level_name,
         confidence: data.confidence,
-        description: `The original question is best aligned to Bloom's level ${data.identified_level_name}.`
+        description: `The original question is best aligned to SOLO level ${data.identified_level_name}.`
       })
       setAllVariants(data.variants || [])
       setTargetLevel(null)
       setConvertedQuestion(null)
     } catch (err) {
       console.error('Error generating all levels:', err)
-      setError(err.message || 'Failed to generate all Bloom variants')
+      setError(err.message || 'Failed to generate all SOLO variants')
     } finally {
       setGeneratingAll(false)
     }
@@ -146,9 +145,9 @@ export default function CheckDifficultyPage() {
 
   return (
     <AppShell
-      title="Bloom Studio"
+      title="SOLO Studio"
       eyebrow="Educator Workflow"
-      description="Identify a question's Bloom level, compare variants across all six levels, and generate one exact rewrite when you need a more precise teaching prompt."
+      description="Identify a question's SOLO level, compare variants across all five levels, and generate one exact rewrite when you need a more precise teaching prompt."
       contentClassName="max-w-6xl space-y-8"
       actions={
         <>
@@ -163,7 +162,7 @@ export default function CheckDifficultyPage() {
           <p className="section-kicker text-[#18181b]">Question input</p>
           <h2 className="mt-2 text-2xl font-bold text-slate-950">Paste one question and decide how far you want to take it.</h2>
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            Start with identification, branch into all Bloom variants, or generate one exact target-level rewrite for a focused classroom need.
+            Start with identification, branch into all SOLO variants, or generate one exact target-level rewrite for a focused classroom need.
           </p>
 
           <div className="mt-6 space-y-5">
@@ -199,7 +198,7 @@ export default function CheckDifficultyPage() {
                 className="btn btn-primary w-full justify-center"
               >
                 <GitBranchPlus className="h-4 w-4" />
-                {generatingAll ? 'Generating all variants...' : 'Generate All Bloom Levels'}
+                {generatingAll ? 'Generating all variants...' : 'Generate All SOLO Levels'}
               </button>
               <button onClick={handleClear} className="btn btn-outline w-full justify-center">
                 Clear Studio
@@ -226,7 +225,7 @@ export default function CheckDifficultyPage() {
               <div className="surface-subtle mt-5 p-5">
                 <p className="text-sm font-semibold text-slate-900">No analysis yet</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Identify the current level first, or generate all Bloom variants to see the full cognitive ladder for this question.
+                  Identify the current level first, or generate all SOLO variants to see the full cognitive ladder for this question.
                 </p>
               </div>
             ) : (
@@ -262,7 +261,7 @@ export default function CheckDifficultyPage() {
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {BLOOM_LEVELS.map((item) => {
+              {SOLO_LEVELS.map((item) => {
                 const active = targetLevel === item.level
                 return (
                   <button
@@ -305,9 +304,9 @@ export default function CheckDifficultyPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="section-kicker text-slate-500">Comparison view</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">Bloom ladder for this same question.</h2>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">SOLO ladder for this same question.</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Generate all levels to compare how the same prompt changes across recall, understanding, application, analysis, evaluation, and creation.
+              Generate all levels to compare how the same prompt changes from a single detail to several unconnected points, then an integrated explanation, then a generalized, transferable idea.
             </p>
           </div>
         </div>
@@ -316,13 +315,13 @@ export default function CheckDifficultyPage() {
           <div className="surface-subtle mt-5 p-6">
             <p className="text-sm font-semibold text-slate-900">No variants generated yet</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Use <strong>Generate All Bloom Levels</strong> above to build the full set of question variants.
+              Use <strong>Generate All SOLO Levels</strong> above to build the full set of question variants.
             </p>
           </div>
         ) : (
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             {allVariants.map((variant) => {
-              const tone = BLOOM_LEVELS.find((item) => item.level === variant.bloom_level)?.tone || 'border-slate-200 bg-slate-50 text-slate-700'
+              const tone = SOLO_LEVELS.find((item) => item.level === variant.bloom_level)?.tone || 'border-slate-200 bg-slate-50 text-slate-700'
               const isOriginal = variant.bloom_level === analyzeResult?.level
               return (
                 <div key={variant.bloom_level} className={`rounded-[22px] border p-5 ${tone}`}>

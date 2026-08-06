@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Dict, List
 
-from app.agents.bloom_classifier import BLOOM_TAXONOMY
+from app.agents.solo_classifier import SOLO_TAXONOMY
 from app.services.ai_quality import classify_confidence
 
 
@@ -13,20 +13,20 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
     quiz_mode = (payload.get("quiz_mode") or "generated").strip().lower()
     issues: List[Dict] = []
     suggestions: List[Dict] = []
-    bloom_distribution: List[Dict] = []
+    solo_distribution: List[Dict] = []
     question_health: List[Dict] = []
 
     if quiz_mode == "manual":
         manual_questions = payload.get("manual_questions") or []
-        bloom_distribution = _build_bloom_distribution(
+        solo_distribution = _build_solo_distribution(
             [int(question.get("bloom_level") or 3) for question in manual_questions]
         )
         issues.extend(_review_manual_questions(manual_questions))
-        suggestions.extend(_manual_quiz_suggestions(manual_questions, bloom_distribution))
+        suggestions.extend(_manual_quiz_suggestions(manual_questions, solo_distribution))
         question_health = _build_question_health(manual_questions)
     else:
         bloom_level = payload.get("bloom_level")
-        bloom_distribution = _build_bloom_distribution(
+        solo_distribution = _build_solo_distribution(
             [int(bloom_level)] * int(payload.get("num_questions") or 0)
             if bloom_level
             else [1, 2, 3, 4]
@@ -47,10 +47,10 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
         average_relevance=confidence_score,
         has_primary_sources=has_primary_sources,
     )
-    assessment_focus = _infer_assessment_focus(payload, bloom_distribution)
+    assessment_focus = _infer_assessment_focus(payload, solo_distribution)
     release_risk = _infer_release_risk(issues)
     fix_first = _build_fix_first_actions(issues, question_health)
-    remediation_plan = _build_remediation_plan(payload, issues, bloom_distribution, question_health)
+    remediation_plan = _build_remediation_plan(payload, issues, solo_distribution, question_health)
 
     summary = (
         "This quiz is ready to publish with only small polish changes."
@@ -66,7 +66,7 @@ def build_quiz_quality_review(payload: Dict) -> Dict:
         "release_risk": release_risk,
         "issues": issues,
         "suggestions": suggestions[:5],
-        "bloom_distribution": bloom_distribution,
+        "solo_distribution": solo_distribution,
         "question_health": question_health[:6],
         "fix_first": fix_first[:3],
         "remediation_plan": remediation_plan[:4],
@@ -184,7 +184,7 @@ def _review_generated_quiz_config(payload: Dict) -> List[Dict]:
         issues.append(
             _issue(
                 "low",
-                "Bloom targeting is mixed",
+                "SOLO targeting is mixed",
                 "Mixed-level quizzes are fine, but you may want one dominant level if this is a checkpoint.",
             )
         )
@@ -215,13 +215,13 @@ def _review_common_quiz_settings(payload: Dict) -> List[Dict]:
     return issues
 
 
-def _manual_quiz_suggestions(questions: List[Dict], bloom_distribution: List[Dict]) -> List[Dict]:
+def _manual_quiz_suggestions(questions: List[Dict], solo_distribution: List[Dict]) -> List[Dict]:
     suggestions: List[Dict] = []
-    if questions and len(bloom_distribution) == 1:
+    if questions and len(solo_distribution) == 1:
         suggestions.append(
             _suggestion(
-                "Broaden Bloom coverage",
-                "Add at least one question at a different Bloom level so the quiz measures more than one thinking skill.",
+                "Broaden SOLO coverage",
+                "Add at least one question at a different SOLO level so the quiz measures more than one thinking skill.",
             )
         )
     if any(not (question.get("explanation") or "").strip() for question in questions):
@@ -245,7 +245,7 @@ def _generated_quiz_suggestions(payload: Dict) -> List[Dict]:
     if payload.get("bloom_level") is None:
         suggestions.append(
             _suggestion(
-                "Pick a target Bloom level for checkpoints",
+                "Pick a target SOLO level for checkpoints",
                 "Choose one dominant level when you want the quiz to diagnose a specific skill gap.",
             )
         )
@@ -258,7 +258,7 @@ def _generated_quiz_suggestions(payload: Dict) -> List[Dict]:
     return suggestions
 
 
-def _build_bloom_distribution(levels: List[int]) -> List[Dict]:
+def _build_solo_distribution(levels: List[int]) -> List[Dict]:
     if not levels:
         return []
     total = len(levels)
@@ -268,7 +268,7 @@ def _build_bloom_distribution(levels: List[int]) -> List[Dict]:
         distribution.append(
             {
                 "level": level,
-                "label": BLOOM_TAXONOMY.get(level, {}).get("name", f"Level {level}"),
+                "label": SOLO_TAXONOMY.get(level, {}).get("name", f"Level {level}"),
                 "count": counts[level],
                 "percentage": round((counts[level] / total) * 100),
             }
@@ -276,20 +276,20 @@ def _build_bloom_distribution(levels: List[int]) -> List[Dict]:
     return distribution
 
 
-def _infer_assessment_focus(payload: Dict, bloom_distribution: List[Dict]) -> str:
+def _infer_assessment_focus(payload: Dict, solo_distribution: List[Dict]) -> str:
     quiz_mode = (payload.get("quiz_mode") or "generated").strip().lower()
     duration = int(payload.get("duration_minutes") or 0)
     question_count = len(payload.get("manual_questions") or []) or int(payload.get("num_questions") or 0)
     proctored = bool(payload.get("proctoring_enabled", True))
-    dominant_bloom = bloom_distribution[-1]["label"] if bloom_distribution else "Mixed"
+    dominant_solo = solo_distribution[-1]["label"] if solo_distribution else "Mixed"
 
     if proctored and question_count >= 8:
-        return f"Controlled mastery check with {dominant_bloom.lower()} emphasis."
+        return f"Controlled mastery check with {dominant_solo.lower()} emphasis."
     if quiz_mode == "manual" and question_count <= 5 and duration <= 20:
         return "Instructor-authored checkpoint for targeted classroom diagnosis."
     if question_count <= 3:
         return "Quick understanding check that should be paired with follow-up review."
-    return f"Balanced class assessment focused on {dominant_bloom.lower()} thinking."
+    return f"Balanced class assessment focused on {dominant_solo.lower()} thinking."
 
 
 def _infer_release_risk(issues: List[Dict]) -> str:
@@ -390,7 +390,7 @@ def _build_fix_first_actions(issues: List[Dict], question_health: List[Dict]) ->
 def _build_remediation_plan(
     payload: Dict,
     issues: List[Dict],
-    bloom_distribution: List[Dict],
+    solo_distribution: List[Dict],
     question_health: List[Dict],
 ) -> List[Dict]:
     steps: List[Dict] = []
@@ -401,11 +401,11 @@ def _build_remediation_plan(
                 "action": "Repair the weakest question first, then rerun the AI review so the answer-key and distractor signals settle.",
             }
         )
-    if len(bloom_distribution) == 1:
+    if len(solo_distribution) == 1:
         steps.append(
             {
                 "phase": "After grading",
-                "action": "Pair results with one short follow-up item at a different Bloom level so you can tell recall gaps from reasoning gaps.",
+                "action": "Pair results with one short follow-up item at a different SOLO level so you can tell recall gaps from reasoning gaps.",
             }
         )
     if any(issue["title"] == "No closing time is set" for issue in issues):

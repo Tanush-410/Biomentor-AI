@@ -103,7 +103,7 @@ export default function StartQuizPage() {
         <>
           <Link href="/documents" className="btn btn-outline">Back to Materials</Link>
           {user?.role !== 'student' && (
-            <Link href="/check-difficulty" className="btn btn-outline">Bloom&apos;s Tools</Link>
+            <Link href="/check-difficulty" className="btn btn-outline">SOLO Tools</Link>
           )}
         </>
       }

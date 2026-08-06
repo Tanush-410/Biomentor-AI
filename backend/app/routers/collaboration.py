@@ -439,7 +439,7 @@ async def get_session_summary(
         "top_discussion_topics": [{"label": label, "mentions": count} for label, count in top_topics],
         "follow_up_tasks": [
             f"Assign targeted practice on {topic}." for topic, _ in gap_counter.most_common(3)
-        ] or ["Assign one follow-up Bloom's quiz to keep the session momentum going."],
+        ] or ["Assign one follow-up SOLO quiz to keep the session momentum going."],
     }
 
 

@@ -21,7 +21,7 @@ def _choose_study_mode(gap_list: List[Dict], average_score: float, has_documents
     if average_score <= 60:
         return (
             "reinforcement",
-            "Your weakest Bloom levels need targeted rebuilding before it makes sense to accelerate difficulty.",
+            "Your weakest SOLO levels need targeted rebuilding before it makes sense to accelerate difficulty.",
         )
     return (
         "revision",
@@ -39,9 +39,9 @@ def build_study_coach_overview(progress_payload: Dict, recommendations: Dict, do
 
     next_action = f"Focus on {top_gap} next."
     rationale = (
-        f"{top_gap} is your weakest recent Bloom level, so improving it should raise your score fastest."
+        f"{top_gap} is your weakest recent SOLO level, so improving it should raise your score fastest."
         if gap_list
-        else "Start with one guided quiz so the coach can identify your weakest Bloom level."
+        else "Start with one guided quiz so the coach can identify your weakest SOLO level."
     )
 
     short_plan = [
@@ -89,7 +89,7 @@ def build_study_coach_overview(progress_payload: Dict, recommendations: Dict, do
         },
         {
             "label": "Finish with a quiz checkpoint",
-            "reason": "Use one timed attempt to see whether the weak Bloom level is improving.",
+            "reason": "Use one timed attempt to see whether the weak SOLO level is improving.",
             "target_url": "/start-quiz",
         },
     ]
@@ -140,7 +140,7 @@ def build_study_coach_progress_payload(progress_payload: Dict) -> Dict:
         return {
             "study_mode": "revision",
             "mode_reason": "The coach needs one completed quiz before it can switch into reinforcement or challenge mode.",
-            "summary": "Complete your first quiz to unlock skill-by-skill coaching across Bloom's levels.",
+            "summary": "Complete your first quiz to unlock skill-by-skill coaching across SOLO levels.",
             "checkpoint_goal": {
                 "label": "Create your first baseline",
                 "reason": "One completed quiz gives the coach enough evidence to build a useful progress path.",

@@ -12,13 +12,12 @@ import { fetchBackendWithFallback, readErrorDetail } from '../../lib/backendApi'
 import RecentScoresChart from './RecentScoresChart'
 import DashboardTabs from './DashboardTabs'
 
-const BLOOM_LABELS = {
-  1: 'Remember',
-  2: 'Understand',
-  3: 'Apply',
-  4: 'Analyze',
-  5: 'Evaluate',
-  6: 'Create'
+const SOLO_LABELS = {
+  1: 'Prestructural',
+  2: 'Unistructural',
+  3: 'Multistructural',
+  4: 'Relational',
+  5: 'Extended Abstract'
 }
 
 export default function StudentDashboard() {
@@ -36,12 +35,12 @@ export default function StudentDashboard() {
 
   const weakAreas = useMemo(() => {
     const progress = studentData.progress
-    if (!progress?.bloomLevelStats) return []
+    if (!progress?.soloLevelStats) return []
 
-    return Object.entries(progress.bloomLevelStats)
+    return Object.entries(progress.soloLevelStats)
       .map(([level, stats]) => ({
         level: Number(level),
-        name: stats.name || BLOOM_LABELS[Number(level)],
+        name: stats.name || SOLO_LABELS[Number(level)],
         average: Math.round(stats.average || 0),
         count: stats.count || 0
       }))
@@ -58,13 +57,13 @@ export default function StudentDashboard() {
     if (!progress) return []
     const items = []
     if (weakAreas[0]) {
-      items.push(`Focus on ${weakAreas[0].name} questions next to strengthen your weakest Bloom's level.`)
+      items.push(`Focus on ${weakAreas[0].name} questions next to strengthen your weakest SOLO level.`)
     }
     if ((progress.totalQuestionsAnswered || 0) === 0) {
       items.push('Upload your first material and generate a quiz to begin tracking progress.')
     }
     if ((documents || []).length > 0 && user?.role !== 'student') {
-      items.push('Use Check Difficulty to convert your own questions across Bloom’s Taxonomy levels.')
+      items.push('Use Check Difficulty to convert your own questions across SOLO Taxonomy levels.')
     }
     return items.slice(0, 3)
   }, [studentData, weakAreas, user])
@@ -114,7 +113,7 @@ export default function StudentDashboard() {
   return (
     <AppShell
       title="Learning Dashboard"
-      description="See your uploaded study material, Bloom's quiz performance, and the next actions that keep your exam prep moving."
+      description="See your uploaded study material, SOLO quiz performance, and the next actions that keep your exam prep moving."
       contentClassName="space-y-8"
       actions={
         <>
@@ -150,7 +149,7 @@ export default function StudentDashboard() {
                   <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">Knowledge Gaps</h3>
-                      <p className="text-sm text-slate-600">Weakest Bloom’s Taxonomy levels based on your quiz history.</p>
+                      <p className="text-sm text-slate-600">Weakest SOLO Taxonomy levels based on your quiz history.</p>
                     </div>
                     <Link href="/progress" className="text-sm font-semibold text-[#18181b] hover:text-[#3f3f46]">Open Progress</Link>
                   </div>
@@ -272,7 +271,7 @@ export default function StudentDashboard() {
                     )}
                     <Link href="/start-quiz" className="btn btn-primary inline-flex items-center justify-center gap-2">
                       <Brain className="h-4 w-4" />
-                      Start Bloom’s Quiz
+                      Start SOLO Quiz
                     </Link>
                   </div>
                 </section>

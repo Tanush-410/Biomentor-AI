@@ -45,7 +45,7 @@ const EDUCATOR_NAV_ITEMS = [
   { href: '/educator/exam-maker', label: 'Exam Maker', icon: FileStack, match: ['/educator/exam-maker'] },
   { href: '/educator/certification', label: 'Certification', icon: BookOpen, match: ['/educator/certification'] },
   { href: '/educator/anticheat-bot', label: 'Anticheat Bot', icon: MessageSquare, match: ['/educator/anticheat-bot'] },
-  { href: '/check-difficulty', label: 'Bloom Studio', icon: Brain, match: ['/check-difficulty'] },
+  { href: '/check-difficulty', label: 'SOLO Studio', icon: Brain, match: ['/check-difficulty'] },
   { href: '/educator/class-insights', label: 'Class Insights', icon: BarChart3, match: ['/educator/class-insights'] },
   { href: '/communication-hub', label: 'Communication Hub', icon: MessageSquare, match: ['/communication-hub'] },
   { href: '/collaboration-hub', label: 'Collaboration', icon: Brain, match: ['/collaboration-hub'] },
@@ -102,7 +102,7 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
       : 'Student Workspace'
   const roleSupportCopy = user?.role === 'student'
     ? 'Study materials, quizzes, progress, and educator support in one focused space.'
-    : 'Classes, Bloom authoring, interventions, and live session control in one place.'
+    : 'Classes, SOLO authoring, interventions, and live session control in one place.'
 
   const renderNavLink = (item, compact = false) => {
     const Icon = item.icon

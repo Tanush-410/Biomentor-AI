@@ -5,7 +5,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <meta name="theme-color" content="#d9c25c" />
-        <meta name="description" content="VYDRA CORE - role-aware exam preparation with offline study, AI tutoring, educator analytics, and Bloom-guided assessment tools." />
+        <meta name="description" content="VYDRA CORE - role-aware exam preparation with offline study, AI tutoring, educator analytics, and SOLO-guided assessment tools." />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="VYDRA CORE" />

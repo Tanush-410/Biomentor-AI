@@ -18,7 +18,7 @@ from app.schemas import (
     QuizSubmissionRequest,
     TaxonomyAnalysis,
 )
-from app.agents import BloomClassifier, QuestionDifficultyConverter
+from app.agents import SoloClassifier, QuestionDifficultyConverter
 from app.agents.question_generator import QuestionGenerator
 from app.services.document_context import build_context_window, fallback_preview_context, get_document_context
 from app.services.learning_analytics import build_progress_payload
@@ -67,7 +67,7 @@ async def generate_quiz(
     Generate a quiz session with intelligent questions from documents.
     
     - **num_questions**: Number of questions to generate
-    - **bloom_level**: Specific Bloom's level filter (optional)
+    - **bloom_level**: Specific SOLO level filter (optional)
     - **document_ids**: Limit to specific documents (optional)
     - **duration_minutes**: Quiz time limit (optional)
     """
@@ -195,8 +195,8 @@ async def analyze_question(
     db: Session = Depends(get_db)
 ):
     """
-    Analyze a question's Bloom's Taxonomy level.
-    
+    Analyze a question's SOLO Taxonomy level.
+
     - **text**: Question text to analyze
     """
     if not user_id:
@@ -205,7 +205,7 @@ async def analyze_question(
             detail="User not authenticated"
         )
     
-    analysis = BloomClassifier.analyze(text)
+    analysis = SoloClassifier.analyze(text)
     
     return {
         "question": text,
@@ -227,8 +227,8 @@ async def convert_question_difficulty(
     Convert a question to a different difficulty level.
     
     - **question_text**: Original question
-    - **current_level**: Current Bloom's level (1-6)
-    - **target_level**: Target Bloom's level (1-6)
+    - **current_level**: Current SOLO level (1-5)
+    - **target_level**: Target SOLO level (1-5)
     - **context**: Optional document context
     """
     if not user_id:
@@ -238,7 +238,7 @@ async def convert_question_difficulty(
         )
     
     # Analyze current
-    current_analysis = BloomClassifier.analyze(request.question_text)
+    current_analysis = SoloClassifier.analyze(request.question_text)
     
     # Get variants
     variants_dict = QuestionDifficultyConverter.get_all_level_variants(
@@ -285,7 +285,7 @@ async def generate_level_variants(
     db: Session = Depends(get_db)
 ):
     """
-    Identify a question's current Bloom level and generate versions for all levels.
+    Identify a question's current SOLO level and generate versions for all levels.
     """
     if not user_id:
         raise HTTPException(
@@ -293,7 +293,7 @@ async def generate_level_variants(
             detail="User not authenticated"
         )
 
-    analysis = BloomClassifier.analyze(request.question_text)
+    analysis = SoloClassifier.analyze(request.question_text)
     variants_dict = QuestionDifficultyConverter.get_all_level_variants(
         request.question_text,
         analysis["level"],
@@ -328,11 +328,11 @@ async def analyze_question_level(
     db: Session = Depends(get_db)
 ):
     """
-    Analyze a question's Bloom's Taxonomy level.
-    
+    Analyze a question's SOLO Taxonomy level.
+
     - **question_text**: Question text to analyze
-    
-    Returns the identified Bloom's level and confidence score.
+
+    Returns the identified SOLO level and confidence score.
     """
     if not user_id:
         raise HTTPException(
@@ -341,7 +341,7 @@ async def analyze_question_level(
         )
     
     # Analyze the question
-    analysis = BloomClassifier.analyze(request.question_text)
+    analysis = SoloClassifier.analyze(request.question_text)
     
     return AnalyzeLevelResponse(
         level=analysis["level"],
@@ -352,10 +352,10 @@ async def analyze_question_level(
     )
 
 
-@router.get("/bloom-taxonomy")
-async def get_bloom_taxonomy():
-    """Get all Bloom's Taxonomy levels with descriptions."""
-    return BloomClassifier.get_all_levels()
+@router.get("/solo-taxonomy")
+async def get_solo_taxonomy():
+    """Get all SOLO Taxonomy levels with descriptions."""
+    return SoloClassifier.get_all_levels()
 
 
 @router.post("/submit-answer")

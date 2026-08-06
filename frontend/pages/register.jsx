@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { requestBackendJson } from '../lib/backendApi'
 
 const ROLE_OPTIONS = [
-  { value: 'student', label: 'Student', hint: 'Upload study material, practice quizzes, and track Bloom’s progress.' },
+  { value: 'student', label: 'Student', hint: 'Upload study material, practice quizzes, and track SOLO progress.' },
   { value: 'educator', label: 'Educator', hint: 'Monitor classes, launch live sessions, and assign interventions.' }
 ]
 

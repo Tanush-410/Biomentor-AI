@@ -10,7 +10,7 @@ const ROLE_MODES = [
   {
     value: 'student',
     label: 'Student Mode',
-    description: 'Study uploaded material, practice Bloom’s quizzes, and track progress.',
+    description: 'Study uploaded material, practice SOLO quizzes, and track progress.',
     icon: GraduationCap
   },
   {

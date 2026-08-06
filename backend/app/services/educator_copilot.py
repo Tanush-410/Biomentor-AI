@@ -197,7 +197,7 @@ def build_dashboard_copilot_payload(
     for student in sorted(student_snapshots, key=lambda item: item["average_score"])[:6]:
         if student.get("risk") == "stable":
             continue
-        gap_label = student["top_gap"]["level"] if student.get("top_gap") else "Bloom reinforcement"
+        gap_label = student["top_gap"]["level"] if student.get("top_gap") else "SOLO reinforcement"
         priorities.append(
             {
                 "id": f"student-{student['student_id']}",
@@ -209,7 +209,7 @@ def build_dashboard_copilot_payload(
                 "target_url": f"/educator/student/{student['student_id']}",
                 "why_now": f"{student['student_name']} is already below the class stability threshold, so delay will make the intervention more expensive later.",
                 "recommended_window": "today" if student["risk"] == "high" else "this week",
-                "confidence_reason": "Recent quiz performance and Bloom gap signals support this intervention recommendation.",
+                "confidence_reason": "Recent quiz performance and SOLO gap signals support this intervention recommendation.",
             }
         )
 

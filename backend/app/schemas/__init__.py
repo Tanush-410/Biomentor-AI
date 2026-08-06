@@ -211,11 +211,11 @@ class MaterialIntelligenceResponse(BaseModel):
     confidence_reason: Optional[str] = None
 
 
-# ===== BLOOM'S TAXONOMY SCHEMAS =====
-class BloomLevel(BaseModel):
-    """Bloom's Taxonomy level."""
-    level: int  # 1-6
-    name: str  # Remember, Understand, Apply, Analyze, Evaluate, Create
+# ===== SOLO TAXONOMY SCHEMAS =====
+class SoloLevel(BaseModel):
+    """SOLO Taxonomy level."""
+    level: int  # 1-5
+    name: str  # Prestructural, Unistructural, Multistructural, Relational, Extended Abstract
     description: str
     keywords: List[str]
 
@@ -317,8 +317,8 @@ class CollaborationEventCreate(BaseModel):
 class QuestionConversionRequest(BaseModel):
     """Request to convert question difficulty."""
     question_text: str
-    current_level: int  # 1-6 (Bloom's)
-    target_level: int   # 1-6 (Bloom's)
+    current_level: int  # 1-5 (SOLO)
+    target_level: int   # 1-5 (SOLO)
     context: Optional[str] = None  # Document context if available
 
 
@@ -340,14 +340,14 @@ class QuestionConversionResponse(BaseModel):
 
 
 class AnalyzeLevelRequest(BaseModel):
-    """Request to analyze question's Bloom's level."""
+    """Request to analyze question's SOLO level."""
     question_text: str
 
 
 class AnalyzeLevelResponse(BaseModel):
     """Response from level analyzer."""
-    level: int  # 1-6 (Bloom's)
-    level_name: str  # Remember, Understand, Apply, Analyze, Evaluate, Create
+    level: int  # 1-5 (SOLO)
+    level_name: str  # Prestructural, Unistructural, Multistructural, Relational, Extended Abstract
     confidence: float
     keywords: Optional[List[str]] = None
     description: Optional[str] = None
@@ -571,8 +571,8 @@ class QuizQualitySuggestion(BaseModel):
     detail: str
 
 
-class QuizQualityBloomMetric(BaseModel):
-    """Bloom-distribution summary for a quiz draft."""
+class QuizQualitySoloMetric(BaseModel):
+    """SOLO-distribution summary for a quiz draft."""
     level: int
     label: str
     count: int
@@ -626,7 +626,7 @@ class QuizQualityReviewResponse(BaseModel):
     release_risk: str
     issues: List[QuizQualityIssue] = Field(default_factory=list)
     suggestions: List[QuizQualitySuggestion] = Field(default_factory=list)
-    bloom_distribution: List[QuizQualityBloomMetric] = Field(default_factory=list)
+    solo_distribution: List[QuizQualitySoloMetric] = Field(default_factory=list)
     question_health: List[QuizQualityQuestionHealth] = Field(default_factory=list)
     fix_first: List[QuizQualityFixFirstItem] = Field(default_factory=list)
     remediation_plan: List[QuizQualityRemediationStep] = Field(default_factory=list)

@@ -5,13 +5,12 @@ from sqlalchemy.orm import Session
 
 from app.database.models import Document, QuizAnswer, QuizSession
 
-BLOOM_LEVEL_NAMES = {
-    1: "Remember",
-    2: "Understand",
-    3: "Apply",
-    4: "Analyze",
-    5: "Evaluate",
-    6: "Create",
+SOLO_LEVEL_NAMES = {
+    1: "Prestructural",
+    2: "Unistructural",
+    3: "Multistructural",
+    4: "Relational",
+    5: "Extended Abstract",
 }
 
 
@@ -38,14 +37,17 @@ def build_progress_payload(db: Session, user_id: str) -> Dict:
         else 0.0
     )
 
-    bloom_stats = {}
-    for level in range(1, 7):
-        level_answers = [answer for answer, _ in answers if answer.bloom_level == level]
+    solo_stats = {}
+    for level in range(1, 6):
+        # Answers persisted before the SOLO migration may still carry a
+        # pre-migration Bloom level (1-6); clamp to the SOLO range (1-5) the
+        # same way the DB backfill does, so old data doesn't get dropped here.
+        level_answers = [answer for answer, _ in answers if min(answer.bloom_level or 1, 5) == level]
         count = len(level_answers)
         correct = sum(1 for answer in level_answers if answer.is_correct)
         average = (correct / count) * 100 if count else 0.0
-        bloom_stats[level] = {
-            "name": BLOOM_LEVEL_NAMES[level],
+        solo_stats[level] = {
+            "name": SOLO_LEVEL_NAMES[level],
             "count": count,
             "average": average,
         }
@@ -64,23 +66,23 @@ def build_progress_payload(db: Session, user_id: str) -> Dict:
         "totalQuizzes": total_quizzes,
         "totalQuestionsAnswered": total_questions,
         "averageScore": average_score,
-        "bloomLevelStats": bloom_stats,
+        "soloLevelStats": solo_stats,
         "recentQuizzes": recent_quizzes,
     }
 
 
 def build_gap_list(progress_payload: Dict) -> List[Dict]:
-    """Convert Bloom progress into gap records."""
+    """Convert SOLO progress into gap records."""
     results = []
-    for level, stats in progress_payload.get("bloomLevelStats", {}).items():
+    for level, stats in progress_payload.get("soloLevelStats", {}).items():
         count = stats.get("count", 0)
         if count == 0:
             continue
         average = stats.get("average", 0.0)
         results.append(
             {
-                "topic": stats.get("name", BLOOM_LEVEL_NAMES.get(int(level), "Unknown")),
-                "level": stats.get("name", BLOOM_LEVEL_NAMES.get(int(level), "Unknown")),
+                "topic": stats.get("name", SOLO_LEVEL_NAMES.get(int(level), "Unknown")),
+                "level": stats.get("name", SOLO_LEVEL_NAMES.get(int(level), "Unknown")),
                 "gap_percentage": round(max(0.0, 100 - average), 1),
                 "answered_count": count,
             }
@@ -103,7 +105,7 @@ def build_recommendations(db: Session, user_id: str, progress_payload: Dict) -> 
     next_steps = []
 
     if total_quizzes == 0:
-        immediate.append("Generate your first quiz from an uploaded material to start measuring Bloom's mastery.")
+        immediate.append("Generate your first quiz from an uploaded material to start measuring SOLO mastery.")
     if documents_count == 0:
         immediate.append("Upload one biology PDF or notes set so the tutor can ground answers and quizzes in your material.")
     if gap_list:
@@ -128,7 +130,7 @@ def build_recommendations(db: Session, user_id: str, progress_payload: Dict) -> 
     next_steps.extend(
         [
             "Ask follow-up questions in Learning Chat using the same document as the answer source.",
-            "Aim for at least one completed quiz at each Bloom's level you want to master.",
+            "Aim for at least one completed quiz at each SOLO level you want to master.",
         ]
     )
 
@@ -146,4 +148,4 @@ def _session_title(db: Session, session: QuizSession) -> str:
         document = db.query(Document).filter(Document.id == first_id).first()
         if document:
             return f"{document.title} Quiz"
-    return f"Bloom's Level {session.bloom_level or 3} Quiz"
+    return f"SOLO Level {min(session.bloom_level or 3, 5)} Quiz"

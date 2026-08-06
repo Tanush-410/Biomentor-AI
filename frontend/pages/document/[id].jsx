@@ -258,7 +258,7 @@ export default function StudyDocumentPage() {
   return (
     <AppShell
       title="Open & Study"
-      description="Read the uploaded material, keep an offline copy ready, and jump straight into a quiz or Bloom's question analysis from the same study view."
+      description="Read the uploaded material, keep an offline copy ready, and jump straight into a quiz or SOLO question analysis from the same study view."
       contentClassName="max-w-6xl"
       actions={
         <>
