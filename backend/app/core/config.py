@@ -24,9 +24,16 @@ class Settings(BaseSettings):
     supabase_service_key: str = ""
     supabase_documents_bucket: str = "documents"
     
-    # Groq API
+    # Groq API (primary AI provider for chat answers, quizzes, and summaries)
     groq_api_key: str = ""
-    
+
+    # Gemini API (failsafe provider -- used automatically when Groq is
+    # unavailable, rate-limited, or errors, and for AI image generation).
+    # A second key can be set so requests rotate to it if the first one is
+    # rate-limited.
+    gemini_api_key: str = ""
+    gemini_api_key_2: str = ""
+
     # JWT
     secret_key: str = "changeme"
     algorithm: str = "HS256"

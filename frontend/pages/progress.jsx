@@ -25,6 +25,8 @@ export default function ProgressPage() {
   const [progress, setProgress] = useState(null)
   const [coachProgress, setCoachProgress] = useState(null)
   const [certificates, setCertificates] = useState(null)
+  const [topicGaps, setTopicGaps] = useState([])
+  const [gapTrend, setGapTrend] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -77,22 +79,19 @@ export default function ProgressPage() {
     setLoading(true)
     setError('')
     try {
-      const [progressPayload, coachPayload, certificatePayload] = await Promise.all([
-        requestBackendJson('/quiz/progress', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }),
-        requestBackendJson('/study-coach/progress', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }),
-        getMyCertificates(token)
+      const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
+      const [progressPayload, coachPayload, certificatePayload, topicGapPayload, gapTrendPayload] = await Promise.all([
+        requestBackendJson('/quiz/progress', authHeaders),
+        requestBackendJson('/study-coach/progress', authHeaders),
+        getMyCertificates(token),
+        requestBackendJson('/gaps/topics', authHeaders).catch(() => null),
+        requestBackendJson('/gaps/trend', authHeaders).catch(() => null)
       ])
       setProgress(progressPayload)
       setCoachProgress(coachPayload)
       setCertificates(certificatePayload)
+      setTopicGaps(topicGapPayload?.topic_gaps || [])
+      setGapTrend(gapTrendPayload?.trend || [])
     } catch (err) {
       console.error('Progress load error:', err)
       setError(err.message || 'Unable to connect to the server.')
@@ -314,6 +313,64 @@ export default function ProgressPage() {
               )}
             </div>
           </div>
+        </section>
+
+        <section id="knowledge-gaps" className="card p-6">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Knowledge Gaps by Topic</h2>
+          <p className="text-slate-600 mb-6">
+            Weak areas mapped to the material they came from, with a mastery trend over time as you keep practicing.
+          </p>
+
+          {topicGaps.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-slate-600">
+              No topic-level gap data yet. Complete a quiz or a Learning Chat quick check to start tracking gaps per topic.
+            </div>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current weak topics</p>
+                {topicGaps.map((gap) => (
+                  <div key={gap.topic} className="rounded-xl border border-slate-200 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-slate-900">{gap.topic}</p>
+                      <span className="text-sm font-semibold text-slate-700">{gap.mastery_percentage}% mastery</span>
+                    </div>
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full bg-[#c9ab3f]"
+                        style={{ width: `${Math.max(4, gap.mastery_percentage)}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">{gap.answered_count} answers tracked</p>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Recent gap history</p>
+                {gapTrend.length === 0 ? (
+                  <p className="text-sm text-slate-600">No history recorded yet -- this fills in as you complete more quizzes and quick checks.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {gapTrend.slice(-8).reverse().map((point, index) => (
+                      <div
+                        key={`${point.topic}-${point.recorded_at || index}`}
+                        className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      >
+                        <div>
+                          <p className="font-medium text-slate-900">{point.topic}</p>
+                          <p className="text-xs text-slate-500">
+                            {point.recorded_at ? new Date(point.recorded_at).toLocaleString() : 'Unknown time'} · {point.source === 'quick_check' ? 'Quick check' : 'Quiz'}
+                          </p>
+                        </div>
+                        <span className="font-semibold text-slate-700">{Math.round(point.mastery_score)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </section>
     </AppShell>
   )

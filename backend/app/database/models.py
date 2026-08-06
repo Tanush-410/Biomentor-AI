@@ -194,6 +194,31 @@ class QuizAnswer(Base):
     answered_at = Column(DateTime, default=datetime.utcnow)
 
 
+class GapRecord(Base):
+    """Persisted per-topic knowledge-gap snapshot.
+
+    Written every time we have real signal about a student's mastery of a
+    topic (a completed quiz, or a graded Learning Chat quick check), so the
+    student/educator "gap analysis" views can show a trend over time rather
+    than only a recomputed-from-scratch snapshot. `topic` is currently the
+    source document's title (the closest curriculum-standard proxy we have
+    without a dedicated topic-tagging system); `mastery_score` and
+    `gap_percentage` are both 0-100 and sum to 100.
+    """
+
+    __tablename__ = "gap_records"
+
+    id = Column(String, primary_key=True, default=new_id)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    topic = Column(String, nullable=False, index=True)
+    document_id = Column(String, ForeignKey("documents.id"), nullable=True)
+    source = Column(String, nullable=False, default="quiz")  # "quiz" | "quick_check"
+    mastery_score = Column(Float, nullable=False)
+    gap_percentage = Column(Float, nullable=False)
+    sample_size = Column(Integer, default=1)
+    recorded_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class GeneratedQuestion(Base):
     """Cached generated questions."""
 

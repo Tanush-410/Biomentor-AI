@@ -1,18 +1,12 @@
 """Document-level study intelligence built from uploaded material."""
 from __future__ import annotations
 
-import json
 from collections import Counter
 from typing import Dict, List
 
-import requests
-
-from app.core.config import settings
+from app.services.ai_generation import ai_json_completion, ai_provider_available
 from app.services.ai_quality import classify_confidence
 from app.services.document_context import build_context_window, build_document_insights
-
-
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 
 def build_material_intelligence(document: Dict, contexts: List[Dict]) -> Dict:
@@ -59,7 +53,7 @@ def _average_relevance(contexts: List[Dict]) -> float:
 
 
 def _generate_with_ai(document: Dict, contexts: List[Dict]) -> Dict | None:
-    if not settings.groq_api_key or not contexts:
+    if not ai_provider_available() or not contexts:
         return None
 
     prompt_context = build_context_window(contexts[:8], max_chars=9000)
@@ -114,42 +108,28 @@ Material:
 \"\"\"
 """.strip()
 
-    try:
-        response = requests.post(
-            GROQ_URL,
-            headers={
-                "Authorization": f"Bearer {settings.groq_api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "temperature": 0.2,
-                "response_format": {"type": "json_object"},
-                "messages": [
-                    {"role": "system", "content": "Return only valid JSON."},
-                    {"role": "user", "content": prompt},
-                ],
-            },
-            timeout=35,
-        )
-        response.raise_for_status()
-        content = response.json()["choices"][0]["message"]["content"]
-        parsed = json.loads(content)
-        return {
-            "summary": parsed.get("summary"),
-            "layered_summaries": parsed.get("layered_summaries") or {},
-            "revision_bullets": parsed.get("revision_bullets") or [],
-            "glossary": parsed.get("glossary") or [],
-            "flashcards": parsed.get("flashcards") or [],
-            "follow_up_prompts": parsed.get("follow_up_prompts") or [],
-            "prerequisite_warning": parsed.get("prerequisite_warning"),
-            "concept_map": parsed.get("concept_map") or [],
-            "misconception_traps": parsed.get("misconception_traps") or [],
-            "viva_questions": parsed.get("viva_questions") or [],
-            "study_path": parsed.get("study_path") or [],
-        }
-    except Exception:
+    parsed = ai_json_completion(
+        system_prompt="Return only valid JSON.",
+        user_prompt=prompt,
+        temperature=0.2,
+        timeout=35,
+    )
+    if not parsed:
         return None
+
+    return {
+        "summary": parsed.get("summary"),
+        "layered_summaries": parsed.get("layered_summaries") or {},
+        "revision_bullets": parsed.get("revision_bullets") or [],
+        "glossary": parsed.get("glossary") or [],
+        "flashcards": parsed.get("flashcards") or [],
+        "follow_up_prompts": parsed.get("follow_up_prompts") or [],
+        "prerequisite_warning": parsed.get("prerequisite_warning"),
+        "concept_map": parsed.get("concept_map") or [],
+        "misconception_traps": parsed.get("misconception_traps") or [],
+        "viva_questions": parsed.get("viva_questions") or [],
+        "study_path": parsed.get("study_path") or [],
+    }
 
 
 def _fallback_material_intelligence(document: Dict, contexts: List[Dict], insights: Dict) -> Dict:

@@ -17,6 +17,7 @@ from app.database.models import (
     User,
 )
 from app.services.ai_evaluation import should_use_safe_fallback
+from app.services.ai_generation import ai_json_completion, ai_provider_available
 from app.services.ai_quality import classify_confidence
 
 
@@ -210,7 +211,7 @@ def generate_ai_meeting_summary(
     audience: str,
 ) -> dict | None:
     """Use the configured LLM to produce a richer meeting summary when available."""
-    if not _groq_available():
+    if not ai_provider_available():
         return None
 
     transcript_text = "\n".join(
@@ -234,46 +235,25 @@ def generate_ai_meeting_summary(
             "Keep it student-safe, concise, and easy to revise from."
         )
 
-    payload = {
-        "model": "llama-3.3-70b-versatile",
-        "temperature": 0.2,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are an academic meeting assistant for a classroom platform. "
-                    "Summarize only from the provided meeting transcript and event cues. "
-                    "Do not invent facts that are not supported by the meeting evidence. "
-                    f"{instruction}"
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Meeting title: {meeting_title or 'Class meeting'}\n\n"
-                    f"Transcript snippets:\n{transcript_text or 'No transcript available.'}\n\n"
-                    f"Meeting events:\n{event_text or 'No structured events.'}\n\n"
-                    "Generate the JSON output now."
-                ),
-            },
-        ],
-    }
+    system_prompt = (
+        "You are an academic meeting assistant for a classroom platform. "
+        "Summarize only from the provided meeting transcript and event cues. "
+        "Do not invent facts that are not supported by the meeting evidence. "
+        f"{instruction}"
+    )
+    user_prompt = (
+        f"Meeting title: {meeting_title or 'Class meeting'}\n\n"
+        f"Transcript snippets:\n{transcript_text or 'No transcript available.'}\n\n"
+        f"Meeting events:\n{event_text or 'No structured events.'}\n\n"
+        "Generate the JSON output now."
+    )
 
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.groq_api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=20,
-        )
-        response.raise_for_status()
-        content = response.json()["choices"][0]["message"]["content"].strip()
-        return json.loads(content)
-    except Exception:
-        return None
+    return ai_json_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        temperature=0.2,
+        timeout=20,
+    )
 
 
 def serialize_transcript(transcript: ClassroomMeetingTranscript) -> dict:

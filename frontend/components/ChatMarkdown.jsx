@@ -164,9 +164,13 @@ function MermaidBlock({ code }) {
 }
 
 /**
- * Renders a ```image code block by asking the backend for a real photo
- * (Wikimedia Commons) first, then falling back to a free AI-generated
- * illustration (Pollinations) if no real image was found.
+ * Renders a ```image code block. Resolution order:
+ *  1. A real photo from Wikimedia Commons (`/qa/image-search`).
+ *  2. If none found, an AI-generated illustration from Gemini
+ *     (`/qa/image-generate` -- automatic, no user action needed).
+ *  3. If Gemini isn't configured or every key failed, a last-resort
+ *     unauthenticated AI illustration from Pollinations so the feature
+ *     never fully breaks.
  */
 function ImageBlock({ prompt }) {
   const { token } = useAuth() || {}
@@ -176,19 +180,38 @@ function ImageBlock({ prompt }) {
 
   useEffect(() => {
     let cancelled = false
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {}
 
     async function resolveImage() {
       setStatus('loading')
+
       try {
-        const payload = await requestBackendJson('/qa/image-search', {
+        const searchPayload = await requestBackendJson('/qa/image-search', {
           method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: authHeaders,
           body: { query: prompt }
         })
         if (cancelled) return
-        if (payload?.image_url) {
-          setImageUrl(payload.image_url)
+        if (searchPayload?.image_url) {
+          setImageUrl(searchPayload.image_url)
           setSourceLabel('wikimedia')
+          setStatus('ready')
+          return
+        }
+      } catch (err) {
+        if (cancelled) return
+      }
+
+      try {
+        const generatePayload = await requestBackendJson('/qa/image-generate', {
+          method: 'POST',
+          headers: authHeaders,
+          body: { prompt }
+        })
+        if (cancelled) return
+        if (generatePayload?.image_url) {
+          setImageUrl(generatePayload.image_url)
+          setSourceLabel('gemini')
           setStatus('ready')
           return
         }
@@ -240,6 +263,8 @@ function ImageBlock({ prompt }) {
               Wikimedia Commons
             </a>
           </>
+        ) : sourceLabel === 'gemini' ? (
+          'AI-generated illustration (Gemini)'
         ) : (
           'AI-generated illustration'
         )}

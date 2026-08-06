@@ -1,6 +1,6 @@
 """Question answering router backed by uploaded materials."""
 from datetime import datetime
-import json
+import base64
 import logging
 import re
 from typing import List, Optional
@@ -26,8 +26,15 @@ from app.schemas import (
 )
 from app.services.ai_evaluation import should_use_safe_fallback
 from app.services.ai_evidence import dedupe_evidence_items, trim_evidence_items
+from app.services.ai_generation import (
+    ai_chat_completion,
+    ai_json_completion,
+    ai_provider_available,
+    gemini_generate_image,
+)
 from app.services.ai_quality import classify_confidence, make_origin_label
 from app.services.document_context import build_context_window, fallback_preview_context, get_document_context
+from app.services.learning_analytics import record_gap_snapshot
 from app.services.web_retrieval import DuckDuckGoSearchClient, retrieve_web_contexts
 
 router = APIRouter(prefix="/api/qa", tags=["qa"])
@@ -44,6 +51,15 @@ class ImageSearchRequest(BaseModel):
 class ImageSearchResponse(BaseModel):
     image_url: Optional[str] = None
     source: str = "wikimedia"
+
+
+class ImageGenerateRequest(BaseModel):
+    prompt: str
+
+
+class ImageGenerateResponse(BaseModel):
+    image_url: Optional[str] = None
+    source: str = "none"
 
 
 def _wikimedia_search_once(query: str) -> Optional[str]:
@@ -122,6 +138,31 @@ async def image_search(
     return ImageSearchResponse(image_url=image_url, source="wikimedia")
 
 
+@router.post("/image-generate", response_model=ImageGenerateResponse)
+async def image_generate(
+    request: ImageGenerateRequest,
+    http_request: Request,
+    current_user=Depends(get_current_user),
+):
+    """Automatically generate an illustration with Gemini when no real photo was found.
+
+    Called by the chat UI as the second step of a requested ```image block,
+    after a Wikimedia Commons search comes up empty. Returns a data URI so
+    the frontend can render it directly with no extra storage step.
+    """
+    enforce_rate_limit(http_request, "qa-image-generate", limit=30, window_seconds=300)
+    prompt = (request.prompt or "").strip()
+    if not prompt:
+        return ImageGenerateResponse(image_url=None, source="none")
+
+    image_bytes = gemini_generate_image(prompt)
+    if not image_bytes:
+        return ImageGenerateResponse(image_url=None, source="none")
+
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    return ImageGenerateResponse(image_url=f"data:image/png;base64,{encoded}", source="gemini")
+
+
 @router.post("/answer", response_model=AnswerGenerationResponse)
 async def generate_answer(
     request: AnswerGenerationRequest,
@@ -152,10 +193,11 @@ async def evaluate_quick_check_route(
     request: QuickCheckEvaluationRequest,
     http_request: Request,
     current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """Grade a lightweight adaptive quick check."""
     enforce_rate_limit(http_request, "qa-quick-check", limit=60, window_seconds=300)
-    return evaluate_quick_check_submission(request)
+    return evaluate_quick_check_submission(request, db=db, user_id=current_user.id)
 
 
 def build_answer_response(
@@ -286,8 +328,8 @@ def _retrieve_for_question(
 
 
 def _generate_answer_from_context(question: str, contexts, conversation_history=None):
-    if _groq_available():
-        answer = _generate_with_groq(question, contexts, conversation_history or [])
+    if ai_provider_available():
+        answer = _generate_with_ai(question, contexts, conversation_history or [])
         if answer:
             return answer, 0.82
 
@@ -298,16 +340,10 @@ def _generate_answer_from_context(question: str, contexts, conversation_history=
     )
 
 
-def _generate_with_groq(question: str, contexts, conversation_history):
+def _generate_with_ai(question: str, contexts, conversation_history):
     context_text = build_context_window(contexts[:6], max_chars=9000)
     conversation_text = _format_conversation_history(conversation_history)
-    payload = {
-        "model": "llama-3.3-70b-versatile",
-        "temperature": 0.2,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
+    system_prompt = (
                     "You are a study assistant. Ground your answer in the provided study material first: use it as "
                     "your primary source, quote or paraphrase it, and cite what it says. "
                     "If the study material only partially covers the question, or does not cover it at all, do NOT "
@@ -356,49 +392,27 @@ def _generate_with_groq(question: str, contexts, conversation_history):
                     "relationships between concepts, and ```image for anything that should look like a real photo or "
                     "drawing -- never use both for the same visual, and use whichever (or both, for different parts of "
                     "the answer) genuinely helps the student understand."
-                )
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Current question: {question}\n\n"
-                    f"Recent conversation:\n{conversation_text}\n\n"
-                    f"Study material:\n{context_text}\n\n"
-                    "Answer the current question. If it is a follow-up, use the recent conversation only to clarify intent, "
-                    "but ground the answer in the study material."
-                )
-            }
-        ]
-    }
+    )
+    user_prompt = (
+        f"Current question: {question}\n\n"
+        f"Recent conversation:\n{conversation_text}\n\n"
+        f"Study material:\n{context_text}\n\n"
+        "Answer the current question. If it is a follow-up, use the recent conversation only to clarify intent, "
+        "but ground the answer in the study material."
+    )
 
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.groq_api_key}",
-                "Content-Type": "application/json"
-            },
-            json=payload,
-            timeout=30
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["choices"][0]["message"]["content"].strip()
-    except requests.exceptions.HTTPError:
-        logger.error(
-            "Groq answer request failed with HTTP %s: %s",
-            response.status_code,
-            response.text[:500],
-        )
+    text, provider = ai_chat_completion(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        temperature=0.2,
+        timeout=30,
+    )
+    if not text:
+        logger.warning("Both Groq and Gemini failed to produce an answer.")
         return None
-    except Exception:
-        logger.exception("Groq answer request failed")
-        return None
-
-
-def _groq_available():
-    key = (settings.groq_api_key or "").strip()
-    return bool(key and not key.lower().startswith("your_"))
+    if provider == "gemini":
+        logger.info("Answer generated via Gemini failsafe (Groq unavailable or failed).")
+    return text.strip()
 
 
 def _normalize_conversation_history(history):
@@ -467,56 +481,41 @@ def _should_offer_quick_check(confidence: float, complexity: str) -> bool:
 
 
 def _build_quick_check(question: str, contexts, answer_text: str):
-    if _groq_available():
-        generated = _generate_quick_check_with_groq(question, contexts, answer_text)
+    if ai_provider_available():
+        generated = _generate_quick_check_with_ai(question, contexts, answer_text)
         if generated:
+            generated.setdefault("topic", _quick_check_topic(contexts))
             return generated
-    return _build_quick_check_fallback(question, contexts, answer_text)
+    quick_check = _build_quick_check_fallback(question, contexts, answer_text)
+    quick_check["topic"] = _quick_check_topic(contexts)
+    return quick_check
 
 
-def _generate_quick_check_with_groq(question: str, contexts, answer_text: str):
-    context_text = build_context_window(contexts[:3], max_chars=3500)
-    payload = {
-        "model": "llama-3.3-70b-versatile",
-        "temperature": 0.2,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Create a compact 2-3 question multiple-choice quick check. "
-                    "Return valid JSON only with keys id, title, questions. "
-                    "Each question must include id, prompt, options, correct_option_id, explanation. "
-                    "Each option must include id and text."
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Question:\n{question}\n\n"
-                    f"Answer:\n{answer_text}\n\n"
-                    f"Sources:\n{context_text}\n\n"
-                    "Create a short quick check grounded in this material."
-                ),
-            },
-        ],
-    }
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.groq_api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=30,
-        )
-        response.raise_for_status()
-        content = response.json()["choices"][0]["message"]["content"].strip()
-        parsed = json.loads(content)
-        return parsed
-    except Exception:
-        logger.exception("Groq quick-check request failed")
+def _quick_check_topic(contexts) -> Optional[str]:
+    """Best-effort topic label for a quick check, used later to record a gap-analytics snapshot."""
+    if not contexts:
         return None
+    return contexts[0].get("document_title") or None
+
+
+def _generate_quick_check_with_ai(question: str, contexts, answer_text: str):
+    context_text = build_context_window(contexts[:3], max_chars=3500)
+    system_prompt = (
+        "Create a compact 2-3 question multiple-choice quick check. "
+        "Return valid JSON only with keys id, title, questions. "
+        "Each question must include id, prompt, options, correct_option_id, explanation. "
+        "Each option must include id and text."
+    )
+    user_prompt = (
+        f"Question:\n{question}\n\n"
+        f"Answer:\n{answer_text}\n\n"
+        f"Sources:\n{context_text}\n\n"
+        "Create a short quick check grounded in this material."
+    )
+    parsed = ai_json_completion(system_prompt=system_prompt, user_prompt=user_prompt, temperature=0.2, timeout=30)
+    if parsed is None:
+        logger.warning("Both Groq and Gemini failed to produce a quick check.")
+    return parsed
 
 
 def _build_quick_check_fallback(question: str, contexts, answer_text: str):
@@ -569,7 +568,11 @@ def _extract_keywords(question: str, answer_text: str):
     return keywords[:6]
 
 
-def evaluate_quick_check_submission(request: QuickCheckEvaluationRequest) -> QuickCheckEvaluationResponse:
+def evaluate_quick_check_submission(
+    request: QuickCheckEvaluationRequest,
+    db: Optional[Session] = None,
+    user_id: Optional[str] = None,
+) -> QuickCheckEvaluationResponse:
     answers_by_question = {item.question_id: item.selected_option_id for item in request.answers}
     results = []
     score = 0
@@ -590,6 +593,25 @@ def evaluate_quick_check_submission(request: QuickCheckEvaluationRequest) -> Qui
         )
 
     total_questions = len(request.quick_check.questions)
+
+    # Feed this graded quick check into gap analytics (best-effort -- a
+    # missing db/user_id, e.g. in direct unit-test calls, just skips this).
+    if db is not None and user_id and total_questions > 0:
+        try:
+            mastery = (score / total_questions) * 100
+            record_gap_snapshot(
+                db,
+                user_id,
+                request.quick_check.topic or "General",
+                mastery,
+                source="quick_check",
+                sample_size=total_questions,
+            )
+            db.commit()
+        except Exception:
+            logger.exception("Failed to record gap snapshot for quick check.")
+            db.rollback()
+
     return QuickCheckEvaluationResponse(
         quick_check_id=request.quick_check_id,
         score=score,

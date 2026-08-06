@@ -9,6 +9,7 @@ import requests
 
 from app.agents.solo_classifier import SOLO_TAXONOMY
 from app.core import settings
+from app.services.ai_generation import gemini_available, gemini_json_completion
 
 
 class QuestionGenerator:
@@ -130,56 +131,68 @@ class QuestionGenerator:
 
     @staticmethod
     def _generate_with_llm(content: str, num_questions: int, target_levels: List[int]) -> List[Dict]:
-        if not QuestionGenerator._groq_available():
-            return []
-
         context = QuestionGenerator._select_context(content)
         if not context:
             return []
 
         prompt = QuestionGenerator._build_prompt(context, num_questions, target_levels)
-        headers = {
-            "Authorization": f"Bearer {settings.groq_api_key}",
-            "Content-Type": "application/json",
-        }
+        system_prompt = (
+            "You create high-quality multiple-choice quizzes from study material. "
+            "Only use facts supported by the provided text. Ignore page headers, table labels, "
+            "example markers, and formatting noise."
+        )
 
-        for model in QuestionGenerator.GROQ_MODELS:
-            payload = {
-                "model": model,
-                "temperature": 0.3,
-                "response_format": {"type": "json_object"},
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "You create high-quality multiple-choice quizzes from study material. "
-                            "Only use facts supported by the provided text. Ignore page headers, table labels, "
-                            "example markers, and formatting noise."
-                        ),
-                    },
-                    {"role": "user", "content": prompt},
-                ],
+        if QuestionGenerator._groq_available():
+            headers = {
+                "Authorization": f"Bearer {settings.groq_api_key}",
+                "Content-Type": "application/json",
             }
 
+            for model in QuestionGenerator.GROQ_MODELS:
+                payload = {
+                    "model": model,
+                    "temperature": 0.3,
+                    "response_format": {"type": "json_object"},
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                }
+
+                try:
+                    response = requests.post(
+                        QuestionGenerator.GROQ_URL,
+                        headers=headers,
+                        json=payload,
+                        timeout=45,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    content_text = data["choices"][0]["message"]["content"]
+                    parsed = QuestionGenerator._extract_json(content_text)
+                    questions = QuestionGenerator._normalize_llm_questions(
+                        parsed.get("questions", []),
+                        target_levels,
+                    )
+                    if len(questions) >= max(1, min(num_questions, 2)):
+                        return questions
+                except Exception:
+                    continue
+
+        # Every Groq model attempt failed (or Groq isn't configured) --
+        # fail over to Gemini before falling back to fact-extraction below.
+        if gemini_available():
             try:
-                response = requests.post(
-                    QuestionGenerator.GROQ_URL,
-                    headers=headers,
-                    json=payload,
-                    timeout=45,
-                )
-                response.raise_for_status()
-                data = response.json()
-                content_text = data["choices"][0]["message"]["content"]
-                parsed = QuestionGenerator._extract_json(content_text)
-                questions = QuestionGenerator._normalize_llm_questions(
-                    parsed.get("questions", []),
-                    target_levels,
-                )
-                if len(questions) >= max(1, min(num_questions, 2)):
-                    return questions
+                parsed = gemini_json_completion(system_prompt=system_prompt, user_prompt=prompt, temperature=0.3, timeout=45)
+                if parsed:
+                    questions = QuestionGenerator._normalize_llm_questions(
+                        parsed.get("questions", []),
+                        target_levels,
+                    )
+                    if len(questions) >= max(1, min(num_questions, 2)):
+                        return questions
             except Exception:
-                continue
+                pass
 
         return []
 

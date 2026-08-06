@@ -422,6 +422,7 @@ class QuickCheckPayload(BaseModel):
     id: str
     title: str
     questions: List[QuickCheckQuestion]
+    topic: Optional[str] = None
 
 
 class QuickCheckAnswer(BaseModel):

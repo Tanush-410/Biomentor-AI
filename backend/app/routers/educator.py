@@ -47,7 +47,7 @@ from app.services.educator_copilot import (
     build_dashboard_copilot_payload,
     load_educator_signal_context,
 )
-from app.services.learning_analytics import build_gap_list, build_progress_payload
+from app.services.learning_analytics import build_gap_list, build_gap_trend, build_progress_payload, build_topic_gap_list
 from app.services.proctor_review import build_proctor_review_payload, serialize_proctor_incident_row
 from app.services.quiz_quality import build_quiz_quality_review
 
@@ -410,6 +410,8 @@ async def get_student_analytics(
         },
         "progress": progress,
         "gaps": build_gap_list(progress),
+        "topic_gaps": build_topic_gap_list(db, student.id),
+        "gap_trend": build_gap_trend(db, student.id),
         "lessons": [
             {
                 "id": lesson.id,

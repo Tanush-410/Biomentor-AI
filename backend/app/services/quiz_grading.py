@@ -15,7 +15,8 @@ from typing import Any, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
-from app.database.models import GeneratedQuestion, QuizAnswer, QuizSession
+from app.database.models import Document, GeneratedQuestion, QuizAnswer, QuizSession
+from app.services.learning_analytics import record_gap_snapshot
 
 
 def grade_mcq_session(
@@ -56,6 +57,7 @@ def grade_mcq_session(
     db.query(QuizAnswer).filter(QuizAnswer.session_id == session.id).delete()
 
     correct_count = 0
+    topic_tally: dict[str, dict] = {}  # document_id -> {"correct": int, "total": int}
     for submitted in answers:
         generated_question = db.query(GeneratedQuestion).filter(
             GeneratedQuestion.id == submitted.question_id,
@@ -82,10 +84,46 @@ def grade_mcq_session(
         if is_correct:
             correct_count += 1
 
+        document_id = generated_question.document_id if generated_question else None
+        bucket = topic_tally.setdefault(document_id or "_none", {"document_id": document_id, "correct": 0, "total": 0})
+        bucket["total"] += 1
+        bucket["correct"] += int(is_correct)
+
     session.correct_answers = correct_count
     session.total_questions = total_questions
     session.score = round((correct_count / total_questions) * 100, 2) if total_questions else 0
     session.is_completed = True
     session.completed_at = datetime.utcnow()
 
+    _record_gap_snapshots(db, user_id, topic_tally)
+
     return correct_count, total_questions
+
+
+def _record_gap_snapshots(db: Session, user_id: str, topic_tally: dict) -> None:
+    """Write one gap-analytics snapshot per topic (source document) this session touched.
+
+    Feeds the persisted mastery-over-time trend shown in the gap analysis
+    views. Best-effort: a missing/renamed document just falls back to a
+    generic "General" topic label rather than blocking grading.
+    """
+    for bucket in topic_tally.values():
+        total = bucket["total"]
+        if not total:
+            continue
+        document_id = bucket["document_id"]
+        topic = "General"
+        if document_id:
+            document = db.query(Document).filter(Document.id == document_id).first()
+            if document:
+                topic = document.title
+        mastery = (bucket["correct"] / total) * 100
+        record_gap_snapshot(
+            db,
+            user_id,
+            topic,
+            mastery,
+            document_id=document_id,
+            source="quiz",
+            sample_size=total,
+        )

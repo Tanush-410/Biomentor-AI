@@ -17,7 +17,13 @@ from app.schemas import (
     StudyCoachOverviewResponse,
     StudyCoachProgressResponse,
 )
-from app.services.learning_analytics import build_gap_list, build_progress_payload, build_recommendations
+from app.services.learning_analytics import (
+    build_gap_list,
+    build_gap_trend,
+    build_progress_payload,
+    build_recommendations,
+    build_topic_gap_list,
+)
 from app.services.study_coach import (
     build_study_coach_chat_payload,
     build_study_coach_materials_payload,
@@ -156,6 +162,42 @@ async def get_knowledge_gaps(
         raise HTTPException(status_code=500, detail=str(exc))
 
 
+@router.get("/gaps/topics")
+async def get_topic_gaps(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Current weak topics -- the "Gap Detection Engine" half of gap analysis.
+
+    Unlike /gaps/list (which buckets by SOLO taxonomy level), this maps each
+    quiz answer to the material it came from, so the result reads as real
+    topics ("Cell Respiration Notes") instead of taxonomy level names.
+    """
+    try:
+        topic_gaps = build_topic_gap_list(db, current_user.id)
+        return {"success": True, "topic_gaps": topic_gaps, "total_topics": len(topic_gaps)}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/gaps/trend")
+async def get_gap_trend(
+    topic: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Persisted gap history over time -- the "Gap Analytics" half of gap analysis.
+
+    Powers an improvement/decline trend chart. Pass `topic` to scope to one
+    topic, or omit it for recent history across all topics.
+    """
+    try:
+        trend = build_gap_trend(db, current_user.id, topic=topic)
+        return {"success": True, "trend": trend}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @router.get("/progress/tracker")
 async def get_progress_tracker(
     current_user: User = Depends(get_current_user),
@@ -186,6 +228,7 @@ async def get_progress_tracker(
                 {"topic": gap["level"], "mastery": round(100 - gap["gap_percentage"])}
                 for gap in gaps[:6]
             ],
+            "topic_gaps": build_topic_gap_list(db, current_user.id, limit=6),
             "recent_quizzes": progress_payload["recentQuizzes"],
         }
         return {"success": True, "data": progress_data}

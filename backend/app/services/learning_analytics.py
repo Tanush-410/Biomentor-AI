@@ -1,9 +1,10 @@
 """Derived analytics and recommendation helpers."""
-from typing import Dict, List
+from datetime import datetime
+from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.database.models import Document, QuizAnswer, QuizSession
+from app.database.models import Document, GapRecord, GeneratedQuestion, QuizAnswer, QuizSession
 
 SOLO_LEVEL_NAMES = {
     1: "Prestructural",
@@ -90,6 +91,115 @@ def build_gap_list(progress_payload: Dict) -> List[Dict]:
 
     results.sort(key=lambda item: item["gap_percentage"], reverse=True)
     return results
+
+
+def record_gap_snapshot(
+    db: Session,
+    user_id: str,
+    topic: str,
+    mastery_score: float,
+    *,
+    document_id: Optional[str] = None,
+    source: str = "quiz",
+    sample_size: int = 1,
+) -> GapRecord:
+    """Persist one point-in-time mastery reading for a topic.
+
+    Callers add this to the same DB session they're already using (e.g. the
+    quiz-submission flow) and let the caller's existing `db.commit()` save
+    it -- this function does not commit on its own, so it never introduces
+    a partial-write in a larger transaction.
+    """
+    topic = (topic or "General").strip() or "General"
+    mastery_score = max(0.0, min(100.0, mastery_score))
+    record = GapRecord(
+        user_id=user_id,
+        topic=topic,
+        document_id=document_id,
+        source=source,
+        mastery_score=mastery_score,
+        gap_percentage=round(100.0 - mastery_score, 1),
+        sample_size=max(1, sample_size),
+        recorded_at=datetime.utcnow(),
+    )
+    db.add(record)
+    return record
+
+
+def build_topic_gap_list(db: Session, user_id: str, limit: int = 8) -> List[Dict]:
+    """Current weak topics, derived from quiz answers joined to their source document.
+
+    This is the "Gap Detection Engine" half of gap analysis: it looks at
+    real answers (not just SOLO level) and maps each one to the document it
+    came from, which stands in for a curriculum-standard/topic tag until the
+    app has a dedicated topic-tagging system.
+    """
+    rows = (
+        db.query(QuizAnswer, GeneratedQuestion, Document)
+        .join(QuizSession, QuizSession.id == QuizAnswer.session_id)
+        .join(
+            GeneratedQuestion,
+            (GeneratedQuestion.id == QuizAnswer.question_id) & (GeneratedQuestion.session_id == QuizAnswer.session_id),
+        )
+        .outerjoin(Document, Document.id == GeneratedQuestion.document_id)
+        .filter(QuizSession.user_id == user_id)
+        .all()
+    )
+
+    by_topic: Dict[str, Dict] = {}
+    for answer, question, document in rows:
+        topic = document.title if document else "General"
+        document_id = document.id if document else None
+        bucket = by_topic.setdefault(
+            topic,
+            {"topic": topic, "document_id": document_id, "answered_count": 0, "correct_count": 0},
+        )
+        bucket["answered_count"] += 1
+        bucket["correct_count"] += int(bool(answer.is_correct))
+
+    results = []
+    for bucket in by_topic.values():
+        count = bucket["answered_count"]
+        mastery = (bucket["correct_count"] / count) * 100 if count else 0.0
+        results.append(
+            {
+                "topic": bucket["topic"],
+                "document_id": bucket["document_id"],
+                "mastery_percentage": round(mastery, 1),
+                "gap_percentage": round(max(0.0, 100 - mastery), 1),
+                "answered_count": count,
+            }
+        )
+
+    results.sort(key=lambda item: item["gap_percentage"], reverse=True)
+    return results[:limit]
+
+
+def build_gap_trend(db: Session, user_id: str, topic: Optional[str] = None, limit: int = 50) -> List[Dict]:
+    """Persisted gap history over time -- the "Gap Analytics" half of gap analysis.
+
+    Returns oldest-first so a line chart can plot improvement (or decline)
+    directly. When `topic` is omitted, returns recent history across all
+    topics (still useful for an overall trend line).
+    """
+    query = db.query(GapRecord).filter(GapRecord.user_id == user_id)
+    if topic:
+        query = query.filter(GapRecord.topic == topic)
+    records = query.order_by(GapRecord.recorded_at.desc()).limit(limit).all()
+    records.reverse()
+
+    return [
+        {
+            "topic": record.topic,
+            "document_id": record.document_id,
+            "source": record.source,
+            "mastery_score": record.mastery_score,
+            "gap_percentage": record.gap_percentage,
+            "sample_size": record.sample_size,
+            "recorded_at": record.recorded_at.isoformat() if record.recorded_at else None,
+        }
+        for record in records
+    ]
 
 
 def build_recommendations(db: Session, user_id: str, progress_payload: Dict) -> Dict:
