@@ -624,6 +624,12 @@ export default function ClassroomQuizPage() {
               <CheckCircle className="mx-auto h-20 w-20 text-[#18181b]" />
               <h3 className="mt-5 text-3xl font-bold text-slate-950">Quiz submitted</h3>
               <p className="mt-3 text-sm leading-7 text-slate-600">Your classroom quiz attempt has been saved. Your educator can now review the result.</p>
+              {typeof attempt?.score === 'number' && (
+                <div className="mx-auto mt-6 max-w-xs rounded-2xl bg-gradient-to-r from-[#f4f4f5] to-[#e4e4e7] p-6">
+                  <p className="text-sm text-slate-600 mb-1">Your Score</p>
+                  <p className="text-4xl font-bold text-[#27272a]">{Math.round(attempt.score)}%</p>
+                </div>
+              )}
               <div className="mt-6 flex justify-center gap-3">
                 <Link href={`/classrooms/${classroomId}/classwork`} className="btn btn-primary">Back to Classwork</Link>
               </div>

@@ -105,8 +105,11 @@ def _grade_objective_question(question: dict[str, Any], response: dict[str, Any]
         expected_ids = list(expected or [])
     if not expected_ids:
         return 0.0, 0.0
-    selected = sorted(str(item) for item in selected_ids)
-    expected = sorted(str(item) for item in expected_ids)
+    # Compare as sets: a duplicate option id in the submitted payload (e.g. a
+    # checkbox UI toggling the same id in twice) must not zero out an
+    # otherwise-correct selection.
+    selected = sorted({str(item) for item in selected_ids})
+    expected = sorted({str(item) for item in expected_ids})
     score = marks if selected == expected else 0.0
     confidence = 0.98 if selected == expected else 0.72
     return score, confidence

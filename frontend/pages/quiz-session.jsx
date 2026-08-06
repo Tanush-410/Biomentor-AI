@@ -18,7 +18,10 @@ export default function QuizSessionPage() {
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [score, setScore] = useState(0)
+  const [correctCount, setCorrectCount] = useState(0)
 
   useEffect(() => {
     if (authLoading) return
@@ -124,36 +127,30 @@ export default function QuizSessionPage() {
   }
 
   const handleSubmitQuiz = async () => {
-    if (submitted) return
-    setSubmitted(true)
+    if (submitting || (submitted && !submitError)) return
 
-    let correctCount = 0
     const submittedAnswers = []
     questions.forEach((question) => {
       const selectedOptionId = answers[question.id]
       if (!selectedOptionId) return
-
       submittedAnswers.push({
         question_id: question.id,
         selected_option_id: selectedOptionId
       })
-
-      const selectedOption = question.options?.find((option) => option.id === selectedOptionId)
-      if (selectedOption?.is_correct) {
-        correctCount += 1
-      }
     })
 
-    const finalScore = Math.round((correctCount / questions.length) * 100)
-    setScore(finalScore)
-
-    // Track in backend
     if (!quizConfig?.sessionId) {
+      setSubmitted(true)
+      setSubmitError('This quiz was not linked to a tracked session, so a score cannot be recorded. Please retake it from Start Quiz.')
       return
     }
 
+    setSubmitted(true)
+    setSubmitting(true)
+    setSubmitError(null)
+
     try {
-      await requestBackendJson('/quiz/submit-answer', {
+      const result = await requestBackendJson('/quiz/submit-answer', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`
@@ -164,8 +161,19 @@ export default function QuizSessionPage() {
           total_questions: questions.length
         }
       })
+
+      // The backend's persisted score is authoritative; never trust a
+      // client-side tally, since it can silently diverge from what actually
+      // got saved (e.g. a question the client had stale/mismatched data for).
+      setScore(Math.round(result?.current_score ?? 0))
+      setCorrectCount(result?.correct_count ?? 0)
+      sessionStorage.removeItem('quizConfig')
+      sessionStorage.removeItem('generatedQuestions')
     } catch (err) {
       console.error('Error submitting quiz:', err)
+      setSubmitError('We could not save your score due to a connection issue. Please retry before leaving this page.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -186,6 +194,38 @@ export default function QuizSessionPage() {
     )
   }
 
+  if (submitted && submitting) {
+    return (
+      <AppShell title="Submitting Quiz" description="Saving your answers..." contentClassName="max-w-4xl">
+        <div className="card p-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#c9ab3f] mb-4"></div>
+          <p className="text-slate-600">Grading your answers and saving your score...</p>
+        </div>
+      </AppShell>
+    )
+  }
+
+  if (submitted && submitError) {
+    return (
+      <AppShell title="Score Not Saved" description="We ran into a problem recording your quiz score." contentClassName="max-w-4xl">
+        <div className="card p-12 text-center">
+          <AlertCircle className="w-24 h-24 text-[#3f3f46] mx-auto mb-6" />
+          <h2 className="text-3xl font-bold mb-2">We couldn&apos;t save your score</h2>
+          <p className="text-slate-600 mb-8">{submitError}</p>
+
+          <div className="flex gap-4">
+            <button onClick={handleSubmitQuiz} className="flex-1 btn btn-primary">
+              Retry Submission
+            </button>
+            <Link href="/dashboard" className="flex-1 btn btn-outline">
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    )
+  }
+
   if (submitted) {
     return (
       <AppShell title="Quiz Complete" description="Your answers have been submitted and the results are now available for progress tracking." contentClassName="max-w-4xl">
@@ -197,7 +237,7 @@ export default function QuizSessionPage() {
             <div className="bg-gradient-to-r from-[#f4f4f5] to-[#e4e4e7] p-8 rounded-lg mb-8">
               <p className="text-sm text-slate-600 mb-2">Your Score</p>
               <p className="text-5xl font-bold text-[#27272a]">{score}%</p>
-              <p className="text-sm text-slate-600 mt-2">{answers ? Object.keys(answers).length : 0} of {questions.length} answered</p>
+              <p className="text-sm text-slate-600 mt-2">{correctCount} of {questions.length} correct &middot; {answers ? Object.keys(answers).length : 0} answered</p>
             </div>
 
             <div className="flex gap-4">

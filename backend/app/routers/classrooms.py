@@ -1417,6 +1417,15 @@ async def submit_classroom_quiz(
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz session not found")
 
+    # Total question count is derived from what was actually generated for
+    # this session, never trusted from the client, so a stale/incorrect
+    # client value can't skew the percentage.
+    actual_total_questions = db.query(GeneratedQuestion).filter(
+        GeneratedQuestion.session_id == session.id,
+        GeneratedQuestion.user_id == current_user.id,
+    ).count()
+    total_questions = actual_total_questions or session.total_questions or payload.total_questions
+
     db.query(QuizAnswer).filter(QuizAnswer.session_id == session.id).delete()
     correct_count = 0
     for submitted in payload.answers:
@@ -1443,8 +1452,8 @@ async def submit_classroom_quiz(
             correct_count += 1
 
     session.correct_answers = correct_count
-    session.total_questions = payload.total_questions
-    session.score = (correct_count / payload.total_questions) * 100 if payload.total_questions else 0
+    session.total_questions = total_questions
+    session.score = round((correct_count / total_questions) * 100, 2) if total_questions else 0
     session.is_completed = True
     session.completed_at = datetime.utcnow()
     session.proctoring_status = "cleared" if quiz.proctoring_enabled else "not_applicable"

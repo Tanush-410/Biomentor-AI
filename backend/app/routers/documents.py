@@ -1,10 +1,13 @@
 """Documents router for PDF upload and management."""
 from datetime import datetime
+import logging
 import mimetypes
 import os
 import tempfile
 import uuid
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse, Response
@@ -242,7 +245,8 @@ async def upload_document(
             page_count = max(1, len(page_payloads))
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
+        logger.error("Text extraction failed for upload %s (%s): %s", safe_file_name, file_extension, exc)
         extracted_text = ""
         page_payloads = []
         page_count = 1

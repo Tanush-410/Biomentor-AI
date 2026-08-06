@@ -168,9 +168,23 @@ async def generate_quiz(
         )
     db.commit()
 
+    # Send a sanitized copy to the client: the answer key must never reach the
+    # browser, both to stop trivial devtools cheating and so the client can no
+    # longer compute its own (potentially divergent) score from `is_correct`.
+    sanitized_questions = [
+        {
+            **question,
+            "options": [
+                {**option, "is_correct": None}
+                for option in (question.get("options") or [])
+            ],
+        }
+        for question in questions
+    ]
+
     return QuizGenerationResponse(
         session_id=session.id,
-        questions=questions
+        questions=sanitized_questions
     )
 
 
@@ -373,12 +387,22 @@ async def submit_quiz_answer(
             detail="Quiz session not found"
         )
     
+    # Total question count is derived from what was actually generated for this
+    # session, never trusted from the client, so a stale/incorrect client value
+    # can't skew the percentage.
+    actual_total_questions = db.query(GeneratedQuestion).filter(
+        GeneratedQuestion.session_id == session.id,
+        GeneratedQuestion.user_id == user_id
+    ).count()
+    total_questions = actual_total_questions or session.total_questions or request.total_questions
+
     db.query(QuizAnswer).filter(QuizAnswer.session_id == session.id).delete()
 
     submitted_count = 0
     for submitted in request.answers:
         generated_question = db.query(GeneratedQuestion).filter(
             GeneratedQuestion.id == submitted.question_id,
+            GeneratedQuestion.session_id == session.id,
             GeneratedQuestion.user_id == user_id
         ).first()
         is_correct = bool(
@@ -398,17 +422,18 @@ async def submit_quiz_answer(
             submitted_count += 1
 
     session.correct_answers = submitted_count
-    session.total_questions = request.total_questions
-    session.score = (submitted_count / request.total_questions) * 100 if request.total_questions else 0
+    session.total_questions = total_questions
+    session.score = round((submitted_count / total_questions) * 100, 2) if total_questions else 0
     session.is_completed = True
     session.completed_at = datetime.utcnow()
-    
+
     db.commit()
-    
+
     return {
         "message": "Answer recorded",
         "current_score": session.score,
-        "correct_count": session.correct_answers
+        "correct_count": session.correct_answers,
+        "total_questions": session.total_questions
     }
 
 
