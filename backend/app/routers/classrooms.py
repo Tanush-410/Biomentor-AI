@@ -47,7 +47,6 @@ from app.database.models import (
     AssessmentAnticheatEvidence,
     CertificationProofSubmission,
     IssuedCertificate,
-    QuizAnswer,
     QuizSession,
     User,
     new_id,
@@ -118,6 +117,7 @@ from app.services.exam_authoring import normalize_exam_blocks, normalize_exam_qu
 from app.services.exam_drafting import build_exam_draft_payload
 from app.services.exam_grading import grade_exam_attempt
 from app.services.exam_review import build_exam_review_attempt_payload
+from app.services.quiz_grading import grade_mcq_session
 from app.services.meeting_assistant import (
     finalize_meeting_assistant_outputs,
     get_student_recap,
@@ -1417,45 +1417,10 @@ async def submit_classroom_quiz(
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz session not found")
 
-    # Total question count is derived from what was actually generated for
-    # this session, never trusted from the client, so a stale/incorrect
-    # client value can't skew the percentage.
-    actual_total_questions = db.query(GeneratedQuestion).filter(
-        GeneratedQuestion.session_id == session.id,
-        GeneratedQuestion.user_id == current_user.id,
-    ).count()
-    total_questions = actual_total_questions or session.total_questions or payload.total_questions
-
-    db.query(QuizAnswer).filter(QuizAnswer.session_id == session.id).delete()
-    correct_count = 0
-    for submitted in payload.answers:
-        generated_question = (
-            db.query(GeneratedQuestion)
-            .filter(
-                GeneratedQuestion.id == submitted.question_id,
-                GeneratedQuestion.user_id == current_user.id,
-                GeneratedQuestion.session_id == session.id,
-            )
-            .first()
-        )
-        is_correct = bool(generated_question and generated_question.correct_answer == submitted.selected_option_id)
-        db.add(
-            QuizAnswer(
-                session_id=session.id,
-                question_id=submitted.question_id,
-                selected_option_id=submitted.selected_option_id,
-                is_correct=is_correct,
-                bloom_level=generated_question.bloom_level if generated_question else (quiz.bloom_level or 3),
-            )
-        )
-        if is_correct:
-            correct_count += 1
-
-    session.correct_answers = correct_count
-    session.total_questions = total_questions
-    session.score = round((correct_count / total_questions) * 100, 2) if total_questions else 0
-    session.is_completed = True
-    session.completed_at = datetime.utcnow()
+    correct_count, total_questions = grade_mcq_session(
+        db, session, current_user.id, payload.answers, payload.total_questions,
+        default_solo_level=quiz.bloom_level or 3,
+    )
     session.proctoring_status = "cleared" if quiz.proctoring_enabled else "not_applicable"
 
     attempt.status = "submitted"

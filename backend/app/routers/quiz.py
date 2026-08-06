@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.database.models import GeneratedQuestion, QuizAnswer, QuizSession
+from app.database.models import GeneratedQuestion, QuizSession
 from app.schemas import (
     AnalyzeLevelRequest,
     AnalyzeLevelResponse,
@@ -22,6 +22,7 @@ from app.agents import SoloClassifier, QuestionDifficultyConverter
 from app.agents.question_generator import QuestionGenerator
 from app.services.document_context import build_context_window, fallback_preview_context, get_document_context
 from app.services.learning_analytics import build_progress_payload
+from app.services.quiz_grading import grade_mcq_session
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 
@@ -387,45 +388,9 @@ async def submit_quiz_answer(
             detail="Quiz session not found"
         )
     
-    # Total question count is derived from what was actually generated for this
-    # session, never trusted from the client, so a stale/incorrect client value
-    # can't skew the percentage.
-    actual_total_questions = db.query(GeneratedQuestion).filter(
-        GeneratedQuestion.session_id == session.id,
-        GeneratedQuestion.user_id == user_id
-    ).count()
-    total_questions = actual_total_questions or session.total_questions or request.total_questions
-
-    db.query(QuizAnswer).filter(QuizAnswer.session_id == session.id).delete()
-
-    submitted_count = 0
-    for submitted in request.answers:
-        generated_question = db.query(GeneratedQuestion).filter(
-            GeneratedQuestion.id == submitted.question_id,
-            GeneratedQuestion.session_id == session.id,
-            GeneratedQuestion.user_id == user_id
-        ).first()
-        is_correct = bool(
-            generated_question and generated_question.correct_answer == submitted.selected_option_id
-        )
-
-        db.add(
-            QuizAnswer(
-                session_id=session.id,
-                question_id=submitted.question_id,
-                selected_option_id=submitted.selected_option_id,
-                is_correct=is_correct,
-                bloom_level=session.bloom_level or 3
-            )
-        )
-        if is_correct:
-            submitted_count += 1
-
-    session.correct_answers = submitted_count
-    session.total_questions = total_questions
-    session.score = round((submitted_count / total_questions) * 100, 2) if total_questions else 0
-    session.is_completed = True
-    session.completed_at = datetime.utcnow()
+    submitted_count, total_questions = grade_mcq_session(
+        db, session, user_id, request.answers, request.total_questions
+    )
 
     db.commit()
 
