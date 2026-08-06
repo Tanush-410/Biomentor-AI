@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import math
+import uuid
 from typing import Dict, Iterable, List, Optional
 
 import requests
@@ -61,6 +62,7 @@ def ensure_collection() -> bool:
         return False
 
     collection_url = f"{settings.qdrant_url}/collections/{settings.qdrant_collection}"
+    collection_exists = False
 
     try:
         info_response = requests.get(collection_url, headers=_headers(), timeout=10)
@@ -74,20 +76,46 @@ def ensure_collection() -> bool:
                 .get("size")
             )
             if existing_size == VECTOR_DIMENSION:
-                return True
-            requests.delete(collection_url, headers=_headers(), timeout=20)
+                collection_exists = True
+            else:
+                requests.delete(collection_url, headers=_headers(), timeout=20)
     except Exception as e:
         logger.warning("Could not inspect existing Qdrant collection: %s", e)
 
-    payload = {
-        "vectors": {
-            "size": VECTOR_DIMENSION,
-            "distance": "Cosine",
+    if not collection_exists:
+        payload = {
+            "vectors": {
+                "size": VECTOR_DIMENSION,
+                "distance": "Cosine",
+            }
         }
-    }
+        response = requests.put(collection_url, headers=_headers(), json=payload, timeout=20)
+        if not response.ok:
+            return False
 
-    response = requests.put(collection_url, headers=_headers(), json=payload, timeout=20)
-    return response.ok
+    _ensure_payload_indexes(collection_url)
+    return True
+
+
+def _ensure_payload_indexes(collection_url: str) -> None:
+    """Create payload indexes for fields used in filters.
+
+    Clusters with strict mode enabled reject any filter on a field with no
+    index ("Index required but not found"), so user_id/document_id -- both
+    filtered on in search_chunks/delete_document_vectors -- need one.
+    Idempotent: re-creating an existing index is a harmless no-op/short error
+    that's safe to ignore.
+    """
+    for field_name in ("user_id", "document_id"):
+        try:
+            requests.put(
+                f"{collection_url}/index",
+                headers=_headers(),
+                json={"field_name": field_name, "field_schema": "keyword"},
+                timeout=10,
+            )
+        except Exception as e:
+            logger.warning("Could not ensure payload index for %s: %s", field_name, e)
 
 
 def upsert_document_chunks(chunks: Iterable[Dict]) -> bool:
@@ -105,11 +133,15 @@ def upsert_document_chunks(chunks: Iterable[Dict]) -> bool:
     ensure_collection()
     points = []
     for chunk in chunk_list:
-        vector_id = chunk["vector_id"]
         vector = chunk.get("embedding") or embed_text(chunk["text_content"])
         points.append(
             {
-                "id": vector_id,
+                # Qdrant point IDs must be an unsigned integer or a UUID --
+                # DocumentChunk.vector_id ("{document_id}:{chunk_index}") is
+                # neither, so derive a stable UUID5 from it instead. It's
+                # deterministic, so re-indexing the same document/chunk
+                # overwrites the same point rather than orphaning one.
+                "id": _point_id(chunk["vector_id"]),
                 "vector": vector,
                 "payload": {
                     "document_id": chunk["document_id"],
@@ -236,6 +268,11 @@ def _hashed_embed_text(text: str) -> List[float]:
 
     norm = math.sqrt(sum(value * value for value in vector)) or 1.0
     return [round(value / norm, 6) for value in vector]
+
+
+def _point_id(vector_id: str) -> str:
+    """Derive a Qdrant-valid point ID (UUID) from an arbitrary vector_id string."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, vector_id))
 
 
 def _headers() -> Dict[str, str]:
