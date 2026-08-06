@@ -6,10 +6,11 @@ import re
 from collections import Counter
 from typing import Dict, Iterable, List, Optional
 
+import numpy as np
 from sqlalchemy.orm import Session
 
 from app.database.models import Document, DocumentChunk
-from app.services.vector_store import search_chunks, upsert_document_chunks
+from app.services.vector_store import embed_text, embed_texts, qdrant_available, search_chunks, upsert_document_chunks
 
 WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9'-]+")
 SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
@@ -116,8 +117,13 @@ def index_document_chunks(
     chunks = chunk_pages(page_payloads)
     db.query(DocumentChunk).filter(DocumentChunk.document_id == document.id).delete(synchronize_session=False)
 
+    # Embed every chunk once here and reuse the same vector for both the
+    # DocumentChunk row (in-process fallback search) and the Qdrant upsert
+    # below, instead of computing it twice.
+    embeddings = embed_texts([chunk["text_content"] for chunk in chunks]) if chunks else []
+
     qdrant_payload = []
-    for chunk in chunks:
+    for chunk, embedding in zip(chunks, embeddings):
         vector_id = f"{document.id}:{chunk['chunk_index']}"
         db.add(
             DocumentChunk(
@@ -126,6 +132,7 @@ def index_document_chunks(
                 page_number=chunk["page_number"],
                 text_content=chunk["text_content"],
                 vector_id=vector_id,
+                embedding=embedding,
             )
         )
         qdrant_payload.append(
@@ -137,6 +144,7 @@ def index_document_chunks(
                 "chunk_index": chunk["chunk_index"],
                 "page_number": chunk["page_number"],
                 "text_content": chunk["text_content"],
+                "embedding": embedding,
             }
         )
 
@@ -167,11 +175,25 @@ def get_document_context(
     if query:
         query_candidates = build_query_candidates(query, conversation_history)
         vector_results: List[Dict] = []
-        for candidate in query_candidates:
+        if qdrant_available():
+            for candidate in query_candidates:
+                try:
+                    vector_results.extend(search_chunks(candidate, user_id=user_id, document_ids=document_ids, top_k=max(top_k, 4)))
+                except Exception:
+                    continue
+
+        if not vector_results:
+            # Qdrant is unconfigured, unreachable, or just had nothing for
+            # this query -- fall back to real semantic search computed
+            # in-process from each chunk's stored embedding, so retrieval
+            # still understands paraphrases/synonyms instead of dropping
+            # straight to keyword-only matching.
             try:
-                vector_results.extend(search_chunks(candidate, user_id=user_id, document_ids=document_ids, top_k=max(top_k, 4)))
+                vector_results = _inprocess_vector_search(
+                    db, user_id=user_id, document_ids=document_ids, query=query_candidates[0], top_k=max(top_k, 4)
+                )
             except Exception:
-                continue
+                vector_results = []
 
         lexical_results = _lexical_search_contexts(
             db,
@@ -415,6 +437,67 @@ def merge_context_results(query: str, vector_results: List[Dict], lexical_result
         reverse=True,
     )
     return _apply_diversity(ranked, top_k=top_k)
+
+
+def _inprocess_vector_search(
+    db: Session,
+    user_id: str,
+    document_ids: Optional[List[str]],
+    query: str,
+    top_k: int,
+) -> List[Dict]:
+    """Cosine-similarity search over each chunk's stored embedding.
+
+    This is real semantic search (paraphrases/synonyms match, unlike the
+    lexical scorer) that doesn't depend on Qdrant being reachable -- used
+    as the fallback whenever it isn't. Fine at the per-user chunk counts
+    this app operates at; no ANN index needed.
+    """
+    rows = (
+        db.query(DocumentChunk, Document)
+        .join(Document, Document.id == DocumentChunk.document_id)
+        .filter(Document.user_id == user_id, DocumentChunk.embedding.isnot(None))
+    )
+    if document_ids:
+        rows = rows.filter(Document.id.in_(document_ids))
+
+    pairs = rows.all()
+    if not pairs:
+        return []
+
+    query_vector = np.asarray(embed_text(query), dtype=np.float32)
+
+    matrix = []
+    meta = []
+    for chunk, document in pairs:
+        content = normalize_whitespace(chunk.text_content)
+        if not content or not chunk.embedding or len(chunk.embedding) != len(query_vector):
+            continue
+        matrix.append(chunk.embedding)
+        meta.append((chunk, document, content))
+
+    if not matrix:
+        return []
+
+    chunk_matrix = np.asarray(matrix, dtype=np.float32)
+    chunk_norms = np.linalg.norm(chunk_matrix, axis=1)
+    chunk_norms[chunk_norms == 0] = 1.0
+    query_norm = float(np.linalg.norm(query_vector)) or 1.0
+    similarities = (chunk_matrix @ query_vector) / (chunk_norms * query_norm)
+
+    scored = [
+        {
+            "content": content,
+            "document_id": document.id,
+            "document_title": document.title,
+            "page_number": chunk.page_number,
+            "chunk_index": chunk.chunk_index,
+            "relevance_score": round(float(similarity), 4),
+        }
+        for (chunk, document, content), similarity in zip(meta, similarities)
+    ]
+    scored.sort(key=lambda item: item["relevance_score"], reverse=True)
+    return scored[:top_k]
 
 
 def _lexical_search_contexts(

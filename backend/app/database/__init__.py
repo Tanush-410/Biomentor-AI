@@ -124,6 +124,13 @@ def _ensure_incremental_columns():
         else:
             statements.append("ALTER TABLE documents ADD COLUMN selected_pages TEXT")
 
+    document_chunk_columns = table_columns.get("document_chunks", set())
+    if "embedding" not in document_chunk_columns:
+        if get_database_backend() == "postgresql":
+            statements.append("ALTER TABLE document_chunks ADD COLUMN embedding JSON")
+        else:
+            statements.append("ALTER TABLE document_chunks ADD COLUMN embedding TEXT")
+
     live_session_columns = table_columns.get("live_sessions", set())
     if "meeting_provider" not in live_session_columns:
         statements.append("ALTER TABLE live_sessions ADD COLUMN meeting_provider VARCHAR")

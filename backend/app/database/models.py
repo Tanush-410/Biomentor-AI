@@ -150,6 +150,11 @@ class DocumentChunk(Base):
     page_number = Column(Integer, nullable=False)
     text_content = Column(Text, nullable=False)
     vector_id = Column(String, nullable=True)
+    # Cached embedding vector, stored alongside the chunk so semantic search
+    # still works via in-process cosine similarity when Qdrant is
+    # unreachable/unconfigured -- Qdrant is a rebuildable index, this column
+    # (like text_content) is closer to a source of truth for retrieval.
+    embedding = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

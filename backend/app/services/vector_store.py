@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
 from typing import Dict, Iterable, List, Optional
 
@@ -9,7 +10,39 @@ import requests
 
 from app.core import settings
 
-VECTOR_DIMENSION = 256
+logger = logging.getLogger(__name__)
+
+# BAAI/bge-small-en-v1.5 (fastembed, ONNX/CPU, ~67MB, no GPU/torch needed).
+# Both the real model and the hashed fallback below produce vectors of this
+# size so callers (Qdrant collections, the in-process fallback search) never
+# need to know which one actually ran.
+VECTOR_DIMENSION = 384
+_EMBEDDING_MODEL_NAME = "BAAI/bge-small-en-v1.5"
+
+_embedding_model = None
+_embedding_model_load_failed = False
+
+
+def _get_embedding_model():
+    """Lazily load the real embedding model once per process.
+
+    Returns None (and remembers not to retry) if fastembed isn't installed
+    or the model can't be downloaded/loaded, so callers fall back to the
+    hashed embedding instead of retrying an expensive failure on every call.
+    """
+    global _embedding_model, _embedding_model_load_failed
+    if _embedding_model is not None or _embedding_model_load_failed:
+        return _embedding_model
+
+    try:
+        from fastembed import TextEmbedding
+        _embedding_model = TextEmbedding(model_name=_EMBEDDING_MODEL_NAME)
+    except Exception as e:
+        logger.warning("Real embedding model unavailable, falling back to hashed embeddings: %s", e)
+        _embedding_model_load_failed = True
+        return None
+
+    return _embedding_model
 
 
 def qdrant_available() -> bool:
@@ -18,9 +51,33 @@ def qdrant_available() -> bool:
 
 
 def ensure_collection() -> bool:
-    """Create the Qdrant collection if it does not exist."""
+    """Create the Qdrant collection if it does not exist, or recreate it if
+    an older collection was indexed with a different vector size (e.g. the
+    previous hashed-embedding dimension). The collection is a rebuildable
+    index over DocumentChunk rows, not a source of truth, so recreating it
+    is safe -- documents get re-indexed the next time they're touched.
+    """
     if not qdrant_available():
         return False
+
+    collection_url = f"{settings.qdrant_url}/collections/{settings.qdrant_collection}"
+
+    try:
+        info_response = requests.get(collection_url, headers=_headers(), timeout=10)
+        if info_response.ok:
+            existing_size = (
+                info_response.json()
+                .get("result", {})
+                .get("config", {})
+                .get("params", {})
+                .get("vectors", {})
+                .get("size")
+            )
+            if existing_size == VECTOR_DIMENSION:
+                return True
+            requests.delete(collection_url, headers=_headers(), timeout=20)
+    except Exception as e:
+        logger.warning("Could not inspect existing Qdrant collection: %s", e)
 
     payload = {
         "vectors": {
@@ -29,17 +86,18 @@ def ensure_collection() -> bool:
         }
     }
 
-    response = requests.put(
-        f"{settings.qdrant_url}/collections/{settings.qdrant_collection}",
-        headers=_headers(),
-        json=payload,
-        timeout=20,
-    )
+    response = requests.put(collection_url, headers=_headers(), json=payload, timeout=20)
     return response.ok
 
 
 def upsert_document_chunks(chunks: Iterable[Dict]) -> bool:
-    """Upsert vectors for indexed chunks."""
+    """Upsert vectors for indexed chunks.
+
+    Each chunk dict may already carry a precomputed `embedding` (the caller
+    -- index_document_chunks -- computes it once and reuses it for both the
+    DocumentChunk.embedding column and this Qdrant upsert, rather than
+    embedding the same text twice).
+    """
     chunk_list = list(chunks)
     if not chunk_list or not qdrant_available():
         return False
@@ -48,10 +106,11 @@ def upsert_document_chunks(chunks: Iterable[Dict]) -> bool:
     points = []
     for chunk in chunk_list:
         vector_id = chunk["vector_id"]
+        vector = chunk.get("embedding") or embed_text(chunk["text_content"])
         points.append(
             {
                 "id": vector_id,
-                "vector": embed_text(chunk["text_content"]),
+                "vector": vector,
                 "payload": {
                     "document_id": chunk["document_id"],
                     "document_title": chunk["document_title"],
@@ -127,7 +186,42 @@ def delete_document_vectors(document_id: str) -> bool:
 
 
 def embed_text(text: str) -> List[float]:
-    """Deterministic hashed embedding for low-cost semantic retrieval."""
+    """Embed text with the real model, falling back to a deterministic
+    hashed embedding if the model isn't available (not installed, offline,
+    failed to load). Both paths always return a VECTOR_DIMENSION-length
+    vector so callers never need to branch on which one ran.
+    """
+    model = _get_embedding_model()
+    if model is not None:
+        try:
+            return list(model.embed([text]))[0].tolist()
+        except Exception as e:
+            logger.warning("Embedding call failed, falling back to hashed embedding: %s", e)
+
+    return _hashed_embed_text(text)
+
+
+def embed_texts(texts: List[str]) -> List[List[float]]:
+    """Batch-embed multiple texts in one call (much faster than embedding
+    one at a time when indexing a document's worth of chunks).
+    """
+    if not texts:
+        return []
+
+    model = _get_embedding_model()
+    if model is not None:
+        try:
+            return [vector.tolist() for vector in model.embed(texts)]
+        except Exception as e:
+            logger.warning("Batch embedding call failed, falling back to hashed embeddings: %s", e)
+
+    return [_hashed_embed_text(text) for text in texts]
+
+
+def _hashed_embed_text(text: str) -> List[float]:
+    """Deterministic hashed embedding, used only when the real model is
+    unavailable. Captures lexical overlap, not real semantic similarity.
+    """
     vector = [0.0] * VECTOR_DIMENSION
     tokens = _tokenize(text)
     if not tokens:
