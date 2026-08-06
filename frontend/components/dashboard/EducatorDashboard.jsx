@@ -228,8 +228,8 @@ export default function EducatorDashboard() {
                         No active alerts yet. Once students complete quizzes, this panel will flag shared gaps and mastery concerns.
                       </div>
                     ) : (
-                      educatorAlerts.slice(0, 4).map((alert) => (
-                        <div key={alert.student_id} className="rounded-2xl border border-slate-200 p-4">
+                      educatorAlerts.slice(0, 4).map((alert, index) => (
+                        <div key={alert.complaint_id || `${alert.student_id}-${alert.type || 'gap'}-${index}`} className="rounded-2xl border border-slate-200 p-4">
                           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                               <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">{alert.severity} priority</p>
