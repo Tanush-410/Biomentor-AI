@@ -491,12 +491,39 @@ def _should_offer_quick_check(confidence: float, complexity: str) -> bool:
 def _build_quick_check(question: str, contexts, answer_text: str):
     if ai_provider_available():
         generated = _generate_quick_check_with_ai(question, contexts, answer_text)
-        if generated:
+        if _is_valid_quick_check_shape(generated):
             generated.setdefault("topic", _quick_check_topic(contexts))
             return generated
     quick_check = _build_quick_check_fallback(question, contexts, answer_text)
     quick_check["topic"] = _quick_check_topic(contexts)
     return quick_check
+
+
+def _is_valid_quick_check_shape(generated) -> bool:
+    """Reject a model's quick-check JSON if it doesn't actually match QuickCheckPayload's shape.
+
+    ai_json_completion already guarantees a dict (never a bare list/scalar),
+    but a dict can still be missing "questions" or have malformed question
+    entries -- which would otherwise blow up later when we try to build the
+    AnswerGenerationResponse from it. Better to detect that here and fall
+    back to the deterministic quick check than crash the whole request.
+    """
+    if not isinstance(generated, dict):
+        return False
+    questions = generated.get("questions")
+    if not isinstance(questions, list) or not questions:
+        return False
+    for question in questions:
+        if not isinstance(question, dict):
+            return False
+        options = question.get("options")
+        if not isinstance(options, list) or not options:
+            return False
+        if not all(isinstance(option, dict) and "id" in option and "text" in option for option in options):
+            return False
+        if "id" not in question or "prompt" not in question:
+            return False
+    return True
 
 
 def _quick_check_topic(contexts) -> Optional[str]:

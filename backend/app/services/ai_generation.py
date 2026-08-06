@@ -189,6 +189,26 @@ def ai_chat_completion(
 
 
 def _parse_json_loose(text: str) -> Optional[dict]:
+    """Parse a model's JSON reply, but only ever return a dict (or None).
+
+    Every caller of ai_json_completion / gemini_json_completion /
+    groq_json_completion in this codebase expects a JSON *object* (they
+    call .get()/.setdefault() on the result). If a model returns a bare
+    JSON array or a scalar instead of an object -- which happens
+    occasionally even with "json mode" enabled -- returning it as-is would
+    hand callers a value whose methods don't exist, crashing the request
+    with an unhandled AttributeError instead of failing gracefully. So a
+    successfully-parsed non-dict is treated the same as a parse failure.
+    """
+    parsed = _try_parse_json(text)
+    if isinstance(parsed, dict):
+        return parsed
+    if parsed is not None:
+        logger.warning("AI completion returned valid JSON but not a JSON object (got %s); treating as a failure.", type(parsed).__name__)
+    return None
+
+
+def _try_parse_json(text: str):
     try:
         return json.loads(text)
     except json.JSONDecodeError:
