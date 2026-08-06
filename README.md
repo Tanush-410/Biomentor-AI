@@ -57,7 +57,7 @@ The project includes:
   - `Live`
 - educator communication hub
 - collaboration hub
-- Bloom's Taxonomy support
+- SOLO Taxonomy support
 - material-based quiz generation
 - manual quiz authoring with answer-key autograding
 - classroom quiz scheduling
@@ -174,7 +174,7 @@ VYDRA CORE's AI tools are designed as visible workspaces, not hidden widgets.
 - `AI Study Coach`: helps students choose what to revise next.
 - `AI Educator Copilot`: helps teachers decide what to assign, who needs attention, and how to respond.
 - `Classroom AI Board`: shows class-level focus signals and reteach opportunities.
-- `Assessment Intelligence Studio`: reviews quiz quality, release risk, Bloom balance, remediation, and question health.
+- `Assessment Intelligence Studio`: reviews quiz quality, release risk, SOLO balance, remediation, and question health.
 - `AI Meeting Assistant`: supports live class notes, follow-up prompts, and recap structure.
 - `AI Proctor Review`: summarizes proctor evidence and review priority for teacher decisions.
 
@@ -329,7 +329,7 @@ These AI systems are part of the project and are implemented inside the `backend
 - Pydantic
 - python-jose
 - bcrypt
-- pypdf
+- pypdfium2 for PDF text extraction, with a pytesseract OCR fallback for scanned pages
 
 ### Data + AI
 - Supabase/Postgres for primary structured data
@@ -353,8 +353,8 @@ Optional:
 ## 1. Clone and enter the project
 
 ```bash
-git clone https://github.com/Tanush-410/Biomentor-AI.git
-cd Biomentor-AI
+git clone https://github.com/Tanush-410/VYDRA-CORE.git
+cd VYDRA-CORE
 ```
 
 ## 2. Backend setup
@@ -475,7 +475,7 @@ This split is important because the classroom meeting system uses FastAPI WebSoc
 
 Create a Render web service from the repo and set the service root to `backend`.
 
-Render can use the included [backend/Dockerfile](/Users/tanush.s.vashisht/Desktop/Tanush/work/backend/Dockerfile:1), which binds `0.0.0.0:$PORT` correctly for production.
+Render can use the included [backend/Dockerfile](backend/Dockerfile), which binds `0.0.0.0:$PORT` correctly for production.
 
 Set these Render variables:
 
