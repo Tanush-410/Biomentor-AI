@@ -10,6 +10,7 @@ wrong SOLO level to an answer).
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, Optional, Sequence
 
@@ -17,6 +18,8 @@ from sqlalchemy.orm import Session
 
 from app.database.models import Document, GeneratedQuestion, QuizAnswer, QuizSession
 from app.services.learning_analytics import record_gap_snapshot
+
+logger = logging.getLogger(__name__)
 
 
 def grade_mcq_session(
@@ -95,7 +98,13 @@ def grade_mcq_session(
     session.is_completed = True
     session.completed_at = datetime.utcnow()
 
-    _record_gap_snapshots(db, user_id, topic_tally)
+    # Gap analytics is a value-add on top of grading, never a precondition
+    # for it -- a bug or unexpected data shape here must never stop a
+    # student's quiz from being graded and saved.
+    try:
+        _record_gap_snapshots(db, user_id, topic_tally)
+    except Exception:
+        logger.exception("Failed to record gap-analytics snapshots for a graded quiz session; grading itself still succeeded.")
 
     return correct_count, total_questions
 

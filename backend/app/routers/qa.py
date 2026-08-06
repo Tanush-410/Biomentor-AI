@@ -155,11 +155,27 @@ async def image_generate(
     if not prompt:
         return ImageGenerateResponse(image_url=None, source="none")
 
-    image_bytes = gemini_generate_image(prompt)
+    # gemini_generate_image() already catches its own request/network errors
+    # and returns None on failure. This extra guard is for anything
+    # unexpected beyond that (e.g. a malformed image payload) -- the chat UI
+    # already handles image_url=None by falling back to the Pollinations
+    # illustration, so degrading here is always safe and never surfaces as
+    # a broken chat message.
+    try:
+        image_bytes = gemini_generate_image(prompt)
+    except Exception:
+        logger.exception("Unexpected failure generating an image with Gemini.")
+        image_bytes = None
+
     if not image_bytes:
         return ImageGenerateResponse(image_url=None, source="none")
 
-    encoded = base64.b64encode(image_bytes).decode("ascii")
+    try:
+        encoded = base64.b64encode(image_bytes).decode("ascii")
+    except Exception:
+        logger.exception("Failed to encode generated image bytes.")
+        return ImageGenerateResponse(image_url=None, source="none")
+
     return ImageGenerateResponse(image_url=f"data:image/png;base64,{encoded}", source="gemini")
 
 
@@ -207,7 +223,58 @@ def build_answer_response(
     retrieve_fn=None,
     web_search_fn=None,
 ) -> AnswerGenerationResponse:
-    """Reusable answer builder for HTTP and collaboration flows."""
+    """Reusable answer builder for HTTP and collaboration flows.
+
+    This is a thin safety-net wrapper around _build_answer_response_inner:
+    the student always gets a normal chat message back, never a raw crash.
+    An intentional HTTPException (e.g. "no material available", a 404) is a
+    real, meaningful error and is left to propagate as-is -- the frontend
+    already shows that message properly. Anything else -- a bug, a network
+    hiccup in a dependency, a malformed AI response that slips past our own
+    validation -- is caught here, logged with the full traceback for
+    debugging, and turned into a normal-looking (if apologetic) answer
+    instead of the raw "Internal Server Error" text a student would
+    otherwise see with no explanation.
+    """
+    try:
+        return _build_answer_response_inner(db, current_user, request, retrieve_fn, web_search_fn)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Unexpected failure while building a chat answer; returning a safe fallback instead of a 500.")
+        return AnswerGenerationResponse(
+            question=request.question,
+            answer=(
+                "I ran into an unexpected problem while working on that answer. Please try asking again -- "
+                "if it keeps happening, try rephrasing the question or picking a specific document from the list."
+            ),
+            sources=[],
+            confidence=0.4,
+            confidence_label="low",
+            confidence_reason="An internal error interrupted answer generation, so this is a safe placeholder rather than a real answer.",
+            answer_origin="material",
+            source_badge=make_origin_label("material"),
+            fallback_used=True,
+            complexity="simple",
+            show_quick_check=False,
+            quick_check=None,
+            generated_at=datetime.utcnow(),
+        )
+
+
+def _build_answer_response_inner(
+    db: Session,
+    current_user,
+    request: AnswerGenerationRequest,
+    retrieve_fn=None,
+    web_search_fn=None,
+) -> AnswerGenerationResponse:
+    """Actual answer-building logic, previously named build_answer_response.
+
+    Kept as a separate function so build_answer_response's try/except can
+    wrap the entire pipeline in one place instead of scattering guards
+    throughout it.
+    """
     user_id = current_user.id
     conversation_history = _normalize_conversation_history(request.conversation_history)
     retrieve_fn = retrieve_fn or _retrieve_for_question
@@ -227,16 +294,27 @@ def build_answer_response(
 
     if _needs_web_fallback(contexts):
         try:
-            trusted_web_contexts, broad_web_contexts = web_search_fn(
-                _default_web_search_client(),
-                request.question,
-                settings.trusted_search_domains,
-            )
-        except TypeError:
-            trusted_web_contexts, broad_web_contexts = web_search_fn(
-                request.question,
-                settings.trusted_search_domains,
-            )
+            try:
+                trusted_web_contexts, broad_web_contexts = web_search_fn(
+                    _default_web_search_client(),
+                    request.question,
+                    settings.trusted_search_domains,
+                )
+            except TypeError:
+                # web_search_fn doesn't take a search-client arg (e.g. a test
+                # double) -- not a real failure, just a different calling
+                # convention, so retry that way rather than falling to the
+                # broader except below.
+                trusted_web_contexts, broad_web_contexts = web_search_fn(
+                    request.question,
+                    settings.trusted_search_domains,
+                )
+        except Exception:
+            # A genuine web-search failure (network error, timeout, search
+            # provider outage, unexpected response shape) should degrade to
+            # material-only answering, not crash the whole chat request.
+            logger.warning("Web search fallback failed; continuing with material-only context.", exc_info=True)
+            trusted_web_contexts, broad_web_contexts = [], []
 
         if trusted_web_contexts or broad_web_contexts:
             web_contexts = trusted_web_contexts + broad_web_contexts
@@ -604,6 +682,29 @@ def _extract_keywords(question: str, answer_text: str):
 
 
 def evaluate_quick_check_submission(
+    request: QuickCheckEvaluationRequest,
+    db: Optional[Session] = None,
+    user_id: Optional[str] = None,
+) -> QuickCheckEvaluationResponse:
+    try:
+        return _evaluate_quick_check_submission_inner(request, db=db, user_id=user_id)
+    except Exception:
+        # The grading loop runs over already Pydantic-validated data, so this
+        # should be very rare -- but per "never a raw crash," still degrade
+        # to an honest zero-score result instead of a 500 if something
+        # unexpected happens here.
+        logger.exception("Unexpected failure while grading a quick check; returning a safe fallback result.")
+        total_questions = len(request.quick_check.questions) if request.quick_check else 0
+        return QuickCheckEvaluationResponse(
+            quick_check_id=request.quick_check_id,
+            score=0,
+            total_questions=total_questions,
+            results=[],
+            next_step="We couldn't grade that quick check just now -- re-read the answer above and continue when you're ready.",
+        )
+
+
+def _evaluate_quick_check_submission_inner(
     request: QuickCheckEvaluationRequest,
     db: Optional[Session] = None,
     user_id: Optional[str] = None,
