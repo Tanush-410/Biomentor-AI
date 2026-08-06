@@ -109,11 +109,11 @@ Authorization: Bearer {token}
 
 ---
 
-## 🧠 Bloom's Taxonomy
+## 🧠 SOLO Taxonomy
 
 ### Get All Taxonomy Levels
 ```http
-GET /api/quiz/bloom-taxonomy
+GET /api/quiz/solo-taxonomy
 ```
 
 **Response**:
@@ -121,18 +121,18 @@ GET /api/quiz/bloom-taxonomy
 [
   {
     "level": 1,
-    "name": "Remember",
-    "description": "Retrieve relevant knowledge from long-term memory",
-    "keywords": ["define", "duplicate", "list", "recall", ...],
-    "examples": ["recall facts", "define terms", ...]
+    "name": "Prestructural",
+    "description": "Little or no relevant understanding is shown; the task is approached through a single unconnected, often surface-level detail",
+    "keywords": ["what is", "name", "label", "point out", ...],
+    "examples": ["name a term", "point to a fact", ...]
   },
   ...
   {
-    "level": 6,
-    "name": "Create",
-    "description": "Put elements together to form a new whole",
-    "keywords": ["assemble", "construct", ...],
-    "examples": ["design solutions", "create frameworks", ...]
+    "level": 5,
+    "name": "Extended Abstract",
+    "description": "Understanding is generalized beyond the given information, transferred to a new context, or used to form an abstract principle",
+    "keywords": ["generalize", "hypothesize", "predict", ...],
+    "examples": ["propose a new theory", "predict outcomes in a new context", ...]
   }
 ]
 ```
@@ -143,19 +143,19 @@ POST /api/quiz/analyze-question?user_id={user_id}
 Content-Type: application/json
 
 {
-  "text": "What is photosynthesis and how does it work?"
+  "text": "Explain how the stages of cellular respiration relate to and depend on one another."
 }
 ```
 
 **Response**:
 ```json
 {
-  "question": "What is photosynthesis and how does it work?",
+  "question": "Explain how the stages of cellular respiration relate to and depend on one another.",
   "current_level": 4,
-  "current_level_name": "Analyze",
-  "confidence": 0.87,
-  "detected_keywords": ["how", "explain"],
-  "description": "Break material into parts and determine how parts relate"
+  "current_level_name": "Relational",
+  "confidence": 0.89,
+  "detected_keywords": ["explain how", "relate"],
+  "description": "Multiple pieces of information are integrated into a coherent whole, with clear relationships understood between the parts"
 }
 ```
 
@@ -171,7 +171,7 @@ Content-Type: application/json
 
 {
   "num_questions": 10,
-  "bloom_level": 3,              // optional, 1-6
+  "bloom_level": 3,              // optional, 1-5 (SOLO level)
   "document_ids": ["doc1", "doc2"] // optional
 }
 ```
@@ -183,7 +183,7 @@ Content-Type: application/json
     "id": "q-uuid",
     "text": "What is the purpose of photosynthesis?",
     "bloom_level": 3,
-    "bloom_level_name": "Apply",
+    "bloom_level_name": "Multistructural",
     "document_reference": "Biology101.pdf",
     "page_number": 12,
     "options": [
@@ -216,29 +216,17 @@ Content-Type: application/json
   "original_question": "What is photosynthesis?",
   "current_analysis": {
     "current_level": 1,
-    "current_level_name": "Remember",
+    "current_level_name": "Prestructural",
     "target_level": 5,
-    "target_level_name": "Evaluate",
+    "target_level_name": "Extended Abstract",
     "confidence": 0.92
   },
   "variants": [
     {
-      "text": "Recall and state: What is photosynthesis?",
-      "bloom_level": 1,
-      "bloom_level_name": "Remember",
-      "reasoning": "Reduced by 1 level"
-    },
-    {
-      "text": "What is photosynthesis?",
-      "bloom_level": 1,
-      "bloom_level_name": "Remember",
-      "reasoning": "Original"
-    },
-    {
-      "text": "Explain what you recall: What is photosynthesis?",
-      "bloom_level": 2,
-      "bloom_level_name": "Understand",
-      "reasoning": "Increased by 1 level"
+      "text": "How would you generalize or apply photosynthesis to a new situation?",
+      "bloom_level": 5,
+      "bloom_level_name": "Extended Abstract",
+      "reasoning": "Increased by 4 levels"
     }
   ],
   "confidence": 0.92

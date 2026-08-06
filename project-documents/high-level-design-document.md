@@ -20,7 +20,7 @@ VYDRA CORE is a role-aware web platform for exam preparation. The product combin
 - AI-assisted learning and quiz generation
 - Document upload and offline viewing
 - Retrieval-backed Q&A
-- Bloom's Taxonomy-based authoring and assessment support
+- SOLO Taxonomy-based authoring and assessment support
 - Real-time collaboration and communication features
 
 ## 3. Architectural Style
@@ -71,7 +71,7 @@ The solution follows a layered web application architecture:
 - Progress tracker
 - Student classroom page
 - Educator dashboards
-- Bloom's Question Studio
+- SOLO Question Studio
 - Communication hub
 - Collaboration hub
 - Admin analytics
@@ -80,7 +80,7 @@ The solution follows a layered web application architecture:
 
 - `auth` router for registration, login, and user identity
 - `documents` router for upload, deletion, file serving, and study access
-- `quiz` router for generation, submission, and Bloom analysis
+- `quiz` router for generation, submission, and SOLO analysis
 - `qa` router for question answering
 - `learning` router for recommendations and progress support
 - `educator` router for classroom, communication, analytics, and complaints
@@ -91,7 +91,7 @@ The solution follows a layered web application architecture:
 - Document chunking and context building
 - Lightweight vector retrieval abstraction
 - Quiz and question generation
-- Bloom's classifier and difficulty converter
+- SOLO classifier and difficulty converter
 - Learning analytics and recommendation logic
 
 ## 6. High-Level Component View
@@ -113,7 +113,7 @@ The solution follows a layered web application architecture:
 2. Educator creates classrooms and monitors alerts.
 3. Students join via classroom invite codes.
 4. Educator inspects student analytics and class trends.
-5. Educator uses Bloom's Question Studio for question analysis and rewriting.
+5. Educator uses SOLO Question Studio for question analysis and rewriting.
 6. Educator sends updates, receives complaints, and manages live sessions.
 
 ### 6.3 Collaboration Path
@@ -171,19 +171,19 @@ Core entities include:
 
 ## 8.2 Quiz Generation Flow
 
-1. User selects a document set and Bloom level.
+1. User selects a document set and SOLO level.
 2. Backend gathers relevant chunks.
 3. Question generation logic produces structured quiz items.
 4. Correct answer, distractors, and explanations are stored with source context.
 5. Quiz session is presented to the learner.
 
-## 8.3 Bloom's Question Studio Flow
+## 8.3 SOLO Question Studio Flow
 
 1. Educator submits a question prompt.
-2. Bloom classifier identifies the current cognitive level.
+2. SOLO classifier identifies the current cognitive level.
 3. Converter generates either:
    - a single selected target rewrite, or
-   - all six Bloom-level versions
+   - all five SOLO-level versions
 4. The UI presents educator-ready question variants for teaching or remediation.
 
 ## 9. Security Design
@@ -264,9 +264,9 @@ The platform is designed to use vector retrieval where available, but fallback r
 
 Offline document viewing improves usability for learners with inconsistent connectivity and supports realistic exam preparation needs.
 
-### 14.4 Bloom's Tool Placement
+### 14.4 SOLO Tool Placement
 
-Bloom's authoring workflows are placed in educator mode because they are intended as teaching and question-authoring tools rather than student navigation clutter.
+SOLO authoring workflows are placed in educator mode because they are intended as teaching and question-authoring tools rather than student navigation clutter.
 
 ## 15. Risks and Mitigations
 

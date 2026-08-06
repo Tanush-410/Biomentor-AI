@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-This document defines the business, functional, non-functional, security, and operational requirements for VYDRA CORE. The application is intended to support exam preparation through AI-assisted study, retrieval-augmented question answering, Bloom's Taxonomy-aligned quiz workflows, offline study support, educator analytics, and real-time class collaboration.
+This document defines the business, functional, non-functional, security, and operational requirements for VYDRA CORE. The application is intended to support exam preparation through AI-assisted study, retrieval-augmented question answering, SOLO Taxonomy-aligned quiz workflows, offline study support, educator analytics, and real-time class collaboration.
 
 ## 2. Product Vision
 
@@ -28,7 +28,7 @@ VYDRA CORE is a web-based intelligent learning platform that helps students stud
 ### 3.2 Learning Objectives
 
 - Help students move from passive reading to active recall and applied practice.
-- Generate question sets aligned to Bloom's cognitive levels.
+- Generate question sets aligned to SOLO cognitive levels.
 - Surface gaps in understanding and recommend next learning actions.
 - Provide teachers with actionable intervention signals.
 
@@ -42,7 +42,7 @@ VYDRA CORE is a web-based intelligent learning platform that helps students stud
 - Offline access to previously saved uploaded PDFs
 - AI learning chat with source-aware study support
 - Quiz generation from uploaded materials
-- Bloom's Taxonomy analysis and question conversion tools for educators
+- SOLO Taxonomy analysis and question conversion tools for educators
 - Student progress tracking and recommendations
 - Educator dashboards, student analytics, and class insights
 - Real-time collaboration workflows with live session support
@@ -85,7 +85,7 @@ VYDRA CORE is a web-based intelligent learning platform that helps students stud
 - Monitor student mastery and learning gaps
 - Send updates and messages
 - Receive real-time student complaints and messages
-- Use Bloom's Question Studio to identify and regenerate question levels
+- Use SOLO Question Studio to identify and regenerate question levels
 - Launch and manage live collaboration sessions
 - Review class insights and assign reinforcement lessons
 
@@ -109,7 +109,7 @@ VYDRA CORE is a web-based intelligent learning platform that helps students stud
 ### 7.2 Student Learning Workspace
 
 - The system shall provide a student dashboard with quick stats, recommendations, and study actions.
-- The system shall show a progress overview based on quiz attempts and Bloom-level performance.
+- The system shall show a progress overview based on quiz attempts and SOLO-level performance.
 - The system shall allow students to access uploaded materials from a materials library.
 
 ### 7.3 Document and Material Management
@@ -135,25 +135,25 @@ VYDRA CORE is a web-based intelligent learning platform that helps students stud
 - The system shall support a scalable path to vector retrieval through a vector database such as Qdrant.
 - The system shall support a safe fallback retrieval path if vector search is unavailable.
 
-### 7.6 Quiz Generation and Bloom's Taxonomy
+### 7.6 Quiz Generation and SOLO Taxonomy
 
 - The system shall generate quiz questions from uploaded material content.
-- The system shall align generated questions to selected Bloom's levels.
+- The system shall align generated questions to selected SOLO levels.
 - The system shall store question options, correct answers, explanations, and source context.
 - The system shall allow students to take generated quizzes and submit answers.
 - The system shall compute scores and persist quiz outcomes.
 
-### 7.7 Bloom's Question Studio for Educators
+### 7.7 SOLO Question Studio for Educators
 
-- The system shall provide a Bloom's tool for educator mode.
-- The system shall identify the Bloom's level of a provided question.
-- The system shall generate the same question across all Bloom's levels.
-- The system shall also allow one targeted conversion to a selected Bloom's level.
-- The system shall keep Bloom's authoring tools hidden from student mode.
+- The system shall provide a SOLO tool for educator mode.
+- The system shall identify the SOLO level of a provided question.
+- The system shall generate the same question across all SOLO levels.
+- The system shall also allow one targeted conversion to a selected SOLO level.
+- The system shall keep SOLO authoring tools hidden from student mode.
 
 ### 7.8 Progress and Recommendations
 
-- The system shall track student performance across Bloom's levels.
+- The system shall track student performance across SOLO levels.
 - The system shall identify weak levels and present recommendations.
 - The system shall provide a progress page with mastery trends and recent activity.
 
@@ -268,7 +268,7 @@ VYDRA CORE is a web-based intelligent learning platform that helps students stud
 ## 13. Acceptance Criteria Summary
 
 - Students can register, upload materials, study offline, ask questions, take quizzes, view progress, and contact educators.
-- Educators can log in to educator mode, manage classes, inspect student performance, use Bloom's question tools, run live sessions, and receive student alerts instantly.
+- Educators can log in to educator mode, manage classes, inspect student performance, use SOLO question tools, run live sessions, and receive student alerts instantly.
 - Admins can view higher-level analytics.
 - The system can operate locally and has a defined path to cloud-backed deployment with Supabase and Qdrant.
 

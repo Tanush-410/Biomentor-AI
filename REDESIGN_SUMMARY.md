@@ -13,12 +13,12 @@ Based on your document requirements, VYDRA CORE is being transformed from a basi
 
 - ✅ Modern, redesigned UI with knowledge gap visualization
 - ✅ Interactive AI learning chat for Q&A
-- ✅ Progress tracking with Bloom's taxonomy mastery charts
+- ✅ Progress tracking with SOLO taxonomy mastery charts
 - ✅ Offline PDF viewing capability (PWA)
 - ✅ Teacher/admin dashboards (API scaffolding ready)
 - ✅ RAG pipeline for content-aware responses (API endpoints ready)
 - ✅ Material-based quiz generation (existing feature maintained)
-- ✅ Bloom's question difficulty analysis and conversion (existing feature maintained)
+- ✅ SOLO question difficulty analysis and conversion (existing feature maintained)
 
 ---
 
@@ -65,7 +65,7 @@ Created 10 new endpoints:
 - `POST /api/chat/send` - AI learning chat with RAG support
 - `POST /api/gaps/detect` - Analyze quiz responses for gaps
 - `GET /api/gaps/list` - Get student's knowledge gaps
-- `GET /api/progress/tracker` - Mastery data by Bloom's level
+- `GET /api/progress/tracker` - Mastery data by SOLO level
 - `GET /api/recommendations/study-plan` - Personalized study suggestions
 - `GET /api/teacher/class-overview` - Teacher class analytics
 - `GET /api/teacher/student-analytics/{id}` - Detailed student analytics
@@ -95,7 +95,7 @@ Still needed:
 **Status**: Backend API Ready, Frontend Needs Enhancement
 
 Current progress.jsx shows:
-- Bloom's level breakdown with progress bars
+- SOLO level breakdown with progress bars
 - Recent quiz history
 - Summary statistics
 
@@ -174,7 +174,7 @@ Still needed:
 
 ✅ **Document Upload** - Fully working, now with offline download
 ✅ **Quiz Generation** - Material-based question generation active
-✅ **Bloom's Difficulty Analysis** - Level detection and conversion working
+✅ **SOLO Difficulty Analysis** - Level detection and conversion working
 ✅ **Authentication** - JWT tokens, registration, login  
 ✅ **Document Storage** - PDF/TXT/MD support with content extraction
 
@@ -210,7 +210,7 @@ All endpoints follow pattern: `/api/{feature}/{action}`
 ## 🚀 Key Features Explained
 
 ### 1. Knowledge Gap Detection
-Shows students which Bloom's levels they struggle with:
+Shows students which SOLO levels they struggle with:
 - **Remember** (Level 1): Highest success rate ~83%
 - **Understand** (Level 2): Good progress ~57%
 - **Apply** (Level 3): Needs work ~40%
@@ -233,7 +233,7 @@ Dashboard highlights top 3 gaps with percentage
 - **Document Access**: Read materials without internet
 
 ### 4. Progress Visualization
-- **Bloom's Breakdown**: Performance by taxonomy level
+- **SOLO Breakdown**: Performance by taxonomy level
 - **Topic Mastery**: Progress per subject
 - **Trends**: Score history over time
 - **Recommendations**: AI-suggested next steps
@@ -260,7 +260,7 @@ Dashboard highlights top 3 gaps with percentage
 ### 2. Checking Progress
 ```
 1. Go to Progress page
-2. View Bloom's level breakdown
+2. View SOLO level breakdown
 3. Check mastered vs weak areas
 4. Review recent quiz performance
 5. Click recommendations for next steps
@@ -468,7 +468,7 @@ As requested, implemented with minimal costs:
 
 ## 🎓 Educational Features
 
-### Bloom's Taxonomy Integration
+### SOLO Taxonomy Integration
 - All questions classified by cognitive level
 - Progress tracked per level
 - Recommendations based on weakest level

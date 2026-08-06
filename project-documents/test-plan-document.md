@@ -14,7 +14,7 @@ This test plan defines the strategy, scope, environments, responsibilities, and 
 ## 2. Test Objectives
 
 - Verify that core student and educator workflows behave as intended.
-- Validate AI-assisted study, quiz generation, and Bloom's tooling behavior.
+- Validate AI-assisted study, quiz generation, and SOLO tooling behavior.
 - Confirm secure role separation and protected data access.
 - Validate real-time communication and complaint delivery.
 - Confirm offline document access behavior for previously cached content.
@@ -29,7 +29,7 @@ This test plan defines the strategy, scope, environments, responsibilities, and 
 - Offline PDF viewer
 - AI learning chat and source references
 - Quiz generation and scoring
-- Bloom's Question Studio
+- SOLO Question Studio
 - Progress tracking and recommendations
 - Educator dashboards and class insights
 - Student-to-educator messaging and complaints
@@ -60,7 +60,7 @@ Testing will combine:
 
 Target logic-heavy areas such as:
 
-- Bloom classifier behavior
+- SOLO classifier behavior
 - question conversion logic
 - analytics helpers
 - document chunking and retrieval helpers
@@ -176,16 +176,16 @@ Prepare:
 
 - Generate quiz from one document
 - Generate quiz from multiple documents
-- Generate quiz by Bloom level
+- Generate quiz by SOLO level
 - Submit answers and verify scoring
 - Confirm progress updates after quiz submission
 
-## 9.6 Bloom's Question Studio
+## 9.6 SOLO Question Studio
 
 - Access page as educator
 - Confirm students cannot access page
-- Identify current Bloom level for a question
-- Generate all six Bloom variants
+- Identify current SOLO level for a question
+- Generate all five SOLO variants
 - Generate one target-level rewrite
 - Verify question text is meaningfully transformed across levels
 
@@ -256,7 +256,7 @@ Prepare:
 ### 10.4 Usability Testing
 
 - Confirm role-specific navigation is easy to follow
-- Confirm educator finds Bloom's tools without student clutter
+- Confirm educator finds SOLO tools without student clutter
 - Confirm complaint and message flows are understandable to students
 
 ## 11. Suggested Detailed Test Cases
@@ -285,16 +285,16 @@ Prepare:
 - Steps: student sends direct message to educator
 - Expected result: message appears in educator communication hub in near real time
 
-### TC-05 Educator Bloom Studio
+### TC-05 Educator SOLO Studio
 
 - Precondition: educator logged in
-- Steps: open Bloom's Question Studio, paste question, click identify, click generate all
-- Expected result: identified level appears and all Bloom variants are shown
+- Steps: open SOLO Question Studio, paste question, click identify, click generate all
+- Expected result: identified level appears and all SOLO variants are shown
 
 ### TC-06 Student Access Restriction
 
 - Precondition: student logged in
-- Steps: attempt to open educator Bloom page
+- Steps: attempt to open educator SOLO page
 - Expected result: student is redirected away or denied access
 
 ### TC-07 Offline Viewer
@@ -312,7 +312,7 @@ Each release should recheck:
 - quiz generation and scoring
 - dashboard loading
 - educator message and complaint flow
-- Bloom's Question Studio
+- SOLO Question Studio
 - collaboration hub entry
 
 ## 13. Defect Management

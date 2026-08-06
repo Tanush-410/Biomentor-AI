@@ -355,6 +355,6 @@ Actions:
 - document upload tested
 - quiz generation tested
 - complaint and message flow tested
-- Bloom's Question Studio tested
+- SOLO Question Studio tested
 - collaboration hub tested
 
