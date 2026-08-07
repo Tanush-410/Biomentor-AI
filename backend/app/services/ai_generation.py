@@ -2,10 +2,14 @@
 
 Every call site in this app should go through the helpers here rather than
 calling Groq or Gemini directly, so there is one place that implements the
-provider failover: Gemini is the primary text model; if it is unconfigured,
-times out, rate-limits, or errors, we automatically fail over to Groq
-before giving up. This keeps an outage or rate-limit on a single provider
-from taking the chatbot down.
+provider failover: Groq is the primary text model (fast, generous free
+tier); if its quota/rate limit is hit, it times out, or it errors, we
+automatically fail over to Gemini before giving up. Gemini can also have a
+second API key configured, and requests will cycle to it if the first
+Gemini key is rate-limited, extending free usage further. Callers only ever
+see one stable function -- the router internally handles provider
+selection, quota detection, and key rotation so an outage or rate-limit on
+a single provider/key never takes the chatbot down.
 """
 from __future__ import annotations
 
@@ -159,21 +163,11 @@ def ai_chat_completion(
     json_mode: bool = False,
     groq_model: str = GROQ_DEFAULT_MODEL,
 ) -> Tuple[Optional[str], Optional[str]]:
-    """Run a chat completion with Gemini as primary and Groq as failsafe.
+    """Run a chat completion with Groq as primary and Gemini as failsafe.
 
-    Returns (text, provider_used) where provider_used is "gemini", "groq",
+    Returns (text, provider_used) where provider_used is "groq", "gemini",
     or None if every configured provider failed (or none were configured).
     """
-    text = _gemini_chat(
-        system_prompt,
-        user_prompt,
-        temperature=temperature,
-        timeout=timeout,
-        json_mode=json_mode,
-    )
-    if text:
-        return text, "gemini"
-
     text = _groq_chat(
         system_prompt,
         user_prompt,
@@ -184,6 +178,16 @@ def ai_chat_completion(
     )
     if text:
         return text, "groq"
+
+    text = _gemini_chat(
+        system_prompt,
+        user_prompt,
+        temperature=temperature,
+        timeout=timeout,
+        json_mode=json_mode,
+    )
+    if text:
+        return text, "gemini"
 
     return None, None
 

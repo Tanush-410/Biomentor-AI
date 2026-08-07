@@ -432,14 +432,23 @@ def _generate_with_ai(question: str, contexts, conversation_history):
                     "caveats. Never end an answer early just because the material was thin -- keep going until the "
                     "question is genuinely answered. "
                     "Be accurate and student-friendly, and match your length and depth to what the question actually "
-                    "needs. For a simple, factual, or definition-style question ('what is X', 'when did Y happen'), "
-                    "answer briefly and directly -- a sentence or two, no padding. For a question that asks to "
+                    "needs -- but never let 'brief' become vague or incomplete. For a truly trivial factual lookup "
+                    "with one right answer ('when did X happen', 'who invented Y', a date or a number), answer "
+                    "directly in a sentence or two, no padding. But for anything that asks what a concept, term, "
+                    "process, chapter, or topic IS or means -- 'what is photosynthesis', 'explain the periodic "
+                    "table', 'what is the nervous system', and similar -- always give a real, substantive "
+                    "explanation even if the question sounds simple: state clearly what it is in plain, everyday "
+                    "English a school student would understand, briefly cover how or why it works, and include at "
+                    "least one concrete, relatable example. Never answer a concept or chapter-level question with "
+                    "just a one-line dictionary definition -- that reads as vague and unhelpful, and the student is "
+                    "trusting you to actually teach them the idea, not just label it. For a question that asks to "
                     "explain, compare, analyze, or understand a mechanism ('why', 'how', 'explain', 'compare', "
                     "'walk me through'), or one that is inherently multi-part or conceptually deep, give a fuller "
                     "explanation: break it into the key steps or components, and use a short concrete example where "
-                    "it genuinely helps understanding. Never pad a simple answer with unnecessary detail just to "
-                    "seem thorough, and never compress a genuinely complex topic into one line just to seem concise -- "
-                    "let the question's own complexity set the length. "
+                    "it genuinely helps understanding. Never pad an answer with irrelevant detail just to seem "
+                    "thorough, and never compress a genuinely important concept into one bare line just to seem "
+                    "concise -- a student asking about a chapter or topic should come away actually understanding "
+                    "it, not just knowing a label for it. "
                     "Treat the recent conversation as context for follow-up questions like 'shorter', 'explain that', "
                     "'what about the next part', or 'simplify it'. "
                     "If the user asks a follow-up, preserve the topic from the conversation. "
@@ -499,10 +508,10 @@ def _generate_with_ai(question: str, contexts, conversation_history):
         timeout=30,
     )
     if not text:
-        logger.warning("Both Gemini and Groq failed to produce an answer.")
+        logger.warning("Both Groq and Gemini failed to produce an answer.")
         return None
-    if provider == "groq":
-        logger.info("Answer generated via Groq failsafe (Gemini unavailable or failed).")
+    if provider == "gemini":
+        logger.info("Answer generated via Gemini failsafe (Groq unavailable, rate-limited, or failed).")
     return text.strip()
 
 
