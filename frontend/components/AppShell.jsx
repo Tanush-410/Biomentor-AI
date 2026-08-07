@@ -17,6 +17,7 @@ import {
   Box,
   PanelLeftClose,
   PanelLeftOpen,
+  Target,
   Users,
   X
 } from 'lucide-react'
@@ -30,6 +31,7 @@ const STUDENT_NAV_ITEMS = [
   { href: '/learning-chat', label: 'Learning Chat', icon: MessageSquare, match: ['/learning-chat'] },
   { href: '/start-quiz', label: 'Quiz Generator', icon: Brain, match: ['/start-quiz', '/quiz-session'] },
   { href: '/progress', label: 'Progress', icon: BarChart3, match: ['/progress'] },
+  { href: '/gap-analysis', label: 'Gap Analysis', icon: Target, match: ['/gap-analysis'] },
   { href: '/collaboration-hub', label: 'Collaboration', icon: MessageSquare, match: ['/collaboration-hub'] },
   { href: '/3d-studio', label: '3D Studio', icon: Box, match: ['/3d-studio'] },
   { href: '/math-lab', label: 'Math Lab', icon: Calculator, match: ['/math-lab'] },

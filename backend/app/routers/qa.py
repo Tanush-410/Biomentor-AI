@@ -499,10 +499,10 @@ def _generate_with_ai(question: str, contexts, conversation_history):
         timeout=30,
     )
     if not text:
-        logger.warning("Both Groq and Gemini failed to produce an answer.")
+        logger.warning("Both Gemini and Groq failed to produce an answer.")
         return None
-    if provider == "gemini":
-        logger.info("Answer generated via Gemini failsafe (Groq unavailable or failed).")
+    if provider == "groq":
+        logger.info("Answer generated via Groq failsafe (Gemini unavailable or failed).")
     return text.strip()
 
 
@@ -632,7 +632,7 @@ def _generate_quick_check_with_ai(question: str, contexts, answer_text: str):
     )
     parsed = ai_json_completion(system_prompt=system_prompt, user_prompt=user_prompt, temperature=0.2, timeout=30)
     if parsed is None:
-        logger.warning("Both Groq and Gemini failed to produce a quick check.")
+        logger.warning("Both Gemini and Groq failed to produce a quick check.")
     return parsed
 
 
