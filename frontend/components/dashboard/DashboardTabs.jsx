@@ -1,8 +1,15 @@
 import React, { useState } from 'react'
 
-export default function DashboardTabs({ tabs, defaultTab }) {
-  const [active, setActive] = useState(defaultTab || tabs[0]?.key)
-  const activeTab = tabs.find((tab) => tab.key === active) || tabs[0]
+export default function DashboardTabs({ tabs, defaultTab, active, onChange }) {
+  const [internalActive, setInternalActive] = useState(defaultTab || tabs[0]?.key)
+  const isControlled = active !== undefined
+  const activeKey = isControlled ? active : internalActive
+  const activeTab = tabs.find((tab) => tab.key === activeKey) || tabs[0]
+
+  const selectTab = (key) => {
+    if (!isControlled) setInternalActive(key)
+    onChange?.(key)
+  }
 
   return (
     <div>
@@ -14,7 +21,7 @@ export default function DashboardTabs({ tabs, defaultTab }) {
               type="button"
               role="tab"
               aria-selected={activeTab?.key === tab.key}
-              onClick={() => setActive(tab.key)}
+              onClick={() => selectTab(tab.key)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab?.key === tab.key
                   ? 'bg-zinc-950 text-[#d9c25c] shadow-md shadow-black/10'

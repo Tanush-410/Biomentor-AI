@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { Brain, Clock, FileText, TrendingUp } from 'lucide-react'
+import { Brain, Clock, FileText } from 'lucide-react'
 
 import AppShell from '../components/AppShell'
+import DashboardTabs from '../components/dashboard/DashboardTabs'
+import GapAnalysisPanel from '../components/GapAnalysisPanel'
 import { useAuth } from '../context/AuthContext'
 import { normalizeListPayload, requestBackendJson } from '../lib/backendApi'
 
@@ -18,7 +20,10 @@ export default function StartQuizPage() {
   const [duration, setDuration] = useState(10)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [weakTopics, setWeakTopics] = useState([])
+  const [topicGaps, setTopicGaps] = useState([])
+  const [gapTrend, setGapTrend] = useState([])
+  const [gapLoading, setGapLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('generator')
   const quizFormRef = useRef(null)
 
   useEffect(() => {
@@ -28,17 +33,23 @@ export default function StartQuizPage() {
       return
     }
     fetchDocuments()
-    fetchWeakTopics()
+    fetchGapData()
   }, [authLoading, token])
 
-  const fetchWeakTopics = async () => {
+  const fetchGapData = async () => {
+    setGapLoading(true)
     try {
-      const payload = await requestBackendJson('/gaps/topics', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setWeakTopics(payload?.topic_gaps || [])
+      const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
+      const [topicPayload, trendPayload] = await Promise.all([
+        requestBackendJson('/gaps/topics', authHeaders),
+        requestBackendJson('/gaps/trend', authHeaders)
+      ])
+      setTopicGaps(topicPayload?.topic_gaps || [])
+      setGapTrend(trendPayload?.trend || [])
     } catch (err) {
-      console.error('Error fetching weak topics:', err)
+      console.error('Error fetching gap analysis:', err)
+    } finally {
+      setGapLoading(false)
     }
   }
 
@@ -46,6 +57,7 @@ export default function StartQuizPage() {
     if (topic.document_id) {
       setSelectedDoc(String(topic.document_id))
     }
+    setActiveTab('generator')
     quizFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -115,59 +127,8 @@ export default function StartQuizPage() {
     }
   }
 
-  return (
-    <AppShell
-      title="Start a Quiz"
-      description="Choose one uploaded material or mix across your library, then generate AI quiz questions from it."
-      contentClassName="max-w-5xl space-y-8"
-      actions={
-        <>
-          <Link href="/documents" className="btn btn-outline">Back to Materials</Link>
-          {user?.role !== 'student' && (
-            <Link href="/check-difficulty" className="btn btn-outline">SOLO Tools</Link>
-          )}
-        </>
-      }
-    >
-        {weakTopics.length > 0 && (
-          <section className="card p-8 border-2 border-[#d9c25c]/60 bg-[#fdfaf0]">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="rounded-2xl bg-zinc-950 p-3 text-[#d9c25c]">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="section-kicker text-[#18181b]">From your gap analysis</p>
-                <h2 className="text-xl font-bold text-slate-900">Improve where you&apos;re weak</h2>
-              </div>
-            </div>
-            <p className="text-slate-600 mb-5">
-              Based on your past quizzes and quick checks, these are your weakest topics right now. Pick one to
-              practice it directly.
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              {weakTopics.map((topic) => (
-                <button
-                  key={topic.topic}
-                  type="button"
-                  onClick={() => practiceTopic(topic)}
-                  className="rounded-xl border border-[#d9c25c]/50 bg-white p-4 text-left transition hover:border-[#c9ab3f] hover:shadow-sm"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-slate-900">{topic.topic}</p>
-                    <span className="shrink-0 rounded-full bg-[#fdf6df] px-2.5 py-1 text-xs font-semibold text-[#8a6d1a]">
-                      {topic.gap_percentage}% gap
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-600">
-                    {topic.mastery_percentage}% mastery · {topic.answered_count} answers tracked
-                  </p>
-                  <p className="mt-2 text-xs font-semibold text-[#8a6d1a]">Practice this topic &rarr;</p>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
+  const generatorTab = (
+    <>
         <section ref={quizFormRef} className="card p-8">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Generate AI quiz questions from your material</h2>
           <p className="text-slate-600 mb-6">
@@ -272,6 +233,43 @@ export default function StartQuizPage() {
             description="Use timed sessions to simulate exam pressure and track performance."
           />
         </section>
+    </>
+  )
+
+  return (
+    <AppShell
+      title="Start a Quiz"
+      description="Choose one uploaded material or mix across your library, then generate AI quiz questions from it."
+      contentClassName="max-w-5xl space-y-8"
+      actions={
+        <>
+          <Link href="/documents" className="btn btn-outline">Back to Materials</Link>
+          {user?.role !== 'student' && (
+            <Link href="/check-difficulty" className="btn btn-outline">SOLO Tools</Link>
+          )}
+        </>
+      }
+    >
+        <DashboardTabs
+          active={activeTab}
+          onChange={setActiveTab}
+          tabs={[
+            { key: 'generator', label: 'Quiz Generator', content: generatorTab },
+            {
+              key: 'gap-analysis',
+              label: 'Gap Analysis',
+              badge: topicGaps.length,
+              content: (
+                <GapAnalysisPanel
+                  topicGaps={topicGaps}
+                  gapTrend={gapTrend}
+                  loading={gapLoading}
+                  onPracticeTopic={practiceTopic}
+                />
+              )
+            }
+          ]}
+        />
     </AppShell>
   )
 }
