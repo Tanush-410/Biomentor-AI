@@ -22,6 +22,7 @@ export default function StartQuizPage() {
   const [error, setError] = useState('')
   const [topicGaps, setTopicGaps] = useState([])
   const [gapTrend, setGapTrend] = useState([])
+  const [recommendations, setRecommendations] = useState(null)
   const [gapLoading, setGapLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('generator')
   const quizFormRef = useRef(null)
@@ -40,12 +41,14 @@ export default function StartQuizPage() {
     setGapLoading(true)
     try {
       const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
-      const [topicPayload, trendPayload] = await Promise.all([
+      const [topicPayload, trendPayload, recommendationsPayload] = await Promise.all([
         requestBackendJson('/gaps/topics', authHeaders),
-        requestBackendJson('/gaps/trend', authHeaders)
+        requestBackendJson('/gaps/trend', authHeaders),
+        requestBackendJson('/recommendations/study-plan', authHeaders).catch(() => null)
       ])
       setTopicGaps(topicPayload?.topic_gaps || [])
       setGapTrend(trendPayload?.trend || [])
+      setRecommendations(recommendationsPayload?.recommendations || null)
     } catch (err) {
       console.error('Error fetching gap analysis:', err)
     } finally {
@@ -265,6 +268,7 @@ export default function StartQuizPage() {
                   gapTrend={gapTrend}
                   loading={gapLoading}
                   onPracticeTopic={practiceTopic}
+                  recommendations={recommendations}
                 />
               )
             }
