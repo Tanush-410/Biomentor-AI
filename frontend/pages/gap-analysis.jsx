@@ -13,6 +13,7 @@ export default function GapAnalysisPage() {
   const { token, loading: authLoading } = useAuth()
   const [topicGaps, setTopicGaps] = useState([])
   const [gapTrend, setGapTrend] = useState([])
+  const [recommendations, setRecommendations] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -30,12 +31,14 @@ export default function GapAnalysisPage() {
     setError('')
     try {
       const authHeaders = { headers: { Authorization: `Bearer ${token}` } }
-      const [topicPayload, trendPayload] = await Promise.all([
+      const [topicPayload, trendPayload, recommendationsPayload] = await Promise.all([
         requestBackendJson('/gaps/topics', authHeaders),
-        requestBackendJson('/gaps/trend', authHeaders)
+        requestBackendJson('/gaps/trend', authHeaders),
+        requestBackendJson('/recommendations/study-plan', authHeaders).catch(() => null)
       ])
       setTopicGaps(topicPayload?.topic_gaps || [])
       setGapTrend(trendPayload?.trend || [])
+      setRecommendations(recommendationsPayload?.recommendations || null)
     } catch (err) {
       console.error('Gap analysis load error:', err)
       setError(err.message || 'Unable to load gap analysis right now.')
@@ -76,6 +79,7 @@ export default function GapAnalysisPage() {
         gapTrend={gapTrend}
         loading={loading}
         onPracticeTopic={practiceTopic}
+        recommendations={recommendations}
       />
     </AppShell>
   )
