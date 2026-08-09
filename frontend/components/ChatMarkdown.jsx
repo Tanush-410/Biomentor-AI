@@ -164,6 +164,23 @@ function MermaidBlock({ code }) {
 }
 
 /**
+ * Turn the model's short (2-6 keyword) search phrase into a real image
+ * prompt for the Pollinations last-resort tier -- the same fix applied
+ * server-side for Gemini in qa.py's /image-generate route (see
+ * _build_illustration_prompt there for why the bare phrase alone produces
+ * vague or surreal results for abstract subjects).
+ */
+function buildIllustrationPrompt(subject) {
+  return (
+    `A clean, accurate educational illustration of: ${subject}. Plain simple background, ` +
+    'textbook style, no on-image text or watermarks, no surreal, distorted, or disturbing ' +
+    'imagery. If this names an abstract idea, framework, or classification rather than a ' +
+    'physical object, depict it as a simple labeled diagram-style graphic representing the ' +
+    'idea instead of attempting a literal photo-like scene.'
+  )
+}
+
+/**
  * Renders a ```image code block. Resolution order:
  *  1. A real photo from Wikimedia Commons (`/qa/image-search`).
  *  2. If none found, an AI-generated illustration from Gemini
@@ -220,7 +237,7 @@ function ImageBlock({ prompt }) {
       }
 
       if (cancelled) return
-      setImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=512&nologo=true`)
+      setImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(buildIllustrationPrompt(prompt))}?width=768&height=512&nologo=true`)
       setSourceLabel('generated')
       setStatus('ready')
     }

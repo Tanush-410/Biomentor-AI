@@ -14,6 +14,7 @@ TAG_RE = re.compile(r"<[^>]+>")
 WHITESPACE_RE = re.compile(r"\s+")
 RESULT_LINK_RE = re.compile(r'<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="(?P<href>[^"]+)"[^>]*>(?P<title>.*?)</a>')
 REDIRECT_RE = re.compile(r"uddg=([^&]+)")
+WIKIPEDIA_USER_AGENT = "VydraCore/1.0 (educational study assistant; contact: support@vydracore.app)"
 
 
 def normalize_web_result(item: Dict, source_type: str) -> Dict:
@@ -55,7 +56,18 @@ def retrieve_web_contexts(search_client, query: str, trusted_domains: Sequence[s
         return trusted, []
 
     broad = rank_web_results(query, trusted_domains, search_client.search_broad(query))
-    return [], broad
+    if broad:
+        return [], broad
+
+    # DuckDuckGo's HTML endpoint frequently blocks/rate-limits requests from a
+    # server/cloud IP -- it returns 200 with an empty results page rather than
+    # an error, so both searches above can silently come back with nothing
+    # even though the request "succeeded". Wikipedia's public search API has
+    # no such blocking for reasonable server-side use and is itself a
+    # reliable, free, keyless source of general educational context, so it's
+    # tried as a last resort before giving up on web fallback entirely.
+    wiki_results = rank_web_results(query, trusted_domains, WikipediaSearchClient().search(query))
+    return [], wiki_results
 
 
 def normalize_text(text: str) -> str:
@@ -80,7 +92,14 @@ class DuckDuckGoSearchClient:
         search_url = f"https://html.duckduckgo.com/html/?q={quote(query)}"
         response = requests.get(
             search_url,
-            headers={"User-Agent": "Mozilla/5.0 VydraCore/1.0"},
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                ),
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://duckduckgo.com/",
+            },
             timeout=self.timeout,
         )
         response.raise_for_status()
@@ -117,6 +136,68 @@ class DuckDuckGoSearchClient:
             )
             response.raise_for_status()
             return normalize_text(response.text)[:2200]
+        except Exception:
+            return ""
+
+
+@dataclass
+class WikipediaSearchClient:
+    """Reliable, keyless fallback for when DuckDuckGo's scrape comes back empty.
+
+    Used only as a last resort inside retrieve_web_contexts(), never as the
+    primary path -- DuckDuckGo is still tried first since it can surface any
+    trusted domain, not just Wikipedia.
+    """
+
+    top_k: int = 4
+    timeout: int = 8
+
+    def search(self, query: str) -> List[Dict]:
+        try:
+            response = requests.get(
+                "https://en.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "list": "search",
+                    "srsearch": query,
+                    "format": "json",
+                    "srlimit": self.top_k,
+                },
+                headers={"User-Agent": WIKIPEDIA_USER_AGENT},
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            hits = ((response.json().get("query") or {}).get("search")) or []
+        except Exception:
+            return []
+
+        results: List[Dict] = []
+        for index, hit in enumerate(hits[: self.top_k]):
+            title = hit.get("title", "")
+            if not title:
+                continue
+            content = self._fetch_summary(title) or normalize_text(hit.get("snippet", ""))
+            if not content:
+                continue
+            results.append(
+                {
+                    "title": title,
+                    "url": f"https://en.wikipedia.org/wiki/{quote(title.replace(' ', '_'))}",
+                    "content": content,
+                    "relevance_score": max(0.2, 0.5 - (index * 0.05)),
+                }
+            )
+        return results
+
+    def _fetch_summary(self, title: str) -> str:
+        try:
+            response = requests.get(
+                f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(title.replace(' ', '_'))}",
+                headers={"User-Agent": WIKIPEDIA_USER_AGENT},
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            return normalize_text(response.json().get("extract", ""))
         except Exception:
             return ""
 

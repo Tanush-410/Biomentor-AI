@@ -62,6 +62,9 @@ class ImageGenerateResponse(BaseModel):
     source: str = "none"
 
 
+WIKIMEDIA_USER_AGENT = "VydraCore/1.0 (educational study assistant; contact: support@vydracore.app)"
+
+
 def _wikimedia_search_once(query: str) -> Optional[str]:
     """Single Wikimedia Commons lookup. Returns a thumbnail/full URL or None."""
     try:
@@ -73,10 +76,19 @@ def _wikimedia_search_once(query: str) -> Optional[str]:
                 "prop": "imageinfo",
                 "generator": "search",
                 "gsrsearch": query,
+                # Restrict to the File namespace (6). Without this, Commons'
+                # search mixes in category/gallery pages, which have no
+                # imageinfo -- crowding out real file results and making
+                # common searches (e.g. "human skull") return nothing at all.
+                "gsrnamespace": 6,
                 "gsrlimit": 5,
                 "iiprop": "url",
                 "iiurlwidth": 768,
             },
+            # Wikimedia's API now hard-rejects requests with no identifying
+            # User-Agent (403, per their robot policy) -- this call was
+            # silently failing on every single query until this was added.
+            headers={"User-Agent": WIKIMEDIA_USER_AGENT},
             timeout=6,
         )
         response.raise_for_status()
@@ -138,6 +150,26 @@ async def image_search(
     return ImageSearchResponse(image_url=image_url, source="wikimedia")
 
 
+def _build_illustration_prompt(subject: str) -> str:
+    """Turn the model's short (2-6 keyword) search phrase into a real image-generation prompt.
+
+    The chat system prompt asks for a short keyword phrase because that's
+    what a photo search (Wikimedia) needs -- but that same bare phrase, fed
+    directly to an image model with no styling or scene guidance, tends to
+    produce vague or surreal results, especially for abstract subjects (a
+    taxonomy level, a classification, a framework) that have no literal
+    photo to draw. Wrapping it in an explicit style/scene template fixes
+    that without needing the chat model to know two different prompt styles.
+    """
+    return (
+        f"A clean, accurate educational illustration of: {subject}. Plain simple background, "
+        "textbook style, no on-image text or watermarks, no surreal, distorted, or disturbing "
+        "imagery. If this names an abstract idea, framework, or classification rather than a "
+        "physical object, depict it as a simple labeled diagram-style graphic representing the "
+        "idea instead of attempting a literal photo-like scene."
+    )
+
+
 @router.post("/image-generate", response_model=ImageGenerateResponse)
 async def image_generate(
     request: ImageGenerateRequest,
@@ -162,7 +194,7 @@ async def image_generate(
     # illustration, so degrading here is always safe and never surfaces as
     # a broken chat message.
     try:
-        image_bytes = gemini_generate_image(prompt)
+        image_bytes = gemini_generate_image(_build_illustration_prompt(prompt))
     except Exception:
         logger.exception("Unexpected failure generating an image with Gemini.")
         image_bytes = None
@@ -473,25 +505,34 @@ def _generate_with_ai(question: str, contexts, conversation_history):
                     "A -->|Label|> B or add any '>' character after the closing pipe -- that is invalid and will fail "
                     "to render. "
                     "Mentally re-check every line of Mermaid syntax against these two rules before including it. "
-                    "3) ALWAYS include one relevant real picture with every single answer, no exceptions -- this is "
+                    "3) ALWAYS include one relevant picture with every single answer, no exceptions -- this is "
                     "mandatory, not optional and not dependent on the student asking for one or on the topic being "
                     "visual. Every answer, regardless of subject or how abstract or simple the question is, must end "
-                    "with a fenced ```image code block illustrating something relevant to the answer -- the main "
-                    "subject discussed, a related real-world object, a person, place, or concept tied to it. Never "
-                    "skip this step. That query is "
-                    "used to search a real photo library first (Wikimedia "
-                    "Commons), so its body must be a SHORT, concrete search phrase of 2-6 keywords naming the exact "
-                    "subject -- the way you would type into an image search box -- not a full descriptive sentence. "
-                    "Good: \"human eye anatomy diagram\", \"plant leaf cross section\", \"Eiffel Tower\". Bad: \"a "
-                    "detailed cross-section illustration showing the cuticle, epidermis, mesophyll, and stomata of a "
-                    "plant leaf, labeled\" -- that phrasing rarely matches a real photo's title or description, so it "
-                    "fails the search and falls back to a generic AI illustration instead of a real, accurate photo. "
-                    "If the student needs specific labeled parts, put those labels in your diagram or prose instead of "
-                    "cramming them into the image search phrase. Use ```diagram for structured flows, cycles, or "
-                    "relationships between concepts, and ```image for the real photo or drawing that must accompany "
-                    "every answer -- they serve different purposes, so include the diagram in addition to the "
-                    "mandatory image whenever the process/relationship visual is also warranted, never as a "
-                    "replacement for it."
+                    "with a fenced ```image code block. Never skip this step. "
+                    "For a subject with an actual visual referent -- a real-world object, organism, place, person, "
+                    "structure, or process (a leaf, an eye, the Eiffel Tower, mitosis, the water cycle) -- the "
+                    "```image body must be a SHORT, concrete search phrase of 2-6 keywords naming the exact subject, "
+                    "the way you would type into an image search box, e.g. \"human eye anatomy diagram\", \"plant "
+                    "leaf cross section\", \"Eiffel Tower\". That phrase is tried against a real photo library "
+                    "(Wikimedia Commons) first. "
+                    "For a purely abstract subject with no real visual referent -- a classification, taxonomy level, "
+                    "framework, model name, or theory (e.g. 'Multistructural' in SOLO taxonomy, Bloom's Taxonomy, "
+                    "growth mindset) -- real photo search will find nothing for the bare term itself, so instead "
+                    "name a concrete, literal, real-world visual metaphor that stands in for the idea -- something an "
+                    "image search or an image generator can actually depict -- rather than the abstract term itself. "
+                    "For example, for a taxonomy level describing several unconnected facts, name something like "
+                    "\"scattered puzzle pieces\" or \"separate building blocks\" instead of the taxonomy level's name; "
+                    "for a growth-mindset concept, name something like \"person climbing a mountain\" instead of "
+                    "\"growth mindset\". Never submit the bare abstract term as the image query -- it has no visual "
+                    "form to search for or generate, which is exactly what produces vague, generic, or bizarre "
+                    "results. Pick a metaphor image that a student would immediately connect back to the concept "
+                    "given the surrounding answer text, not a random or generic one. "
+                    "If the student needs specific labeled parts, put those labels in your diagram or prose instead "
+                    "of cramming them into the image search phrase -- generative image models render text/labels "
+                    "badly. Use ```diagram for structured flows, cycles, or relationships between concepts, and "
+                    "```image for the picture that must accompany every answer -- they serve different purposes, so "
+                    "include both whenever the process/relationship visual is also warranted, never as a substitute "
+                    "for the mandatory image."
     )
     user_prompt = (
         f"Current question: {question}\n\n"
