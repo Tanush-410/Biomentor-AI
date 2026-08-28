@@ -473,6 +473,10 @@ export default function EducatorExamMakerPage() {
       setError('Every exam question needs a prompt.')
       return
     }
+    if (form.questions.some((question) => question.question_type === 'mcq' && !question.answer_key)) {
+      setError('Every multiple-choice question needs a correct option marked, or it will be graded wrong for everyone.')
+      return
+    }
 
     setSaving(true)
     setError('')
@@ -947,20 +951,42 @@ export default function EducatorExamMakerPage() {
                       <input value={question.grading_keywords} onChange={(event) => updateQuestion(question.local_id, { grading_keywords: event.target.value })} className="input" placeholder="Comma-separated key ideas, phrases, or terms the AI should reward." />
                     </label>
 
-                    <label className="space-y-2 md:col-span-2">
-                      <span className="text-sm font-semibold text-slate-900">Answer key or model answer</span>
-                      <textarea value={question.answer_key} onChange={(event) => updateQuestion(question.local_id, { answer_key: event.target.value })} className="input min-h-[120px]" placeholder="Used for AI-assisted review and for educator guidance during manual grading." />
-                    </label>
+                    {question.question_type !== 'mcq' && (
+                      <label className="space-y-2 md:col-span-2">
+                        <span className="text-sm font-semibold text-slate-900">Answer key or model answer</span>
+                        <textarea value={question.answer_key} onChange={(event) => updateQuestion(question.local_id, { answer_key: event.target.value })} className="input min-h-[120px]" placeholder="Used for AI-assisted review and for educator guidance during manual grading." />
+                      </label>
+                    )}
                   </div>
 
                   {question.question_type === 'mcq' && (
-                    <div className="mt-5 grid gap-3 md:grid-cols-2">
-                      {question.options.map((option) => (
-                        <label key={option.id} className="space-y-2">
-                          <span className="text-sm font-semibold text-slate-900">Option {option.id}</span>
-                          <input value={option.text} onChange={(event) => updateQuestionOption(question.local_id, option.id, event.target.value)} className="input" placeholder={`Option ${option.id}`} />
-                        </label>
-                      ))}
+                    <div className="mt-5 space-y-3">
+                      <p className="text-sm font-semibold text-slate-900">
+                        Options -- select the correct one
+                      </p>
+                      {!question.answer_key && (
+                        <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                          Mark a correct option below, or every student answer will be graded wrong.
+                        </p>
+                      )}
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {question.options.map((option) => (
+                          <div key={option.id} className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name={`correct-option-${question.local_id}`}
+                              checked={question.answer_key === option.id}
+                              onChange={() => updateQuestion(question.local_id, { answer_key: option.id })}
+                              className="h-4 w-4 shrink-0 accent-black"
+                              aria-label={`Mark option ${option.id} as correct`}
+                            />
+                            <label className="flex-1 space-y-2">
+                              <span className="text-sm font-semibold text-slate-900">Option {option.id}</span>
+                              <input value={option.text} onChange={(event) => updateQuestionOption(question.local_id, option.id, event.target.value)} className="input" placeholder={`Option ${option.id}`} />
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -950,6 +950,7 @@ async def override_classroom_certification_step(
     classroom = get_accessible_classroom(db, classroom_id, current_user)
     certification = get_classroom_certification_row(db, classroom.id, certification_id)
     step = get_classroom_certification_step_row(db, certification.id, payload.step_id)
+    _require_classroom_enrollment(db, classroom.id, payload.student_id)
     enrollment = get_or_create_enrollment(db, certification, payload.student_id)
     progress = get_or_create_step_progress(db, enrollment, step)
     progress.status = payload.status
@@ -981,6 +982,7 @@ async def issue_classroom_certificate(
     student = db.query(User).filter(User.id == student_id).first()
     if not student:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+    _require_classroom_enrollment(db, classroom.id, student_id)
     try:
         certificate = issue_certificate(db, certification, classroom, student, current_user)
     except ValueError as error:
@@ -1758,19 +1760,29 @@ async def finalize_classroom_exam_review_attempt(
         response.teacher_feedback = update.teacher_feedback
         response.review_status = update.review_status or "teacher_finalized"
 
+    # Recompute both totals from the (possibly just-updated) responses --
+    # objective_score was previously left at its original auto-graded
+    # value here, so a teacher's correction to an MCQ response's score
+    # (e.g. fixing a manually-authored question whose answer key didn't
+    # match the grader) was saved on the response but silently had no
+    # effect on the attempt's actual released score.
     descriptive_total = 0.0
+    objective_total = 0.0
     for response in responses:
         question = question_by_id.get(response.question_id)
-        if not question or question.question_type == "mcq":
-            continue
-        descriptive_total += float(response.teacher_score if response.teacher_score is not None else response.ai_score or 0.0)
+        effective_score = float(response.teacher_score if response.teacher_score is not None else response.ai_score or 0.0)
+        if question and question.question_type == "mcq":
+            objective_total += effective_score
+        else:
+            descriptive_total += effective_score
 
     grading_summary = attempt.grading_summary or {}
     grading_summary["overall_feedback"] = payload.overall_feedback
     grading_summary["teacher_review_completed_at"] = serialize_utc_datetime(datetime.utcnow())
     grading_summary["teacher_review_completed_by"] = current_user.id
     attempt.descriptive_score = round(descriptive_total, 2)
-    attempt.score = round(float(attempt.objective_score or 0.0) + descriptive_total, 2)
+    attempt.objective_score = round(objective_total, 2)
+    attempt.score = round(objective_total + descriptive_total, 2)
     attempt.teacher_review_required = False
     attempt.grading_summary = grading_summary
     db.commit()
@@ -3734,6 +3746,30 @@ def get_source_contexts_for_document_ids(
         for document in fallback_documents
         if document.content_preview
     ][:top_k]
+
+
+def _require_classroom_enrollment(db: Session, classroom_id: str, student_id: str) -> None:
+    """Guard against granting certification progress/credentials to a user
+    who was never actually enrolled in this classroom.
+
+    get_or_create_enrollment() will happily create a certification
+    enrollment row for any user_id passed to it, and issue_certificate()
+    only checks the certification's own completion state -- neither
+    verifies classroom membership, so without this an educator could
+    issue a real IssuedCertificate (or fabricate step progress) for an
+    arbitrary platform user who was never in the classroom.
+    """
+    enrollment = (
+        db.query(ClassroomEnrollment)
+        .filter(
+            ClassroomEnrollment.classroom_id == classroom_id,
+            ClassroomEnrollment.student_id == student_id,
+            ClassroomEnrollment.status == "active",
+        )
+        .first()
+    )
+    if not enrollment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student is not enrolled in this classroom.")
 
 
 def get_classroom_certification_row(
