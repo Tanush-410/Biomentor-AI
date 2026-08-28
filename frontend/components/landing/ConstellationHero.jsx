@@ -30,7 +30,13 @@ const LAYER_3 = [
   { x: 560, y: 840, r: 2 }, { x: 960, y: 820, r: 3 }, { x: 1340, y: 850, r: 2 },
 ]
 
-const MAX_EDGE_DISTANCE = 190
+// Nodes are spread across a wide viewBox for full-page coverage, so their
+// real pairwise distances run ~200-650+ (checked against the actual
+// coordinates below) -- a threshold under ~200 draws zero edges, which is
+// exactly the bug an earlier version of this file had after being widened
+// for full-page coverage without re-checking the threshold against the new
+// spacing.
+const MAX_EDGE_DISTANCE = 420
 const VIEW_W = 1560
 const VIEW_H = 940
 
@@ -42,7 +48,7 @@ function buildEdges(nodes) {
       const dy = nodes[i].y - nodes[j].y
       const distance = Math.sqrt(dx * dx + dy * dy)
       if (distance < MAX_EDGE_DISTANCE) {
-        edges.push({ a: nodes[i], b: nodes[j], opacity: Math.max(0.05, 0.3 - distance / 800) })
+        edges.push({ a: nodes[i], b: nodes[j], opacity: Math.max(0.14, 0.32 - distance / 1400) })
       }
     }
   }
@@ -86,15 +92,19 @@ export default function ConstellationHero({ className = '' }) {
 
   return (
     <div className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`} aria-hidden="true">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(217,194,92,0.14),transparent_45%),radial-gradient(circle_at_78%_65%,rgba(217,194,92,0.10),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(217,194,92,0.16),transparent_45%),radial-gradient(circle_at_78%_65%,rgba(217,194,92,0.12),transparent_50%)]" />
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         className="h-full w-full"
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
+          {/* Warm gold halo behind each node, but the node/line ink itself
+              is near-black -- reads as fine linework on a light page
+              instead of the low-contrast gold-on-light that a straight
+              color swap from the dark theme would have produced. */}
           <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#d9c25c" stopOpacity="0.9" />
+            <stop offset="0%" stopColor="#d9c25c" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#d9c25c" stopOpacity="0" />
           </radialGradient>
         </defs>
@@ -112,7 +122,7 @@ export default function ConstellationHero({ className = '' }) {
                 y1={edge.a.y}
                 x2={edge.b.x}
                 y2={edge.b.y}
-                stroke="#d9c25c"
+                stroke="#18181b"
                 strokeWidth="1"
                 strokeOpacity={edge.opacity}
               />
@@ -123,8 +133,8 @@ export default function ConstellationHero({ className = '' }) {
                 className="constellation-node"
                 style={{ animationDelay: `${(index % 7) * 0.6}s` }}
               >
-                <circle cx={node.x} cy={node.y} r={node.r * 4} fill="url(#nodeGlow)" opacity="0.3" />
-                <circle cx={node.x} cy={node.y} r={node.r} fill="#d9c25c" />
+                <circle cx={node.x} cy={node.y} r={node.r * 4} fill="url(#nodeGlow)" opacity="0.4" />
+                <circle cx={node.x} cy={node.y} r={node.r} fill="#18181b" />
               </g>
             ))}
           </g>
