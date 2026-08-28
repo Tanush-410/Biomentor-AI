@@ -16,10 +16,13 @@ class QuestionGenerator:
     """Generate grounded quiz questions from PDF/text content."""
 
     GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+    # llama-3.3-70b-versatile, llama-3.1-8b-instant, and mixtral-8x7b-32768
+    # have all been removed from Groq's catalog (calls returned 404
+    # model_not_found), silently degrading quiz generation to Gemini or the
+    # non-AI fact-extraction fallback. These are the current equivalents.
     GROQ_MODELS = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "mixtral-8x7b-32768",
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
     ]
 
     STOPWORDS = {

@@ -26,7 +26,11 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile"
+# llama-3.3-70b-versatile was removed from Groq's catalog (calls started
+# returning 404 model_not_found) -- gpt-oss-120b is the current equivalent
+# general-purpose model on the same free tier, verified to support both
+# plain chat and response_format=json_object.
+GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b"
 
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 GEMINI_TEXT_MODEL = "gemini-2.0-flash"
