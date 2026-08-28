@@ -282,7 +282,7 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
 
           {children}
         </main>
-        <Footer className="border-t-0 bg-transparent" />
+        <Footer transparent />
       </div>
     </div>
   )
