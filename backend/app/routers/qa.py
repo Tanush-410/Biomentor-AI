@@ -359,7 +359,7 @@ def _build_answer_response_inner(
             detail="No uploaded material is available for answering this question."
         )
 
-    evidence_items = trim_evidence_items(dedupe_evidence_items(contexts), max_chars=6000)
+    evidence_items = trim_evidence_items(dedupe_evidence_items(contexts), max_chars=9000)
     answer_text, confidence = _generate_answer_from_context(request.question, evidence_items, conversation_history)
     if answer_origin != "material":
         confidence = min(0.92, confidence + CONFIDENCE_WEB_BONUS)
@@ -451,7 +451,7 @@ def _generate_answer_from_context(question: str, contexts, conversation_history=
 
 
 def _generate_with_ai(question: str, contexts, conversation_history):
-    context_text = build_context_window(contexts[:6], max_chars=9000)
+    context_text = build_context_window(contexts[:8], max_chars=12000)
     conversation_text = _format_conversation_history(conversation_history)
     system_prompt = (
                     "You are a study assistant. Ground your answer in the provided study material first: use it as "
@@ -565,7 +565,7 @@ def _normalize_conversation_history(history):
         content = str(item.get("content", "")).strip()
         if role in {"user", "assistant"} and content:
             normalized.append({"role": role, "content": content})
-    return normalized[-6:]
+    return normalized[-10:]
 
 
 def _format_conversation_history(history):
@@ -573,7 +573,7 @@ def _format_conversation_history(history):
         return "No previous conversation."
 
     lines = []
-    for item in history[-6:]:
+    for item in history[-10:]:
         speaker = "User" if item["role"] == "user" else "Assistant"
         lines.append(f"{speaker}: {item['content']}")
     return "\n".join(lines)

@@ -237,7 +237,11 @@ function ImageBlock({ prompt }) {
       }
 
       if (cancelled) return
-      setImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(buildIllustrationPrompt(prompt))}?width=768&height=512&nologo=true`)
+      // model=flux is Pollinations' higher-quality generator (vs their
+      // older default) -- worth pinning explicitly since Gemini generation
+      // is currently unconfigured, making this the tier most illustrations
+      // actually come from when Wikimedia has no real photo.
+      setImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(buildIllustrationPrompt(prompt))}?width=1024&height=683&nologo=true&model=flux`)
       setSourceLabel('generated')
       setStatus('ready')
     }
