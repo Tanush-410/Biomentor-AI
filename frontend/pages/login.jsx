@@ -111,12 +111,11 @@ export default function Login() {
         <section className="space-y-8">
           {!heroImageFailed && (
             <div className="overflow-hidden rounded-[32px] border border-black/10 shadow-2xl shadow-black/10">
-              {/* TODO: replace public/stem-education-hero.png with the real artwork -- placeholder path until it's provided. */}
               <Image
                 src="/stem-education-hero.png"
                 alt=""
-                width={1200}
-                height={780}
+                width={1037}
+                height={653}
                 className="h-auto w-full"
                 priority
                 onError={() => setHeroImageFailed(true)}
