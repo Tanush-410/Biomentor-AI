@@ -294,9 +294,27 @@ def refresh_certification_enrollment(
 
     required_steps = [step for step in step_payloads if step.get("required", True)]
     completed_required = [step for step in required_steps if step.get("status") == "completed"]
-    completion_percentage = 100.0 if not required_steps else round((len(completed_required) / len(required_steps)) * 100, 2)
+    if required_steps:
+        completion_percentage = round((len(completed_required) / len(required_steps)) * 100, 2)
+    elif step_payloads:
+        # No step is "required," so base the shown percentage on progress
+        # across all steps instead of vacuously reporting 100% complete.
+        completed_any_status = [step for step in step_payloads if step.get("status") == "completed"]
+        completion_percentage = round((len(completed_any_status) / len(step_payloads)) * 100, 2)
+    else:
+        completion_percentage = 0.0
     any_started = any(step.get("status") in {"completed", "pending_review"} for step in step_payloads)
-    ready = len(completed_required) == len(required_steps)
+    if required_steps:
+        ready = len(completed_required) == len(required_steps)
+    else:
+        # A certification where every step was marked optional would
+        # otherwise be "ready" the instant it's created, with zero actual
+        # progress (0 completed == 0 required is vacuously true) -- issuing
+        # a real certificate off that is never correct, so fall back to
+        # requiring every step (not just the required ones) instead of
+        # treating "nothing is required" as "nothing to do."
+        completed_any_status = [step for step in step_payloads if step.get("status") == "completed"]
+        ready = bool(step_payloads) and len(completed_any_status) == len(step_payloads)
     existing_certificate = (
         db.query(IssuedCertificate)
         .filter(
