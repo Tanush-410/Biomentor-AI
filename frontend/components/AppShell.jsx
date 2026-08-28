@@ -9,6 +9,7 @@ import {
   Calculator,
   FileStack,
   FlaskConical,
+  GraduationCap,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -22,10 +23,13 @@ import {
   X
 } from 'lucide-react'
 
+import Footer from './Footer'
+import StemEducationBadge from './StemEducationBadge'
 import { useAuth } from '../context/AuthContext'
 
 const STUDENT_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, match: ['/dashboard'] },
+  { href: '/stem-education', label: 'STEM Education', icon: GraduationCap, match: ['/stem-education'] },
   { href: '/classrooms', label: 'Classroom', icon: Users, match: ['/classrooms', '/classrooms/[id]', '/classrooms/[id]/stream', '/classrooms/[id]/classwork', '/classrooms/[id]/people', '/classrooms/[id]/messages', '/classrooms/[id]/live', '/classrooms/[id]/live/[meetingId]', '/classrooms/[id]/live/[meetingId]/room', '/classrooms/[id]/quiz/[quizId]', '/classrooms/[id]/exam/[examId]', '/classrooms/[id]/certification/[certificationId]'] },
   { href: '/documents', label: 'Materials', icon: BookOpen, match: ['/documents', '/document/[id]', '/certificate/[certificateId]'] },
   { href: '/learning-chat', label: 'Learning Chat', icon: MessageSquare, match: ['/learning-chat'] },
@@ -42,7 +46,9 @@ const STUDENT_NAV_ITEMS = [
 
 const EDUCATOR_NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, match: ['/dashboard'] },
+  { href: '/stem-education', label: 'STEM Education', icon: GraduationCap, match: ['/stem-education'] },
   { href: '/classrooms', label: 'Classrooms', icon: BookOpen, match: ['/classrooms', '/classrooms/[id]', '/classrooms/[id]/stream', '/classrooms/[id]/classwork', '/classrooms/[id]/people', '/classrooms/[id]/messages', '/classrooms/[id]/live', '/classrooms/[id]/live/[meetingId]', '/classrooms/[id]/live/[meetingId]/room', '/classrooms/[id]/quiz/[quizId]', '/classrooms/[id]/exam/[examId]', '/classrooms/[id]/certification/[certificationId]'] },
+  { href: '/learning-chat', label: 'Learning Chat', icon: MessageSquare, match: ['/learning-chat'] },
   { href: '/educator/quiz-maker', label: 'Quiz Maker', icon: Brain, match: ['/educator/quiz-maker'] },
   { href: '/educator/exam-maker', label: 'Exam Maker', icon: FileStack, match: ['/educator/exam-maker'] },
   { href: '/educator/certification', label: 'Certification', icon: BookOpen, match: ['/educator/certification'] },
@@ -262,6 +268,7 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
             <div className="pointer-events-none absolute -left-10 bottom-0 h-28 w-28 rounded-full bg-black/5 blur-3xl" />
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0">
+                <StemEducationBadge className="mb-3" />
                 <p className="section-kicker text-zinc-500">{eyebrow}</p>
                 <h1 className="mt-2 text-3xl font-bold text-zinc-950 sm:text-4xl">{title}</h1>
                 {description && <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-600 sm:text-base">{description}</p>}
@@ -272,6 +279,7 @@ export default function AppShell({ title, eyebrow = 'VYDRA CORE', description = 
 
           {children}
         </main>
+        <Footer className="border-t-0 bg-transparent" />
       </div>
     </div>
   )

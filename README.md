@@ -463,30 +463,45 @@ If the backend connects correctly, `/health` will show:
 
 ## Production Deployment: Vercel + Render
 
+**Nothing in this repo is deployed to a live URL today** -- every setup described elsewhere in this README runs locally only (`127.0.0.1`). If login or any other feature "doesn't work" for someone outside the development machine, the most likely reason is that there is no public URL for them to reach yet, not a bug in the login code itself. Follow the steps below to get a real, shareable URL.
+
 VYDRA CORE should be deployed with:
 - `Vercel` for the `frontend`
 - `Render` for the `backend`
 - `Supabase/Postgres` for production relational data
-- `Qdrant` for vector retrieval
+- `Qdrant` for vector retrieval (optional -- the app works without it, see [Running with Qdrant](#running-with-qdrant))
 
 This split is important because the classroom meeting system uses FastAPI WebSockets for signaling. The backend should stay on Render instead of being deployed as Vercel Functions.
 
+### 0. Before you start
+
+Create accounts and gather these values first so the deploy steps below are just copy/paste:
+- A [Render](https://render.com) account (backend hosting).
+- A [Vercel](https://vercel.com) account (frontend hosting).
+- A [Supabase](https://supabase.com) project, with its Postgres connection string (`Project Settings > Database > Connection string > URI`) and API keys (`Project Settings > API`).
+- A [Groq](https://console.groq.com) API key (primary AI provider).
+- Optionally, a [Gemini](https://aistudio.google.com/apikey) API key (automatic AI failsafe + AI image generation -- the app runs fine without one, it just skips that tier).
+- Optionally, a [Qdrant Cloud](https://cloud.qdrant.io) cluster URL + API key (vector search accelerator -- the app runs fine without one too, falling back to search computed directly against Supabase).
+- Optionally, a TURN provider such as [Metered](https://www.metered.ca) for reliable live-meeting video across different networks.
+
 ### 1. Deploy the backend to Render
 
-Create a Render web service from the repo and set the service root to `backend`.
+Create a Render **Web Service** from this repo and set the service root directory to `backend`.
 
-Render can use the included [backend/Dockerfile](backend/Dockerfile), which binds `0.0.0.0:$PORT` correctly for production.
+Render should use the included [backend/Dockerfile](backend/Dockerfile), which binds `0.0.0.0:$PORT` correctly for production -- Render usually detects this automatically since the file is present.
 
-Set these Render variables:
+Set these Render environment variables (Render's dashboard: your service > **Environment**):
 
 ```env
 DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.your-project.supabase.co:5432/postgres
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+GROQ_API_KEY=your_groq_api_key
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_API_KEY_2=your_second_gemini_api_key
 QDRANT_URL=https://your-qdrant-endpoint
 QDRANT_API_KEY=your_qdrant_api_key
-GROQ_API_KEY=your_groq_api_key
 SECRET_KEY=replace-this-with-a-long-random-secret
 ENVIRONMENT=production
 DEBUG=false
@@ -495,9 +510,13 @@ TRUSTED_SEARCH_DOMAINS=["khanacademy.org","britannica.com","nih.gov","nasa.gov",
 WEB_FALLBACK_TOP_K=4
 ```
 
+Leave `GEMINI_API_KEY`, `GEMINI_API_KEY_2`, `QDRANT_URL`, and `QDRANT_API_KEY` blank if you're skipping those optional pieces -- the app degrades gracefully with no errors.
+
 After deploy, confirm:
-- `https://your-render-service.onrender.com/health`
-- the response should include `"database_backend": "postgresql"`
+- Open `https://your-render-service.onrender.com/health` in a browser.
+- The response should include `"database_backend": "postgresql"`.
+
+**Cold starts on Render's free tier**: a free-tier service spins down after ~15 minutes of no traffic and takes 30-60+ seconds to wake up on the next request. The first login attempt after idle time can look like it's hung or broken when it's actually just waking the server up -- this is a very common source of "login isn't working" reports. Upgrade to a paid Render plan to keep the service always-on if that matters for how the client will use it.
 
 ### 2. Deploy the frontend to Vercel
 
@@ -530,6 +549,15 @@ After deploy, test:
 - Use a real TURN server for reliable classroom calls. STUN-only is not enough for many real-world networks.
 - Put TURN credentials in Vercel as frontend environment variables, then redeploy the frontend so the browser bundle receives them.
 - CORS is now environment-driven through `CORS_ORIGINS`, so Render should allow your Vercel domain once it is added there.
+
+### 4. If login "doesn't work" for someone
+
+Before assuming it's a bug, check these in order -- they cover the vast majority of real login reports:
+1. **Is there actually a deployed URL yet?** If the person is trying to reach `localhost`/`127.0.0.1`, that only works on the machine running the dev server -- see steps 1-2 above.
+2. **Render cold start** (free tier only): the first request after ~15 minutes idle can take 30-60+ seconds. Wait it out, or upgrade the Render plan.
+3. **Wrong mode selected**: an account registered as a student will be rejected with "This account is registered as student. Please switch to the correct mode." if someone tries to sign in from Educator Mode (and vice versa). Check the mode toggle on the login page matches the account's role.
+4. **Temporary lockout**: 5 wrong password attempts locks the account for 10 minutes (`423 Locked`). Wait, or use "Forgot Password?" to reset.
+5. **Rate limiting**: repeated rapid login attempts (12+ within 5 minutes) return `429 Too Many Requests`. Wait a few minutes before retrying.
 
 ## Running with Qdrant
 

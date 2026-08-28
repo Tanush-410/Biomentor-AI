@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
+import Footer from '../components/Footer'
+import StemEducationBadge from '../components/StemEducationBadge'
 import { requestBackendJson } from '../lib/backendApi'
 
 export default function ResetPassword() {
@@ -52,11 +54,12 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(145deg,#ffffff,#f4f4f5_48%,#e4e4e7)] px-6 py-10">
-      <div className="mx-auto max-w-5xl">
+    <div className="flex min-h-screen flex-col bg-[linear-gradient(145deg,#ffffff,#f4f4f5_48%,#e4e4e7)]">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="section-kicker text-[#18181b]">VYDRA CORE</p>
+            <StemEducationBadge />
+            <p className="mt-3 section-kicker text-[#18181b]">VYDRA CORE</p>
             <h1 className="mt-2 text-4xl font-bold text-zinc-950">Choose a new password</h1>
           </div>
           <Link href="/login" className="btn btn-outline">Back to login</Link>
@@ -115,6 +118,7 @@ export default function ResetPassword() {
           </section>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

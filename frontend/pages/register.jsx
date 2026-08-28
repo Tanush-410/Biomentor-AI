@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import Footer from '../components/Footer'
+import StemEducationBadge from '../components/StemEducationBadge'
 import { requestBackendJson } from '../lib/backendApi'
 
 const ROLE_OPTIONS = [
@@ -67,11 +69,12 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(145deg,_#ffffff,_#f4f4f5_45%,_#e4e4e7)] px-6 py-10 text-zinc-950">
-      <div className="mx-auto max-w-5xl">
+    <div className="flex min-h-screen flex-col bg-[linear-gradient(145deg,_#ffffff,_#f4f4f5_45%,_#e4e4e7)] text-zinc-950">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-500">VYDRA CORE</p>
+            <StemEducationBadge />
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.35em] text-zinc-500">VYDRA CORE</p>
             <h1 className="mt-2 text-4xl font-bold text-slate-950">Create your workspace</h1>
           </div>
           <Link href="/login" className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:border-black hover:bg-zinc-950 hover:text-[#d9c25c]">
@@ -201,6 +204,7 @@ export default function Register() {
           </section>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

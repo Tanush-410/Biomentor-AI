@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { GraduationCap, School2 } from 'lucide-react'
 
+import Footer from '../components/Footer'
+import StemEducationBadge from '../components/StemEducationBadge'
 import { useAuth } from '../context/AuthContext'
 import { requestBackendJson } from '../lib/backendApi'
 
@@ -10,13 +13,11 @@ const ROLE_MODES = [
   {
     value: 'student',
     label: 'Student Mode',
-    description: 'Study uploaded material, practice SOLO quizzes, and track progress.',
     icon: GraduationCap
   },
   {
     value: 'educator',
     label: 'Educator Mode',
-    description: 'Monitor classes, launch live sessions, and assign reinforcement tasks.',
     icon: School2
   }
 ]
@@ -30,6 +31,7 @@ export default function Login() {
   const [mode, setMode] = useState('student')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [heroImageFailed, setHeroImageFailed] = useState(false)
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('biomentor_remember_email')
@@ -86,12 +88,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(10,10,10,0.06),_transparent_35%),linear-gradient(135deg,_#d9c25c,_#e3ce7a_52%,_#dcc26a)] text-zinc-950">
+    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_rgba(10,10,10,0.06),_transparent_35%),linear-gradient(135deg,_#d9c25c,_#e3ce7a_52%,_#dcc26a)] text-zinc-950">
       <header className="border-b border-black/10 bg-white/55 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-zinc-700">VYDRA CORE</p>
-            <h1 className="mt-2 text-2xl font-bold">Exam Preparation Workspace</h1>
+            <StemEducationBadge className="border-black/15 bg-white/70" />
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.35em] text-zinc-700">VYDRA CORE</p>
           </div>
           <Link href="/" className="rounded-full border border-black/15 px-4 py-2 text-sm font-semibold text-zinc-800 transition hover:border-black hover:bg-black hover:text-[#d9c25c]">
             Back Home
@@ -99,17 +101,22 @@ export default function Login() {
         </div>
       </header>
 
-      <main className="mx-auto grid min-h-[calc(100vh-89px)] max-w-6xl gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <section className="space-y-8">
-          <div className="max-w-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-zinc-700">Secure Sign In</p>
-            <h2 className="mt-4 text-5xl font-bold leading-tight text-zinc-950">
-              Choose the right mode and enter the part of VYDRA CORE built for you.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-zinc-700">
-              Students get study, quiz, and progress tools. Educators unlock class dashboards, live collaboration, alerts, and intervention workflows.
-            </p>
-          </div>
+          {!heroImageFailed && (
+            <div className="overflow-hidden rounded-[32px] border border-black/10 shadow-2xl shadow-black/10">
+              {/* TODO: replace public/stem-education-hero.png with the real artwork -- placeholder path until it's provided. */}
+              <Image
+                src="/stem-education-hero.png"
+                alt=""
+                width={1200}
+                height={780}
+                className="h-auto w-full"
+                priority
+                onError={() => setHeroImageFailed(true)}
+              />
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2">
             {ROLE_MODES.map((item) => {
@@ -130,10 +137,7 @@ export default function Login() {
                     <div className={`rounded-2xl p-3 ${active ? 'bg-black text-[#d9c25c]' : 'bg-zinc-100 text-zinc-700'}`}>
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-zinc-950">{item.label}</h3>
-                      <p className="mt-2 text-sm leading-6 text-zinc-700">{item.description}</p>
-                    </div>
+                    <h3 className="text-lg font-bold text-zinc-950">{item.label}</h3>
                   </div>
                 </button>
               )
@@ -202,6 +206,8 @@ export default function Login() {
           </div>
         </section>
       </main>
+
+      <Footer className="border-black/10 bg-white/55 backdrop-blur" />
     </div>
   )
 }
