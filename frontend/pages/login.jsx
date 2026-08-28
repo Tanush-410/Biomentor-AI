@@ -49,12 +49,8 @@ export default function Login() {
     }
   }, [router.query.mode])
 
-  const redirectForRole = (role) => {
-    if (role === 'educator' || role === 'admin') {
-      router.push('/dashboard')
-      return
-    }
-    router.push('/dashboard')
+  const redirectForRole = () => {
+    router.push('/stem-education')
   }
 
   const handleSubmit = async (e) => {
@@ -83,7 +79,7 @@ export default function Login() {
         localStorage.removeItem('biomentor_remember_email')
       }
       localStorage.setItem('biomentor_login_mode', mode)
-      redirectForRole(data.user?.role)
+      redirectForRole()
     } catch (err) {
       setError(err.message || 'An error occurred')
     } finally {
