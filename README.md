@@ -508,9 +508,17 @@ DEBUG=false
 CORS_ORIGINS=["https://your-frontend.vercel.app","https://your-custom-domain.com"]
 TRUSTED_SEARCH_DOMAINS=["khanacademy.org","britannica.com","nih.gov","nasa.gov",".edu/"]
 WEB_FALLBACK_TOP_K=4
+FRONTEND_BASE_URL=https://your-frontend.vercel.app
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-gmail-address@gmail.com
+SMTP_PASSWORD=your-16-character-gmail-app-password
+SMTP_FROM_EMAIL=your-gmail-address@gmail.com
 ```
 
 Leave `GEMINI_API_KEY`, `GEMINI_API_KEY_2`, `QDRANT_URL`, and `QDRANT_API_KEY` blank if you're skipping those optional pieces -- the app degrades gracefully with no errors.
+
+**`SMTP_*` and `FRONTEND_BASE_URL` are what actually make "Forgot Password" work.** Without them, `/auth/forgot-password` still returns a success message either way (by design, so it can't be used to check whether an email is registered) but silently does nothing visible -- it only logs the reset link server-side instead of emailing it, and even once SMTP is configured, a missing `FRONTEND_BASE_URL` puts a `localhost:3000` link in that email instead of your real domain. For Gmail: turn on 2-Step Verification, generate an app password at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), and use that as `SMTP_PASSWORD` (not the account's normal login password).
 
 After deploy, confirm:
 - Open `https://your-render-service.onrender.com/health` in a browser.
