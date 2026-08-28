@@ -23,6 +23,7 @@ export default function Register() {
     class_code: ''
   })
   const [loading, setLoading] = useState(false)
+  const [slowLoading, setSlowLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleChange = (e) => {
@@ -45,6 +46,8 @@ export default function Register() {
     }
 
     setLoading(true)
+    setSlowLoading(false)
+    const slowTimer = setTimeout(() => setSlowLoading(true), 4000)
 
     try {
       await requestBackendJson('/auth/register', {
@@ -64,7 +67,9 @@ export default function Register() {
     } catch (err) {
       setError(err.message || 'An error occurred')
     } finally {
+      clearTimeout(slowTimer)
       setLoading(false)
+      setSlowLoading(false)
     }
   }
 
@@ -200,6 +205,12 @@ export default function Register() {
               >
                 {loading ? 'Creating account...' : `Create ${formData.role === 'student' ? 'Student' : 'Educator'} Account`}
               </button>
+
+              {slowLoading && (
+                <p className="text-center text-xs leading-5 text-zinc-600">
+                  Still working -- the server can take up to a minute to wake up if it has been idle. Please wait, no need to refresh.
+                </p>
+              )}
             </form>
           </section>
         </div>

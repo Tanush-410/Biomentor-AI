@@ -30,6 +30,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false)
   const [mode, setMode] = useState('student')
   const [loading, setLoading] = useState(false)
+  const [slowLoading, setSlowLoading] = useState(false)
   const [error, setError] = useState('')
   const [heroImageFailed, setHeroImageFailed] = useState(false)
 
@@ -59,7 +60,10 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setSlowLoading(false)
     setError('')
+
+    const slowTimer = setTimeout(() => setSlowLoading(true), 4000)
 
     try {
       const data = await requestBackendJson('/auth/login', {
@@ -83,7 +87,9 @@ export default function Login() {
     } catch (err) {
       setError(err.message || 'An error occurred')
     } finally {
+      clearTimeout(slowTimer)
       setLoading(false)
+      setSlowLoading(false)
     }
   }
 
@@ -193,6 +199,12 @@ export default function Login() {
             >
               {loading ? 'Signing in...' : `Enter ${mode === 'student' ? 'Student' : 'Educator'} Workspace`}
             </button>
+
+            {slowLoading && (
+              <p className="text-center text-xs leading-5 text-zinc-600">
+                Still working -- the server can take up to a minute to wake up if it has been idle. Please wait, no need to refresh.
+              </p>
+            )}
           </form>
 
           <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-zinc-700">
