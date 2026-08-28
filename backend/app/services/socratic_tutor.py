@@ -10,6 +10,7 @@ services/ (db-backed) split used by SoloClassifier vs document_context.py.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -33,6 +34,22 @@ logger = logging.getLogger(__name__)
 
 RECAP_EVERY_N_TURNS = 4
 STRUGGLE_HINT_THRESHOLD = 1
+
+# Matches a short "I don't know" style non-answer (in English -- speech
+# recognition transcribes even non-English speech through this same text
+# path, but a student typing/saying this is overwhelmingly likely to type
+# it in English regardless of the session language). Deliberately narrow
+# and anchored to the whole message so it never matches a real, longer
+# answer that merely contains one of these words.
+_NO_ATTEMPT_RE = re.compile(
+    r"^\s*(i\s*)?(don'?t|dont|do\s*not)\s*know\s*[.!?]*\s*$"
+    r"|^\s*(idk|dunno|no\s*idea|not\s*sure|no\s*clue)\s*[.!?]*\s*$",
+    re.IGNORECASE,
+)
+
+
+def _is_no_attempt(student_message: str) -> bool:
+    return bool(_NO_ATTEMPT_RE.match(student_message.strip()))
 
 
 class RetrievalAgent:
@@ -119,17 +136,24 @@ class SessionOrchestratorAgent:
         last_question = next((t["text"] for t in reversed(transcript) if t["role"] == "tutor"), session.topic)
 
         solo_result = SoloResponseAgent.classify(student_message)
-        misconception = MisconceptionAgent.detect(
+        no_attempt = _is_no_attempt(student_message)
+        # A "don't know" style answer has no factual content to check, so
+        # skip the misconception LLM call entirely -- there's nothing to
+        # detect a misconception about.
+        misconception = None if no_attempt else MisconceptionAgent.detect(
             context_text=context_text, tutor_question=last_question, student_answer=student_message, language=session.language
         )
 
-        # Correctness comes from the misconception check, not from the SOLO
-        # level of the answer's phrasing -- a correct one-fact answer to a
-        # Unistructural question is *supposed* to score low on structural
-        # complexity, so using that as a struggle signal would keep
-        # struggle_streak climbing forever on perfectly good short answers
-        # and the session would never progress past hints.
-        is_struggling = bool(misconception)
+        # Correctness comes from the misconception check (or an explicit
+        # "I don't know"), not from the SOLO level of the answer's phrasing
+        # -- a correct one-fact answer to a Unistructural question is
+        # *supposed* to score low on structural complexity, so using that
+        # as a struggle signal would keep struggle_streak climbing forever
+        # on perfectly good short answers and the session would never
+        # progress past hints. Without the no_attempt check, "I don't know"
+        # had no misconception to flag either, so it was wrongly treated as
+        # a fine attempt and praised with "Good effort."
+        is_struggling = bool(misconception) or no_attempt
         correct_streak = session.correct_streak + 1 if not is_struggling else 0
         struggle_streak = session.struggle_streak + 1 if is_struggling else 0
 

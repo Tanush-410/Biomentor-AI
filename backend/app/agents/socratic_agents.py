@@ -153,7 +153,12 @@ class EncouragementAgent:
         bank = _ENCOURAGEMENT.get(language, _ENCOURAGEMENT["en"])
         if correct_streak >= 2:
             return bank["streak"]
-        if struggle_streak >= 2:
+        # Any struggle at all (not just two in a row) should get the
+        # sympathetic tone -- a struggle_streak of 1 still means the
+        # student just got it wrong or said they don't know, and pairing
+        # that with the generic "Good effort" neutral line reads as
+        # incoherent, not encouraging.
+        if struggle_streak >= 1:
             return bank["struggle"]
         return bank["neutral"]
 
