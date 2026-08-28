@@ -463,7 +463,7 @@ If the backend connects correctly, `/health` will show:
 
 ## Production Deployment: Vercel + Render
 
-**Nothing in this repo is deployed to a live URL today** -- every setup described elsewhere in this README runs locally only (`127.0.0.1`). If login or any other feature "doesn't work" for someone outside the development machine, the most likely reason is that there is no public URL for them to reach yet, not a bug in the login code itself. Follow the steps below to get a real, shareable URL.
+**This is live**: the frontend is deployed to Vercel at `https://vydra-core.vercel.app` and the backend to Render at `https://biomentor-ai.onrender.com`. The steps below document how that deployment was set up, so you can redeploy, add a custom domain, or stand up a second environment the same way.
 
 VYDRA CORE should be deployed with:
 - `Vercel` for the `frontend`
@@ -553,11 +553,10 @@ After deploy, test:
 ### 4. If login "doesn't work" for someone
 
 Before assuming it's a bug, check these in order -- they cover the vast majority of real login reports:
-1. **Is there actually a deployed URL yet?** If the person is trying to reach `localhost`/`127.0.0.1`, that only works on the machine running the dev server -- see steps 1-2 above.
-2. **Render cold start** (free tier only): the first request after ~15 minutes idle can take 30-60+ seconds. Wait it out, or upgrade the Render plan.
-3. **Wrong mode selected**: an account registered as a student will be rejected with "This account is registered as student. Please switch to the correct mode." if someone tries to sign in from Educator Mode (and vice versa). Check the mode toggle on the login page matches the account's role.
-4. **Temporary lockout**: 5 wrong password attempts locks the account for 10 minutes (`423 Locked`). Wait, or use "Forgot Password?" to reset.
-5. **Rate limiting**: repeated rapid login attempts (12+ within 5 minutes) return `429 Too Many Requests`. Wait a few minutes before retrying.
+1. **Render cold start** (free tier only): the first request after ~15 minutes idle can take 30-60+ seconds. The login and register pages now show a "still working, the server can take up to a minute to wake up" message after a few seconds of waiting specifically so this doesn't look like a hang -- wait it out, or upgrade the Render plan to keep the service always-on.
+2. **Wrong mode selected**: an account registered as a student will be rejected with "This account is registered as student. Please switch to the correct mode." if someone tries to sign in from Educator Mode (and vice versa). Check the mode toggle on the login page matches the account's role.
+3. **Temporary lockout**: 5 wrong password attempts locks the account for 10 minutes (`423 Locked`). Wait, or use "Forgot Password?" to reset.
+4. **Rate limiting**: repeated rapid login attempts (12+ within 5 minutes) return `429 Too Many Requests`. Wait a few minutes before retrying.
 
 ## Running with Qdrant
 
