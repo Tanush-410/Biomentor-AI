@@ -9,6 +9,7 @@ import {
   Clock,
   FileStack,
   FlaskConical,
+  Mic,
   MessageCircle,
   MessageSquare,
   School2,
@@ -22,6 +23,13 @@ import AppShell from '../components/AppShell'
 import { useAuth } from '../context/AuthContext'
 
 const STUDY_FEATURES = [
+  {
+    icon: Mic,
+    title: 'Voice-based Socratic tutor',
+    text: 'A spoken, question-led study session in English, Hindi, Tamil, Telugu, or Kannada -- grounded in your own material, with a shared AI whiteboard. The tutor never gives the answer away; it asks the next question that gets you there.',
+    href: '/socratic-tutor',
+    linkLabel: 'Start a voice session',
+  },
   {
     icon: MessageSquare,
     title: '24/7 question, answer, and feedback',

@@ -11,6 +11,7 @@ from .math_lab import router as math_lab_router
 from .quantum_lab import router as quantum_lab_router
 from .quiz import router as quiz_router
 from .qa import router as qa_router
+from .socratic_tutor import router as socratic_tutor_router
 from .sticky_notes import router as sticky_notes_router
 
 __all__ = [
@@ -26,5 +27,6 @@ __all__ = [
     "quantum_lab_router",
     "quiz_router",
     "qa_router",
+    "socratic_tutor_router",
     "sticky_notes_router",
 ]

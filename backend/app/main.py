@@ -16,6 +16,7 @@ from app.routers import (
     quantum_lab_router,
     quiz_router,
     qa_router,
+    socratic_tutor_router,
     sticky_notes_router,
 )
 from app.routers.learning import router as learning_router
@@ -83,6 +84,7 @@ app.include_router(math_lab_router)
 app.include_router(quantum_lab_router)
 app.include_router(bio_lab_router)
 app.include_router(collaboration_router)
+app.include_router(socratic_tutor_router)
 app.include_router(sticky_notes_router)
 
 

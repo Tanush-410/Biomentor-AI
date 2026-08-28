@@ -1521,3 +1521,70 @@ class BioSimulationResponse(BaseModel):
     species_names: List[str]
     time_points: List[float]
     concentrations: Dict[str, List[float]]
+
+
+# ===== SOCRATIC TUTOR SCHEMAS =====
+SOCRATIC_LANGUAGES = {"en", "hi", "ta", "te", "kn"}
+
+
+class SocraticStartRequest(BaseModel):
+    """Start a new voice Socratic tutoring session."""
+    document_id: Optional[str] = None
+    topic: Optional[str] = None
+    language: str = "en"
+
+
+class SocraticTurnRequest(BaseModel):
+    """One student turn (transcribed speech or typed text) in an existing session."""
+    message: str = Field(..., min_length=1, max_length=4000)
+
+
+class DiagramShape(BaseModel):
+    """One shape in an AI-generated whiteboard diagram.
+
+    Kept as plain geometric primitives (never an image) so the frontend
+    canvas can render it deterministically with no extra image-generation
+    round trip, and so it composes cleanly with the student's own freehand
+    strokes on the same canvas.
+    """
+    type: str  # "rect" | "circle" | "line" | "arrow" | "text"
+    x: float
+    y: float
+    x2: Optional[float] = None
+    y2: Optional[float] = None
+    width: Optional[float] = None
+    height: Optional[float] = None
+    text: Optional[str] = None
+    color: str = "#18181b"
+
+
+class SocraticTurnResponse(BaseModel):
+    """Result of one Socratic-tutor exchange."""
+    session_id: str
+    tutor_message: str
+    language: str
+    solo_level: int
+    solo_level_name: str
+    misconception: Optional[str] = None
+    hint_given: bool = False
+    diagram: Optional[List[DiagramShape]] = None
+    recap: Optional[str] = None
+    turn_count: int
+    status: str
+
+
+class SocraticTranscriptTurn(BaseModel):
+    role: str  # "tutor" | "student"
+    text: str
+    at: datetime
+
+
+class SocraticSessionSummary(BaseModel):
+    session_id: str
+    topic: str
+    language: str
+    solo_level: int
+    solo_level_name: str
+    turn_count: int
+    status: str
+    transcript: List[SocraticTranscriptTurn]

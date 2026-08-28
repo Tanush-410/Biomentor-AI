@@ -915,3 +915,31 @@ class APILog(Base):
     response_time_ms = Column(Float)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class SocraticSession(Base):
+    """A voice-first Socratic tutoring session.
+
+    `transcript` holds the full turn-by-turn history (student + tutor
+    messages, plus each turn's agent-produced metadata: SOLO level,
+    misconception notes, hints, diagrams) as a single JSON list rather than
+    a separate turns table -- a session is always read and written as one
+    unit (never queried turn-by-turn), so one JSON column keeps this simple
+    without an unnecessary join.
+    """
+
+    __tablename__ = "socratic_sessions"
+
+    id = Column(String, primary_key=True, default=new_id)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    document_id = Column(String, ForeignKey("documents.id"), nullable=True)
+    topic = Column(String, nullable=False, default="General")
+    language = Column(String, nullable=False, default="en")
+    solo_level = Column(Integer, nullable=False, default=2)
+    turn_count = Column(Integer, nullable=False, default=0)
+    correct_streak = Column(Integer, nullable=False, default=0)
+    struggle_streak = Column(Integer, nullable=False, default=0)
+    transcript = Column(JSON, nullable=False, default=list)
+    status = Column(String, nullable=False, default="active")  # "active" | "completed"
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
