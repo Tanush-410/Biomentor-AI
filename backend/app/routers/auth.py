@@ -3,7 +3,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 import bcrypt
@@ -153,12 +153,23 @@ async def login(user: UserLogin, request: Request, db: Session = Depends(get_db)
 
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)
-async def forgot_password(request: ForgotPasswordRequest, http_request: Request, db: Session = Depends(get_db)):
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    http_request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """
     Issue a password reset link if the email matches an account.
 
     Always returns a generic success message, regardless of whether the
     email is registered, so this endpoint cannot be used to enumerate users.
+    The actual email send is deferred to a background task specifically so
+    that response time is the same either way -- sending it inline only
+    when an account exists made the "exists" case measurably slower than
+    the "doesn't exist" case (a real SMTP round trip vs an instant return),
+    letting an attacker enumerate registered emails via response timing
+    despite the identical response body.
     """
     enforce_rate_limit(http_request, "auth-forgot-password", limit=5, window_seconds=300)
 
@@ -174,7 +185,7 @@ async def forgot_password(request: ForgotPasswordRequest, http_request: Request,
         db.commit()
 
         reset_link = f"{settings.frontend_base_url.rstrip('/')}/reset-password?token={raw_token}"
-        send_password_reset_email(db_user.email, reset_link)
+        background_tasks.add_task(send_password_reset_email, db_user.email, reset_link)
 
     return ForgotPasswordResponse(message=GENERIC_FORGOT_PASSWORD_MESSAGE)
 

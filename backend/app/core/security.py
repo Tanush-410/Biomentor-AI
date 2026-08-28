@@ -40,8 +40,20 @@ def enforce_rate_limit(
     window_seconds: int,
 ) -> None:
     """Simple in-memory rate limiting for sensitive endpoints."""
-    forwarded = request.headers.get("x-forwarded-for", "")
-    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    # This app is always served through Cloudflare (Render's default
+    # *.onrender.com domains sit behind it), which overwrites any
+    # client-supplied CF-Connecting-IP at its edge with the real connecting
+    # IP -- so it can't be spoofed the way a client-supplied X-Forwarded-For
+    # can. X-Forwarded-For is deliberately NOT trusted here: a client can
+    # set it to any value on every request, which previously gave every
+    # request on auth endpoints (register, login, forgot-password) a fresh
+    # rate-limit bucket for free, completely defeating the limit. Falling
+    # back to the raw TCP peer address covers local/direct-connection
+    # deployments with no proxy in front at all.
+    client_ip = (
+        request.headers.get("cf-connecting-ip", "").strip()
+        or (request.client.host if request.client else "unknown")
+    )
     key = f"{bucket}:{client_ip}"
     now = datetime.utcnow()
     window_start = now - timedelta(seconds=window_seconds)

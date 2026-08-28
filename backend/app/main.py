@@ -31,6 +31,18 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Fail fast rather than silently serving live sessions signed with a
+    # publicly-known secret -- if SECRET_KEY were ever left unset (or at
+    # its "changeme" default) in production, anyone could forge a valid
+    # JWT for any user_id/role via get_current_user's HS256 verification.
+    # Better to refuse to start than to boot vulnerable.
+    if settings.environment == "production" and settings.secret_key in {"changeme", ""}:
+        raise RuntimeError(
+            "SECRET_KEY is not set (or is still the 'changeme' default) in a production "
+            "environment. Refusing to start: JWTs would be signed with a publicly-known "
+            "value, letting anyone forge a valid session for any user. Set a real, random "
+            "SECRET_KEY in this deployment's environment variables."
+        )
     logger.info("Initializing database...")
     init_db()
     logger.info("Database initialized successfully!")
