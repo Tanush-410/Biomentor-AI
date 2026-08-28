@@ -36,21 +36,29 @@ body {
   min-height: 100vh;
 }
 
-/* Fine film-grain texture over every page, blended with whatever colors are
-   already there (mix-blend-mode, not a flat overlay) rather than
-   introducing a new color -- one fixed pseudo-element on body reaches every
-   page without touching each page's own markup. Fixed positioning escapes
-   any individual page's overflow:hidden container, and the extremely low
-   opacity keeps it a "premium paper" feel rather than visible noise. */
+/* Fine film-grain texture over every page -- one fixed pseudo-element on
+   body reaches every page without touching each page's own markup, and
+   fixed positioning escapes any individual page's overflow:hidden
+   container. Deliberately plain alpha compositing (opacity only, NO
+   mix-blend-mode): overlay/multiply/soft-light all collapse to a no-op at
+   the extreme they're weakest on (overlay does nothing on a near-white
+   base, multiply does nothing on a near-black one) -- since this app has
+   both near-white cards and a near-black landing hero, any single blend
+   mode made the grain vanish on roughly half the app. Plain opacity over a
+   grayscale (desaturated) noise pattern stays visible on any background. */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.1;
+  /* feComponentTransfer with slope=3.5/intercept=-1.25 stretches the raw
+     turbulence output (which clusters close to mid-gray, ~100-160 out of
+     255) toward the 0/255 extremes -- without this the noise itself has so
+     little internal contrast that no reasonable opacity makes it read as
+     grain rather than a barely-there gray wash. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix in='t' type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='3.5' intercept='-1.25'/%3E%3CfeFuncG type='linear' slope='3.5' intercept='-1.25'/%3E%3CfeFuncB type='linear' slope='3.5' intercept='-1.25'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 
