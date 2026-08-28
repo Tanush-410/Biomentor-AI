@@ -17,6 +17,7 @@ from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 
 from app.agents.socratic_agents import (
+    ClarifyingQuestionAgent,
     DiagramAgent,
     EncouragementAgent,
     HintAgent,
@@ -59,10 +60,13 @@ class RetrievalAgent:
     @staticmethod
     def gather(db: Session, *, user_id: str, document_id: Optional[str], query: str) -> str:
         document_ids = [document_id] if document_id else None
-        contexts = get_document_context(db, user_id=user_id, document_ids=document_ids, query=query, top_k=5)
+        # top_k=8 (up from 5) so the tutor has enough grounding to field a
+        # genuine student question (ClarifyingQuestionAgent) or a deeper
+        # hint, not just enough for a single-fact next question.
+        contexts = get_document_context(db, user_id=user_id, document_ids=document_ids, query=query, top_k=8)
         if not contexts:
-            contexts = fallback_preview_context(db, user_id, document_ids=document_ids, top_k=3)
-        return "\n\n".join(item["content"] for item in contexts[:5]) if contexts else ""
+            contexts = fallback_preview_context(db, user_id, document_ids=document_ids, top_k=4)
+        return "\n\n".join(item["content"] for item in contexts[:8]) if contexts else ""
 
 
 class GapLinkingAgent:
@@ -134,6 +138,37 @@ class SessionOrchestratorAgent:
             db, user_id=session.user_id, document_id=session.document_id, query=f"{session.topic} {student_message}"
         )
         last_question = next((t["text"] for t in reversed(transcript) if t["role"] == "tutor"), session.topic)
+
+        # If the student is asking the tutor a genuine question rather than
+        # attempting to answer ("wait, what does that term mean?"), answer
+        # it directly and re-ask the same pending question, instead of
+        # running it through misconception-detection/grading as if it were
+        # an answer attempt -- streaks and level are left untouched since
+        # nothing was actually attempted this turn.
+        clarifying_answer = ClarifyingQuestionAgent.maybe_answer(
+            context_text=context_text, tutor_question=last_question, student_message=student_message, language=session.language
+        )
+        if clarifying_answer:
+            tutor_message = f"{clarifying_answer}\n\n{last_question}"
+            transcript.append(_turn("tutor", tutor_message))
+            session.transcript = transcript
+            session.turn_count += 1
+            db.add(session)
+            db.commit()
+            db.refresh(session)
+            return {
+                "session_id": session.id,
+                "tutor_message": tutor_message,
+                "language": session.language,
+                "solo_level": session.solo_level,
+                "solo_level_name": level_name(session.solo_level),
+                "misconception": None,
+                "hint_given": False,
+                "diagram": None,
+                "recap": None,
+                "turn_count": session.turn_count,
+                "status": session.status,
+            }
 
         solo_result = SoloResponseAgent.classify(student_message)
         no_attempt = _is_no_attempt(student_message)

@@ -1524,7 +1524,7 @@ class BioSimulationResponse(BaseModel):
 
 
 # ===== SOCRATIC TUTOR SCHEMAS =====
-SOCRATIC_LANGUAGES = {"en", "hi", "ta", "te", "kn"}
+SOCRATIC_LANGUAGES = {"en", "hi", "ta", "te", "kn", "bn", "mr", "de", "pt", "nl", "zh", "ja"}
 
 
 class SocraticStartRequest(BaseModel):

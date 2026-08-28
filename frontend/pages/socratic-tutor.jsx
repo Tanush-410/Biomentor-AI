@@ -12,6 +12,13 @@ const LANGUAGES = [
   { code: 'ta', label: 'Tamil', speechLocale: 'ta-IN' },
   { code: 'te', label: 'Telugu', speechLocale: 'te-IN' },
   { code: 'kn', label: 'Kannada', speechLocale: 'kn-IN' },
+  { code: 'bn', label: 'Bengali', speechLocale: 'bn-IN' },
+  { code: 'mr', label: 'Marathi', speechLocale: 'mr-IN' },
+  { code: 'de', label: 'German', speechLocale: 'de-DE' },
+  { code: 'pt', label: 'Portuguese', speechLocale: 'pt-PT' },
+  { code: 'nl', label: 'Dutch', speechLocale: 'nl-NL' },
+  { code: 'zh', label: 'Chinese', speechLocale: 'zh-CN' },
+  { code: 'ja', label: 'Japanese', speechLocale: 'ja-JP' },
 ]
 
 const CANVAS_WIDTH = 800

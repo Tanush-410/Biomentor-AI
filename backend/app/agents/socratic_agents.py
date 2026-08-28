@@ -25,6 +25,13 @@ LANGUAGE_NAMES = {
     "ta": "Tamil",
     "te": "Telugu",
     "kn": "Kannada",
+    "bn": "Bengali",
+    "mr": "Marathi",
+    "de": "German",
+    "pt": "Portuguese",
+    "nl": "Dutch",
+    "zh": "Chinese (Simplified Mandarin)",
+    "ja": "Japanese",
 }
 
 
@@ -32,7 +39,7 @@ def language_name(code: str) -> str:
     return LANGUAGE_NAMES.get(code, "English")
 
 
-def _format_history(history: List[Dict], limit: int = 6) -> str:
+def _format_history(history: List[Dict], limit: int = 10) -> str:
     if not history:
         return "This is the first exchange of the session."
     lines = []
@@ -110,6 +117,43 @@ class MisconceptionAgent:
         return str(misconception).strip() if misconception else None
 
 
+class ClarifyingQuestionAgent:
+    """Detects when the student is asking the tutor a genuine question
+    (e.g. "wait, what does that term even mean?") instead of attempting to
+    answer the tutor's own question, and gives a short direct explanation.
+
+    Without this, a purely Socratic loop runs every student message through
+    misconception-detection and grading even when the student is plainly
+    asking for help, which produces confusing or nonsensical feedback and
+    never actually answers what they asked -- not a smart tutor, just a
+    rigid one.
+    """
+
+    @staticmethod
+    def maybe_answer(*, context_text: str, tutor_question: str, student_message: str, language: str) -> Optional[str]:
+        if not ai_provider_available():
+            return None
+        lang = language_name(language)
+        system_prompt = (
+            "Decide whether the student's message is a genuine question asking the tutor for information or "
+            "clarification, rather than an attempt (even a wrong or partial one) to answer the tutor's own "
+            "question. Return JSON only: {\"is_question\": boolean, \"answer\": string or null}. "
+            f"If is_question is true, give a short, clear, direct answer (2-4 sentences) in {lang}, grounded in "
+            "the study material, as natural spoken conversation (no markdown, no LaTeX). If the message is any "
+            "kind of attempt to answer the tutor's question, is_question must be false and answer must be null."
+        )
+        user_prompt = (
+            f"Study material:\n{context_text[:3000]}\n\n"
+            f"Tutor's question: {tutor_question}\n\n"
+            f"Student's message: {student_message}"
+        )
+        parsed = ai_json_completion(system_prompt=system_prompt, user_prompt=user_prompt, temperature=0.2, timeout=20)
+        if not parsed or not parsed.get("is_question"):
+            return None
+        answer = parsed.get("answer")
+        return str(answer).strip() if answer else None
+
+
 class HintAgent:
     """Agent 4: gives one graduated hint -- never the answer -- when the
     student is stuck or wrong. Each successive hint for the same question
@@ -141,6 +185,13 @@ _ENCOURAGEMENT = {
     "ta": {"streak": "அருமை, நீங்கள் சரியான பாதையில் இருக்கிறீர்கள்.", "struggle": "பரவாயில்லை, இதை ஒன்றாகப் புரிந்துகொள்வோம்.", "neutral": "நல்ல முயற்சி."},
     "te": {"streak": "బాగుంది, మీరు సరైన మార్గంలో ఉన్నారు.", "struggle": "పర్వాలేదు, దీన్ని కలిసి అర్థం చేసుకుందాం.", "neutral": "మంచి ప్రయత్నం."},
     "kn": {"streak": "ಚೆನ್ನಾಗಿದೆ, ನೀವು ಸರಿಯಾದ ಹಾದಿಯಲ್ಲಿದ್ದೀರಿ.", "struggle": "ಪರವಾಗಿಲ್ಲ, ಇದನ್ನು ಒಟ್ಟಿಗೆ ಅರ್ಥಮಾಡಿಕೊಳ್ಳೋಣ.", "neutral": "ಒಳ್ಳೆಯ ಪ್ರಯತ್ನ."},
+    "bn": {"streak": "চমৎকার, আপনি সঠিক পথে আছেন।", "struggle": "কোনো ব্যাপার না, চলুন একসাথে এটা বুঝে নিই।", "neutral": "ভালো চেষ্টা।"},
+    "mr": {"streak": "छान, तुम्ही योग्य मार्गावर आहात.", "struggle": "काही हरकत नाही, चला हे एकत्र समजून घेऊया.", "neutral": "चांगला प्रयत्न."},
+    "de": {"streak": "Klasse, du bist auf dem richtigen Weg.", "struggle": "Kein Problem, lass es uns gemeinsam durchgehen.", "neutral": "Guter Versuch."},
+    "pt": {"streak": "Ótimo, você está no caminho certo.", "struggle": "Sem problemas, vamos entender isso juntos.", "neutral": "Bom esforço."},
+    "nl": {"streak": "Goed zo, je zit op het juiste spoor.", "struggle": "Geen probleem, laten we dit samen doornemen.", "neutral": "Goede poging."},
+    "zh": {"streak": "很棒,你的方向是对的。", "struggle": "没关系,我们一起来理解这个。", "neutral": "很好的尝试。"},
+    "ja": {"streak": "いいですね、正しい方向に進んでいます。", "struggle": "大丈夫、一緒に整理していきましょう。", "neutral": "よく頑張りました。"},
 }
 
 
