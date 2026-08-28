@@ -26,21 +26,21 @@ const STUDY_FEATURES = [
   {
     icon: Mic,
     title: 'Voice-based Socratic tutor',
-    text: 'A spoken, question-led study session in English, Hindi, Tamil, Telugu, or Kannada -- grounded in your own material, with a shared AI whiteboard. The tutor never gives the answer away; it asks the next question that gets you there.',
+    text: "A voice-based Socratic tutor available in English and ten additional languages -- Hindi, Tamil, Telugu, Kannada, Bengali, Marathi, German, Portuguese, Dutch, Chinese, and Japanese -- enabling learners to engage in guided questioning, reasoning, and mastery-based dialogue, 24/7. Grounded in your own material, with a shared AI whiteboard. The tutor never gives the answer away; it asks the next question that gets you there.",
     href: '/socratic-tutor',
     linkLabel: 'Start a voice session',
   },
   {
     icon: MessageSquare,
-    title: '24/7 question, answer, and feedback',
-    text: 'An always-available adaptive learning loop grounded in mastery learning and formative assessment: ask a question in Learning Chat, get a source-grounded answer from your own material, and follow up with a quick check for immediate feedback.',
+    title: '24/7 question, answer, assessment, feedback',
+    text: 'An AI-driven adaptive learning system grounded in mastery learning, formative assessment, and self-regulated learning: ask a question in Learning Chat, get a source-grounded answer from your own material, and follow up with a quick check for immediate feedback.',
     href: '/learning-chat',
     linkLabel: 'Open Learning Chat',
   },
   {
     icon: Users,
     title: 'Virtual classroom STEM labs',
-    text: 'Attend live classroom sessions and work through interactive 3D and simulation labs together -- Math Lab, Bio Lab, Quantum Lab, and 3D Studio can all be shared live during a class meeting.',
+    text: 'Attend live classroom sessions and work through interactive, AI-driven 3D and simulation labs together -- Math Lab, Bio Lab, Quantum Lab, and 3D Studio can all be shared live during a class meeting.',
     href: '/collaboration-hub',
     linkLabel: 'Open Collaboration Hub',
   },
@@ -54,14 +54,14 @@ const STUDY_FEATURES = [
   {
     icon: Target,
     title: 'SOLO-aligned quiz generation',
-    text: "Quizzes generated from your uploaded material progress through SOLO Taxonomy levels -- from unistructural recall, to multistructural comprehension, to relational integration, to extended-abstract transfer -- so practice builds toward real mastery instead of stopping at recall.",
+    text: 'The system analyzes your uploaded learning material and generates quizzes that progressively move from unistructural recall to multistructural comprehension, relational integration, and extended-abstract transfer, ensuring deeper mastery through SOLO-aligned assessment.',
     href: '/start-quiz',
     linkLabel: 'Generate a SOLO quiz',
   },
   {
     icon: StickyNote,
     title: 'Sticky notes',
-    text: 'Private, colorful notes that stay pinned to the exact page position where you created them -- available on every page, for students and educators alike.',
+    text: 'Private, colorful notes that stay pinned to the exact page position where students or educators created them -- available on every page.',
   },
   {
     icon: ShieldCheck,
@@ -77,7 +77,7 @@ const STUDY_FEATURES = [
   },
 ]
 
-const EDUCATOR_FEATURES = [
+const EDUCATOR_AI_FEATURES = [
   {
     icon: Brain,
     title: 'AI Meeting Assistant',
@@ -86,18 +86,21 @@ const EDUCATOR_FEATURES = [
   {
     icon: School2,
     title: 'AI Educator Copilot',
-    text: 'Helps you decide what to assign, who needs attention, and how to respond to classroom patterns.',
+    text: 'Helps educators decide what to assign, who needs attention, and how to respond to classroom patterns.',
   },
   {
     icon: Bot,
     title: 'AI Study Coach',
-    text: "Guides each student through weak areas, upcoming work, and revision paths based on their own material -- visible to you as an intervention signal.",
+    text: 'Guides students through weak areas, upcoming work, and revision paths based on their own material -- visible to you as an intervention signal.',
   },
   {
     icon: BookOpen,
     title: 'Material Intelligence',
     text: 'Transforms documents into summaries, concept maps, exam-focused study paths, and grounded answers.',
   },
+]
+
+const EDUCATOR_ASSESSMENT_FEATURES = [
   {
     icon: FileStack,
     title: 'Exam Maker',
@@ -115,14 +118,14 @@ const EDUCATOR_FEATURES = [
   {
     icon: Award,
     title: 'Certifications',
-    text: 'Attach course links or build a course path, then issue VYDRA CORE-branded certificates when students complete it.',
+    text: 'Attach course links or create course paths, then issue VYDRA CORE-branded certificates when students complete them.',
     href: '/educator/certification',
     linkLabel: 'Open Certifications',
   },
   {
     icon: Clock,
     title: 'Automated progress reports',
-    text: 'Reduces your working hours with automated, always-current progress reports on student performance instead of manual tracking.',
+    text: 'Reduces educators’ working hours by providing automated, always-current progress reports on students instead of manual tracking.',
     href: '/educator/class-insights',
     linkLabel: 'Open Class Insights',
   },
@@ -164,7 +167,7 @@ export default function StemEducationPage() {
     <AppShell
       eyebrow="STEM Education"
       title="Personal study and virtual classroom, powered by AI-driven STEM labs"
-      description="One connected system for self-study and live classroom learning: adaptive AI feedback, interactive 3D and simulation STEM labs, SOLO-aligned assessment, and the tools that keep protected assessment and progress visible."
+      description="One connected system for self-study and live classroom learning: a voice-based Socratic tutor with a shared AI whiteboard and a ten-part AI tutoring pipeline, interactive 3D and simulation STEM labs, SOLO-aligned assessment, and the tools that keep protected assessment and progress visible."
     >
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {STUDY_FEATURES.map((feature) => (
@@ -173,20 +176,37 @@ export default function StemEducationPage() {
       </section>
 
       {isEducator && (
-        <section className="mt-10">
-          <div className="mb-5">
-            <p className="section-kicker text-[#18181b]">For educators</p>
-            <h2 className="mt-2 text-2xl font-bold text-slate-950">The AI is not a side widget. It is the operating layer.</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Every major part of VYDRA CORE now has an AI role: teaching decisions, student coaching, material understanding, assessment quality, meeting recaps, and classroom intelligence.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {EDUCATOR_FEATURES.map((feature) => (
-              <FeatureCard key={feature.title} {...feature} role={user?.role} />
-            ))}
-          </div>
-        </section>
+        <>
+          <section className="mt-10">
+            <div className="mb-5">
+              <p className="section-kicker text-[#18181b]">AI systems now visible</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">The AI is not a side widget. It is the operating layer.</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                Every major part of the app now has an AI role: teaching decisions, student coaching, material understanding, assessment quality, meeting recaps, and classroom intelligence.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {EDUCATOR_AI_FEATURES.map((feature) => (
+                <FeatureCard key={feature.title} {...feature} role={user?.role} />
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-10">
+            <div className="mb-5">
+              <p className="section-kicker text-[#18181b]">Assessment, proctoring, certificates</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">From classroom task to verified outcome.</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                VYDRA CORE now supports educator-built exams, AI-suggested papers, proctored attempts, anti-cheat review, rubric-backed grading, and completion certificates.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {EDUCATOR_ASSESSMENT_FEATURES.map((feature) => (
+                <FeatureCard key={feature.title} {...feature} role={user?.role} />
+              ))}
+            </div>
+          </section>
+        </>
       )}
     </AppShell>
   )
