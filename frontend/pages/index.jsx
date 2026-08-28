@@ -17,7 +17,7 @@ export default function HomePage() {
         <header className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-5 px-6 py-8 md:px-10 lg:px-16">
           <div>
             <StemEducationBadge />
-            <p className="mt-3 text-sm font-black uppercase tracking-[0.48em] text-[#d9c25c]">VYDRA CORE</p>
+            <p className="mt-3 text-2xl font-black uppercase tracking-[0.38em] text-[#d9c25c] md:text-3xl">VYDRA CORE</p>
           </div>
           <nav className="flex items-center gap-3">
             <Link href="/login" className="rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10">

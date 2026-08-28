@@ -36,6 +36,30 @@ body {
   min-height: 100vh;
 }
 
+/* Fine film-grain texture over every page, blended with whatever colors are
+   already there (mix-blend-mode, not a flat overlay) rather than
+   introducing a new color -- one fixed pseudo-element on body reaches every
+   page without touching each page's own markup. Fixed positioning escapes
+   any individual page's overflow:hidden container, and the extremely low
+   opacity keeps it a "premium paper" feel rather than visible noise. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    opacity: 0.03;
+  }
+}
+
 h1,
 h2,
 h3,
