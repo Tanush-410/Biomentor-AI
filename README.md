@@ -12,6 +12,8 @@ The project includes:
 ## What VYDRA CORE Does
 
 ### Student experience
+- start every session on a dedicated `STEM Education` overview page covering every AI-driven study tool
+- study with a voice-based Socratic tutor (English + 11 more languages) and a shared AI whiteboard -- the tutor asks the next question instead of giving the answer away, detects genuine misconceptions vs. plain non-attempts, and answers a student's own clarifying questions before returning to its own
 - upload study material and reopen it later
 - read documents in-app with offline-friendly access
 - ask material-grounded questions in Learning Chat
@@ -44,6 +46,8 @@ The project includes:
 
 ## Core Features
 
+- `STEM Education` overview page shown immediately after login for both roles
+- voice-based Socratic tutor -- 12 languages (English, Hindi, Tamil, Telugu, Kannada, Bengali, Marathi, German, Portuguese, Dutch, Chinese, Japanese), a shared AI whiteboard the student can draw on with AI-pushed diagrams, and a ten-part agent pipeline (question asking, SOLO-level calibration, misconception detection, graduated hints, encouragement, diagram generation, session recap, retrieval, gap-linking, orchestration)
 - AI learning chat grounded in uploaded material with automatic trusted-web fallback
 - adaptive Quick Check mini-tests with short targeted feedback
 - offline-friendly document viewing
@@ -209,6 +213,21 @@ Before a client uses VYDRA CORE in a real class, verify:
 - Certification creation and certificate generation work.
 - Sticky notes persist after logout and can be deleted.
 
+## Client-Requested Changes (August 2026)
+
+A detailed, request-by-request writeup of everything delivered against the client's requirements this cycle lives at [`project-documents/client-requested-changes.md`](project-documents/client-requested-changes.md). Summary:
+
+- Landing and login pages stripped of marketing copy per the client's explicit direction; landing page redesigned around an interactive, mouse-reactive constellation graphic instead.
+- New `STEM Education` page (shown immediately after login for both roles) covering every AI-driven feature, with role-specific content for students and educators using the client's own wording.
+- Client-supplied infographic wired into the login page.
+- Tagline added ("An intelligent, AI-driven teaching and studying application."); product name kept as VYDRA CORE.
+- Footer and a `STEM Education` badge added to every page.
+- New voice-based Socratic tutor with a shared AI whiteboard and a 10-agent tutoring pipeline, in 12 languages.
+- "Login is troubling" and "educator chatbot missing" bug reports diagnosed and fixed.
+- Full security/correctness audit: fixed a rate-limiter bypass, a missing JWT-secret startup check, a password-reset timing side-channel, two exam-grading bugs (unmarked MCQ answer keys, discarded teacher score corrections), and three certificate-issuance authorization gaps.
+- Learning Chat and the Socratic tutor both deepened for better answers/teaching (larger retrieval context, longer conversation memory, genuine-question detection).
+- Written deployment steps, including the SMTP configuration required for password-reset emails to actually send.
+
 ## Recent AI Platform Upgrades
 
 VYDRA CORE now exposes its intelligence as explicit product workspaces instead of subtle helper text.
@@ -262,6 +281,10 @@ VYDRA CORE now exposes its intelligence as explicit product workspaces instead o
 ## AI Features Map
 
 These AI systems are part of the project and are implemented inside the `backend` and `frontend` folders, not as separate top-level root files.
+
+### AI Voice Socratic Tutor
+- backend: `backend/app/agents/socratic_agents.py` (7 model-facing agents), `backend/app/services/socratic_tutor.py` (3 db-backed agents + orchestrator), `backend/app/routers/socratic_tutor.py`
+- frontend: `frontend/pages/socratic-tutor.jsx` (Web Speech API for voice, HTML5 canvas whiteboard)
 
 ### AI Meeting Assistant
 - backend: `backend/app/services/meeting_assistant.py`
@@ -586,6 +609,8 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 - `/forgot-password`
 
 ### Student + educator shared app
+- `/stem-education` -- landing page after login for both roles; overview of every AI-driven study/teaching feature
+- `/socratic-tutor` -- voice-based Socratic tutor (12 languages) with a shared AI whiteboard
 - `/dashboard`
 - `/documents`
 - `/document/[id]`
@@ -593,6 +618,7 @@ The app is structured to use Qdrant-backed retrieval when available, with safer 
 - `/start-quiz`
 - `/quiz-session`
 - `/progress`
+- `/gap-analysis`
 - `/classrooms`
 - sticky notes render across authenticated app pages and stay tied to the exact URL where they were created
 
